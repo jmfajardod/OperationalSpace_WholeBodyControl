@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<robot name="vx300s_transmissions" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <!-- Waist Tranmission -->
+    <transmission name="trans_waist">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="waist_joint">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="waist_motor">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+    <!-- Shoulder Tranmission -->
+    <transmission name="trans_shoulder">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="shoulder_joint">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="shoulder_motor">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+    <!-- Elbow Tranmission -->
+    <transmission name="trans_elbow">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="elbow_joint">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="elbow_motor">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+    <!-- Upper Forearm Tranmission -->
+    <transmission name="trans_upper_forearm">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="upper_forearm_joint">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="upper_forearm_motor">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+    <!-- Lower Forearm Tranmission -->
+    <transmission name="trans_lower_forearm_joint">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="lower_forearm_joint">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="lower_forearm_joint_motor">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+    <!-- Wrist Tranmission -->
+    <transmission name="trans_wrist_joint">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="wrist_joint">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="wrist_joint_motor">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+    <!-- Gripper Prop Tranmission 
+    <transmission name="trans_gripper">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="gripper_joint">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="gripper_motor">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+    -->
+    
+    <!-- In case Gripper finger are enabled--> 
+    <xacro:if value="$(arg use_gripper_fingers)">
+
+        <!-- Left Finger Tranmission -->
+        <transmission name="trans_left_finger">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="left_finger_joint">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="left_finger_motor">
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+
+        <!-- Right Finger Tranmission -->
+        <transmission name="trans_right_finger">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="right_finger_joint">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="right_finger_motor">
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+        
+
+    </xacro:if>
+
+</robot>

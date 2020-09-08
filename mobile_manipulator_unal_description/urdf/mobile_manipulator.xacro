@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<robot name="mobile_robot" xmlns:xacro="http://wiki.ros.org/xacro">
+
+    <xacro:arg name="robot_name" default = "mobile_manipulator"/>
+    <xacro:arg name="load_transmission" default="true"/>
+    <xacro:arg name="load_gazebo" default="true"/>
+    <xacro:arg name="mobile_manipulator" default="true"/>
+    <xacro:arg name="world_frame" default="false"/>
+
+    <xacro:include filename="$(find mobile_robot_unal_description)/urdf/mobile_base.urdf.xacro" />
+</robot>

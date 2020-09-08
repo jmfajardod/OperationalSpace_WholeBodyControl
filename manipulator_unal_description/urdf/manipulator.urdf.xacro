@@ -1,0 +1,518 @@
+<?xml version="1.0"?>
+<robot name="vx300s" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:arg name="robot_name" default = ""/>
+    <xacro:arg name="load_transmission" default="false"/>
+    <xacro:arg name="load_gazebo" default="false"/>
+    <xacro:arg name="use_gripper_fingers" default="true"/>
+    <xacro:arg name="mobile_manipulator" default="false"/>
+    <xacro:arg name="world_frame" default="true"/>
+
+    <material name="interbotix_black">
+        <color rgba="0.0 0.0 0.0 1.0"/>
+    </material>
+
+    <!-- If not using mobile manipulator load World Frame-->
+    <xacro:if value="$(arg world_frame)">
+        <!-- World Frame-->
+        <link name="world"/>
+
+        <!-- Fixed Joint between World and Robot Base-->
+
+        <joint name="fixed" type="fixed">
+            <parent link="world"/>
+            <child link="$(arg robot_name)/base_link"/>
+        </joint>
+    </xacro:if>
+
+        <!-- If using mobile manipulator attach manipulator to platform-->
+        <xacro:if value="$(arg mobile_manipulator)">
+            <!-- Fixed Joint between Platform and Robot Base-->
+            <joint name="fixed" type="fixed">
+                <parent link="$(arg robot_name)/platform_link"/>
+                <child link="$(arg robot_name)/base_link"/>
+            </joint>
+        </xacro:if>
+
+    <!-- Base Link description-->
+    <link name="$(arg robot_name)/base_link">
+        <visual>
+            <origin rpy="0 0 ${pi/2}" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-1-Base.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            <material name="interbotix_black"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 ${pi/2}" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-1-Base.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 0 ${pi/2}" xyz="-0.0534774000 -0.0005625750 0.0205961000"/>
+            <mass value="0.969034" />
+            <inertia    ixx="0.0060240000" 
+                        iyy="0.0017000000" 
+                        izz="0.0071620000" 
+                        ixy="0.0000471300" 
+                        ixz="0.0000038510" 
+                        iyz="-0.0000841500" />
+        </inertial>
+    </link>
+
+    <!-- Waist Joint (attaching waist_link and shoulder_link)-->
+    <joint name="waist_joint" type="revolute">
+        <axis xyz="0 0 1"/>
+        <limit effort="100" lower="${-pi}" upper="${pi}" velocity="${pi}"/>
+        <origin rpy="0 0 0" xyz="0 0 0.0787"/>
+        <parent link="$(arg robot_name)/base_link"/>
+        <child link="$(arg robot_name)/shoulder_link"/>
+    </joint>
+
+    <!-- Shoulder Link description-->
+    <link name="$(arg robot_name)/shoulder_link">
+        <visual>
+            <origin rpy="0 0 ${pi/2}" xyz="0 0 -0.003"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-2-Shoulder.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            <material name="interbotix_black"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 ${pi/2}" xyz="0 0 -0.003"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-2-Shoulder.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 0 ${pi/2}" xyz="0.0002592330 -0.0000033552 0.0116129000"/>
+            <mass value="0.798614" />
+            <inertia    ixx="0.0009388000" 
+                        iyy="0.0011380000" 
+                        izz="0.0012010000" 
+                        ixy="-0.0000000010" 
+                        ixz="-0.0000000191" 
+                        iyz="0.0000059568" />
+        </inertial>
+    </link>
+
+    <!-- Shoulder Joint (attaching shoulder_link and upper_arm_link)-->
+    <joint name="shoulder_joint" type="revolute">
+        <axis xyz="0 1 0"/>
+        <limit effort="100" lower="${radians(-106)}" upper="${radians(101)}" velocity="${pi}"/>
+        <origin rpy="0 0 0" xyz="0 0 0.04805"/>
+        <parent link="$(arg robot_name)/shoulder_link"/>
+        <child link="$(arg robot_name)/upper_arm_link"/>
+    </joint>
+    
+
+    <!-- Upper Arm Link description -->
+    <link name="$(arg robot_name)/upper_arm_link">
+        <visual>
+            <origin rpy="0 0 ${pi/2}" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-3-UA.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            <material name="interbotix_black"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 ${pi/2}" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-3-UA.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 0 ${pi/2}" xyz="0.0206949000 0.0000000004 0.2264590000"/>
+            <mass value="0.792592" />
+            <inertia    ixx="0.0089250000" 
+                        iyy="0.0089370000" 
+                        izz="0.0009357000" 
+                        ixy="0.0000000000" 
+                        ixz="0.0000000000" 
+                        iyz="0.0012010000" />
+        </inertial>
+    </link>
+
+    <!-- Elbow Joint (attaching upper_arm_link and upper_forearm_link)-->
+    <joint name="elbow_joint" type="revolute">
+        <axis xyz="0 1 0"/>
+        <limit effort="100" lower="${radians(-92)}" upper="${radians(101)}" velocity="${pi}"/>
+        <origin rpy="${pi} 0 0" xyz="0.05955 0 0.3"/>
+        <parent link="$(arg robot_name)/upper_arm_link"/>
+        <child link="$(arg robot_name)/upper_forearm_link"/>
+    </joint>
+    
+    
+    <!-- Upper Forearm Link description -->
+    <link name="$(arg robot_name)/upper_forearm_link">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-4-UF.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            <material name="interbotix_black"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-4-UF.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 0 0" xyz="0.105723 0 0"/>
+            <mass value="0.322228" />
+            <inertia    ixx="0.0001524000" 
+                        iyy="0.0013420000" 
+                        izz="0.0014410000" 
+                        ixy="-0.0000188300" 
+                        ixz="-0.0000084064" 
+                        iyz="0.0000012564" />
+        </inertial>
+    </link>
+
+    <!-- Upper Forearm Joint (attaching upper_forearm_link and lowe_forearm_link)-->
+    <joint name="upper_forearm_joint" type="revolute">
+        <axis xyz="1 0 0"/>
+        <limit effort="100" lower="${radians(-180)}" upper="${radians(180)}" velocity="${pi}"/>
+        <origin rpy="0 0 0" xyz="0.2 0 0"/>
+        <parent link="$(arg robot_name)/upper_forearm_link"/>
+        <child link="$(arg robot_name)/lower_forearm_link"/>
+    </joint>
+    
+    <!-- Lower Forearm Link description -->
+    <link name="$(arg robot_name)/lower_forearm_link">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-5-LF.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            <material name="interbotix_black"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-5-LF.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 0 0" xyz="0.0513477000 -0.0068046200 0"/>
+            <mass value="0.414823" />
+            <inertia    ixx="0.0001753000" 
+                        iyy="0.0005269000" 
+                        izz="0.0005911000" 
+                        ixy="-0.0000852800" 
+                        ixz="0" 
+                        iyz="0" />
+        </inertial>
+    </link>
+
+    <!-- Lower Forearm Joint (attaching lower_forearm_link and wrist_link)-->
+    <joint name="lower_forearm_joint" type="revolute">
+        <axis xyz="0 1 0"/>
+        <limit effort="100" lower="${radians(-130)}" upper="${radians(107)}" velocity="${pi}"/>
+        <origin rpy="0 0 0" xyz="0.1 0 0"/>
+        <parent link="$(arg robot_name)/lower_forearm_link"/>
+        <child link="$(arg robot_name)/wrist_link"/>
+    </joint>
+    
+    <!-- Wrist Link Description-->
+    <link name="$(arg robot_name)/wrist_link">
+        <visual>
+            <origin rpy="0 ${pi} ${pi/2}" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-6-Wrist.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            <material name="interbotix_black"/>
+        </visual>
+        <collision>
+            <origin rpy="0 ${pi} ${pi/2}" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-6-Wrist.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 ${pi} ${pi/2}" xyz="0.0467430000 0.0000076652 -0.0105650000"/>
+            <mass value="0.115395" />
+            <inertia    ixx="0.0000463100" 
+                        iyy="0.0000451400" 
+                        izz="0.0000527000" 
+                        ixy="0.0000000195" 
+                        ixz="0.0000000023" 
+                        iyz="0.0000042002" />
+        </inertial>
+    </link>
+
+    <!-- Wrist Joint (attaching wrist_link and gripper)-->
+    <joint name="wrist_joint" type="revolute">
+        <axis xyz="1 0 0"/>
+        <limit effort="100" lower="${-pi}" upper="${pi}" velocity="${pi}"/>
+        <origin rpy="${-pi} 0 0" xyz="0.069744 0 0"/>
+        <parent link="$(arg robot_name)/wrist_link"/>
+        <child link="$(arg robot_name)/base_gripper_link"/>
+    </joint>
+    
+    <!-- Base Gripper Link Description-->
+    <link name="$(arg robot_name)/base_gripper_link">
+        <visual>
+            <origin rpy="0 0 ${pi/2}" xyz="-0.02 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-7-Gripper.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            <material name="interbotix_black"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 ${pi/2}" xyz="-0.02 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-7-Gripper.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 0 ${pi/2}" xyz="0.0230010000 0.0000000000 0.0115230000"/>
+            <mass value="0.097666" />
+            <inertia    ixx="0.0000326800" 
+                        iyy="0.0000243600" 
+                        izz="0.0000211900" 
+                        ixy="0.0000000000" 
+                        ixz="0.0000000000" 
+                        iyz="0.0000002785" />
+        </inertial>
+    </link>
+
+    <!-- Fixed joint to End Effector-->
+    <joint name="tcp_joint" type="fixed">
+        <axis xyz="1 0 0"/>
+        <origin rpy="0 0 0" xyz="0.042825 0 0"/>
+        <parent link="$(arg robot_name)/base_gripper_link"/>
+        <child link="$(arg robot_name)/end_effector_link"/>
+    </joint>
+    
+    <!-- End Effector Frame-->
+    <link name="$(arg robot_name)/end_effector_link">
+        <inertial>
+            <mass value="0.001" />
+            <inertia    ixx="0.0001" 
+                        iyy="0.0001" 
+                        izz="0.0001" 
+                        ixy="0" 
+                        ixz="0" 
+                        iyz="0" />
+        </inertial>
+    </link>
+
+    <!-- ############################################################################################# -->
+    <!-- ############################################################################################# -->
+    <!-- ############################################################################################# -->
+    
+    <!-- Joint between EE and Gripper Prop (Prop of gripper motor) -->
+    <joint name="gripper_joint" type="fixed"> <!-- continuous-->
+        <axis xyz="1 0 0"/>
+        <limit effort="100" velocity="${pi}"/>
+        <origin rpy="0 0 0" xyz="0.005675 0 0"/>
+        <parent link="$(arg robot_name)/end_effector_link"/>
+        <child  link="$(arg robot_name)/gripper_prop_link"/>
+    </joint>
+
+    <!-- Gripper Prop Link Description-->
+    <link name="$(arg robot_name)/gripper_prop_link">
+        <visual>
+            <origin rpy="0 0 ${pi/2}" xyz="-0.0685 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-8-Gripper-Prop.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            <material name="interbotix_black"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 ${pi/2}" xyz="-0.0685 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-8-Gripper-Prop.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 0 ${pi/2}" xyz="0.0023780000 0.0000000285 0.0000000000"/>
+            <mass value="0.008009" />
+            <inertia    ixx="0.0000020386" 
+                        iyy="0.0000042979" 
+                        izz="0.0000023796" 
+                        ixy="0.0000000000" 
+                        ixz="0.0000006559" 
+                        iyz="0.0000000000" />
+        </inertial>
+    </link>
+
+    <!-- Gripper Bar Fixed Joint (attaching EE and gripper bar)-->
+    <joint name="gripper_bar_joint" type="fixed">
+        <axis xyz="1 0 0"/>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="$(arg robot_name)/end_effector_link"/>
+        <child link="$(arg robot_name)/gripper_bar_link"/>
+    </joint>
+    
+    <!-- Gripper Bar Link Description-->
+    <link name="$(arg robot_name)/gripper_bar_link">
+        <visual>
+            <origin rpy="0 0 ${pi/2}" xyz="-0.063 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-9-Gripper-Bar.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            <material name="interbotix_black"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 ${pi/2}" xyz="-0.063 0 0"/>
+            <geometry>
+                <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-9-Gripper-Bar.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 0 ${pi/2}" xyz="0.0067940000 -0.0000004272 -0.0007760000"/>
+            <mass value="0.150986" />
+            <inertia    ixx="0.0000789500" 
+                        iyy="0.0003283000" 
+                        izz="0.0003095000" 
+                        ixy="-0.0000000012" 
+                        ixz="0.0000001341" 
+                        iyz="0.0000017465" />
+        </inertial>
+    </link>
+
+    <!-- Fixed joint bewteen bar link and TCP of the bar-->
+    <joint name="tcp_bar" type="fixed">
+        <axis xyz="1 0 0"/>
+        <origin rpy="0 0 0" xyz="0.025875 0 0"/>
+        <parent link="$(arg robot_name)/gripper_bar_link"/>
+        <child link="$(arg robot_name)/tcp_bar_link"/>
+    </joint>
+
+    <!-- TCP of the gripper bar Link Description-->
+    <link name="$(arg robot_name)/tcp_bar_link">
+        <inertial>
+            <mass value="0.001" />
+            <inertia    ixx="0.0001" 
+                        iyy="0.0001" 
+                        izz="0.0001" 
+                        ixy="0.0" 
+                        ixz="0.0" 
+                        iyz="0.0" />
+        </inertial>
+    </link>
+
+    <!-- ############################################################################################# -->
+    <!-- ############################################################################################# -->
+
+    <!-- In case Gripper finger are enabled--> 
+    <xacro:if value="$(arg use_gripper_fingers)">
+        
+        <!-- Left Finger Joint ( Attaching the gripper bar TCP to the left finger link)-->
+        <joint name="left_finger_joint" type="prismatic">
+            <axis xyz="0 1 0"/>
+            <limit effort="10" lower="-0.018" upper="0.018" velocity="1"/>
+            <origin rpy="0 0 0" xyz="0 0.039 0"/>
+            <parent link="$(arg robot_name)/tcp_bar_link"/>
+            <child link="$(arg robot_name)/left_finger_link"/>
+        </joint>
+
+        <!-- Left Finger Link description-->
+        <link name="$(arg robot_name)/left_finger_link">
+            <visual>
+                <origin rpy="${pi/2} ${-pi} ${pi/2}" xyz="-0.0404 -0.0575 0"/>
+                <geometry>
+                    <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-10-Finger.stl" scale="0.001 0.001 0.001"/>
+                </geometry>
+                <material name="interbotix_black"/>
+            </visual>
+            <collision>
+                <origin rpy="${pi/2} ${-pi} ${pi/2}" xyz="-0.0404 -0.0575 0"/>
+                <geometry>
+                    <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-10-Finger.stl" scale="0.001 0.001 0.001"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <origin rpy="${pi} ${pi} ${pi/2}" xyz="0.0173440000 -0.0060692000 0.0000000000"/>
+                <mass value="0.034796" />
+                <inertia    ixx="0.0000243300" 
+                            iyy="0.0000125500" 
+                            izz="0.0000141700" 
+                            ixy="-0.0000024004" 
+                            ixz="0.0000000000" 
+                            iyz="0.0000000000" />
+            </inertial>
+        </link>
+        
+        <!-- Right Finger Joint ( Attaching the gripper bar TCP to the right finger link)-->
+        <joint name="right_finger_joint" type="prismatic">
+            <axis xyz="0 1 0"/>
+            <limit effort="10" lower="-0.018" upper="0.018" velocity="1"/>
+            <origin rpy="0 0 0" xyz="0 -0.039 0"/>
+            <parent link="$(arg robot_name)/tcp_bar_link"/>
+            <child link="$(arg robot_name)/right_finger_link"/>
+            <!-- If gazebo is loaded the mimic feature cant be used -->
+            <xacro:unless value="$(arg load_gazebo)">
+                <mimic joint="left_finger_joint" multiplier="-1" offset="0"/>
+            </xacro:unless>
+            
+        </joint>
+
+        <!-- Right Finger Link description -->
+        <link name="$(arg robot_name)/right_finger_link">
+            <visual>
+                <origin rpy="${-pi/2} ${pi} ${-pi/2}" xyz="-0.0404 0.0575 0 "/>
+                <geometry>
+                    <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-10-Finger.stl" scale="0.001 0.001 0.001"/>
+                </geometry>
+                <material name="interbotix_black"/>
+            </visual>
+            <collision>
+                <origin rpy="${-pi/2} ${pi} ${-pi/2}" xyz="-0.0404 0.0575 0 "/>
+                <geometry>
+                    <mesh filename="package://manipulator_unal_description/meshes/VXSA-300-M-10-Finger.stl" scale="0.001 0.001 0.001"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <origin rpy="0 ${pi} ${pi/2}" xyz="0.0173440000 0.0060692000  0.0000000000"/>
+                <mass value="0.034796" />
+                <inertia    ixx="0.0000243300" 
+                            iyy="0.0000125500" 
+                            izz="0.0000141700" 
+                            ixy="0.0000024001" 
+                            ixz="0.0000000000" 
+                            iyz="0.0000000000" />
+            </inertial>
+        </link>
+
+        <!-- Fixed joint attaching the gripper bar TCP frame to the gripper TCP-->
+        <joint name="tcp_gripper_joint" type="fixed">
+            <axis xyz="1 0 0"/>
+            <origin rpy="0 0 0" xyz="0.0385 0 0"/>
+            <parent link="$(arg robot_name)/tcp_bar_link"/>
+            <child link="$(arg robot_name)/tcp_gripper_link"/>
+        </joint>
+
+        <!-- Gripper TCP Link description-->
+        <link name="$(arg robot_name)/tcp_gripper_link">
+            <inertial>
+                <mass value="0.001" />
+                <inertia    ixx="0.0001" 
+                            iyy="0.0001" 
+                            izz="0.0001" 
+                            ixy="0" 
+                            ixz="0" 
+                            iyz="0" />
+            </inertial>
+        </link>
+
+    </xacro:if>
+
+    <!-- ############################################################################################# -->
+    <!-- ############################################################################################# -->
+    <!-- ############################################################################################# -->
+    <!-- Include Transmission -->
+    <xacro:if value="$(arg load_transmission)">
+        <xacro:include filename="$(find manipulator_unal_description)/urdf/manipulator_transmission.urdf.xacro" />
+    </xacro:if>
+
+    <!-- Include Gazebo -->
+    <xacro:if value="$(arg load_gazebo)">
+        <xacro:include filename="$(find manipulator_unal_description)/urdf/manipulator.gazebo.xacro" />
+    </xacro:if>
+
+</robot>

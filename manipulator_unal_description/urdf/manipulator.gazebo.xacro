@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+
+<robot name="vx300s_gazebo" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <!-- If not using mobile manipulator load Plugin-->
+    <xacro:if value="$(arg world_frame)">
+        <gazebo>
+            <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+                <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+            </plugin>
+        </gazebo>
+    </xacro:if>
+    
+    <gazebo reference="$(arg robot_name)/base_link">
+        <material>Gazebo/Black</material>
+        <selfCollide>True</selfCollide>
+    </gazebo>
+
+    <gazebo reference="$(arg robot_name)/shoulder_link">>
+        <material>Gazebo/Blue</material>
+        <selfCollide>True</selfCollide>
+    </gazebo>
+
+    <gazebo reference="$(arg robot_name)/upper_arm_link">
+        <material>Gazebo/DarkGrey</material>
+        <selfCollide>True</selfCollide>
+    </gazebo>
+
+    <gazebo reference="$(arg robot_name)/upper_forearm_link">
+        <material>Gazebo/Orange</material>
+        <selfCollide>True</selfCollide>
+    </gazebo>
+
+    <gazebo reference="$(arg robot_name)/lower_forearm_link">
+        <material>Gazebo/Grey</material>
+        <selfCollide>True</selfCollide>
+    </gazebo>
+
+    <gazebo reference="$(arg robot_name)/wrist_link">
+        <material>Gazebo/Indigo</material>
+        <selfCollide>True</selfCollide>
+    </gazebo>
+
+    <gazebo reference="$(arg robot_name)/base_gripper_link">
+        <material>Gazebo/Black</material>
+        <selfCollide>True</selfCollide>   
+    </gazebo>
+
+    <gazebo reference="$(arg robot_name)/gripper_bar_link">
+        <material>Gazebo/Green</material>
+        <selfCollide>True</selfCollide>   
+    </gazebo>
+
+    <gazebo reference="$(arg robot_name)/left_finger_link">
+        <material>Gazebo/Red</material>
+        <selfCollide>True</selfCollide>   
+    </gazebo>
+
+    <gazebo reference="$(arg robot_name)/right_finger_link">
+        <material>Gazebo/Red</material>
+        <selfCollide>True</selfCollide>   
+    </gazebo>
+
+    <!--  disableFixedJointLumping  
+    <gazebo reference="tcp_joint">
+        <disableFixedJointLumping>true</disableFixedJointLumping>
+    </gazebo>
+    
+    <gazebo reference="gripper_bar_joint">
+        <disableFixedJointLumping>true</disableFixedJointLumping>
+    </gazebo>
+    
+    <gazebo reference="tcp_bar">
+        <disableFixedJointLumping>true</disableFixedJointLumping>
+    </gazebo>
+    
+    <gazebo reference="tcp_gripper_joint">
+        <disableFixedJointLumping>true</disableFixedJointLumping>
+    </gazebo>
+    -->
+
+</robot>

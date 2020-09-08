@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<robot name="manipulator" xmlns:xacro="http://wiki.ros.org/xacro">
+    <xacro:arg name="robot_name" default = "manipulator"/>
+    <xacro:arg name="load_transmission" default="true"/>
+    <xacro:arg name="load_gazebo" default="true"/>
+    <xacro:arg name="use_gripper_fingers" default="true"/>
+    <xacro:arg name="mobile_manipulator" default="false"/>
+    <xacro:arg name="world_frame" default="true"/>
+
+    <xacro:include filename="$(find manipulator_unal_description)/urdf/manipulator.urdf.xacro" />
+</robot>

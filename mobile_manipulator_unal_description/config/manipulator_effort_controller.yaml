@@ -1,0 +1,39 @@
+# Effort Controller
+waist_controller:
+  type: effort_controllers/JointEffortController
+  joint: waist_joint
+
+# Effort Controller
+shoulder_controller:
+  type: effort_controllers/JointEffortController
+  joint: shoulder_joint
+
+# Effort Controller
+elbow_controller:
+  type: effort_controllers/JointEffortController
+  joint: elbow_joint
+    
+# Effort Controller
+upper_forearm_controller:
+  type: effort_controllers/JointEffortController
+  joint: upper_forearm_joint
+
+# Effort Controller
+lower_forearm_controller:
+  type: effort_controllers/JointEffortController
+  joint: lower_forearm_joint
+
+# Effort Controller
+wrist_controller:
+  type: effort_controllers/JointEffortController
+  joint: wrist_joint
+
+# Effort Trajectory Controller
+gripper_controller:
+  type: effort_controllers/JointTrajectoryController
+  joints:
+    - left_finger_joint
+    - right_finger_joint
+  gains:
+    left_finger_joint: {p: 100.0,  d: 1.0, i: 0.0}
+    right_finger_joint: {p: 100.0,  d: 1.0, i: 0.0}

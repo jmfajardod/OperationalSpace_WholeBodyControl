@@ -1,0 +1,34 @@
+# Publish all joint states
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 100
+
+# Effort Trajectory Controller
+waist_controller:
+  type: effort_controllers/JointEffortController
+  joint: waist_joint
+
+# Effort Trajectory Controller
+shoulder_controller:
+  type: effort_controllers/JointEffortController
+  joint: shoulder_joint
+
+# Effort Trajectory Controller
+elbow_controller:
+  type: effort_controllers/JointEffortController
+  joint: elbow_joint
+    
+# Effort Trajectory Controller
+upper_forearm_controller:
+  type: effort_controllers/JointEffortController
+  joint: upper_forearm_joint
+
+# Effort Trajectory Controller
+lower_forearm_controller:
+  type: effort_controllers/JointEffortController
+  joint: lower_forearm_joint
+
+# Effort Trajectory Controller
+wrist_controller:
+  type: effort_controllers/JointEffortController
+  joint: wrist_joint

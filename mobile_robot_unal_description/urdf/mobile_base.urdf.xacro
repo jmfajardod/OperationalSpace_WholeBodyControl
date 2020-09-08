@@ -1,0 +1,200 @@
+<?xml version="1.0"?>
+<robot name="robotino" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:arg name="robot_name" default = "mobile_robot"/>
+    <xacro:arg name="load_transmission" default="true"/>
+    <xacro:arg name="load_gazebo" default="true"/>
+    <xacro:arg name="mobile_manipulator" default="false"/>
+    <xacro:arg name="world_frame" default="true"/>
+
+    <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0"/>
+    </material>
+
+    <link name="$(arg robot_name)/base_footprint"/>
+
+    <!-- Fixed Joint between Base_footprint and Robot Base-->
+    <joint name="base_fixed_joint" type="fixed">
+        <parent link="$(arg robot_name)/base_footprint"/>
+        <child link="$(arg robot_name)/mobile_base_link"/>
+    </joint>
+
+    <!-- Base Link description -->
+    <link name="$(arg robot_name)/mobile_base_link">
+        <visual>
+            <origin xyz="0 0 0.035" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://mobile_robot_unal_description/meshes/Robotino3_SplitMain.dae" scale="0.01 0.01 0.01"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.035" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://mobile_robot_unal_description/meshes/Robotino3_SplitMain.dae" scale="0.01 0.01 0.01"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 0 0" xyz="0.002288 0.045646 0.074145"/>
+            <mass value="20.0" />
+            <inertia    ixx="0.258839226" 
+                        iyy="0.394929953" 
+                        izz="0.426951301" 
+                        ixy="0.002668446" 
+                        ixz="-0.005336891" 
+                        iyz="0.005336891" />
+        </inertial>
+    </link>
+
+    <!-- Wheel 0 Joint (attaching mobile_base_link and wheel0_link)-->
+    <joint name="wheel0_joint" type="continuous">
+        <parent link="$(arg robot_name)/mobile_base_link"/>
+        <child link="$(arg robot_name)/wheel0_link"/>
+        <origin xyz="-0.0001 0.1825 0.059154" rpy="0 0 0"/>
+        <axis xyz="0 1 0" rpy="0 0 0"/>	
+        <limit effort="200.0" velocity="23.5"/>
+    </joint>
+
+    <!-- Wheel0 Link description -->
+    <link name="$(arg robot_name)/wheel0_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://mobile_robot_unal_description/meshes/Robotino3_SplitWheel.dae" scale="0.01 0.01 0.01"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+            <geometry>
+                <!-- <mesh filename="package://mobile_robot_unal_description/meshes/Robotino3_SplitWheel.dae" scale="0.01 0.01 0.01"/> -->
+                <!-- <cylinder radius="0.06" length="0.052"/> -->
+                <sphere radius="0.06"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 0 0" xyz="0.000091 -0.000123 -0.000182"/>
+            <mass value="0.315" />
+            <inertia    ixx="0.000353139" 
+                        iyy="0.000706278" 
+                        izz="0.000353139" 
+                        ixy="0.0" 
+                        ixz="0.0" 
+                        iyz="0.0" />
+        </inertial>
+    </link>
+
+    <!-- Wheel 1 Joint (attaching mobile_base_link and wheel1_link)-->
+    <joint name="wheel1_joint" type="continuous">
+        <parent link="$(arg robot_name)/mobile_base_link"/>
+        <child link="$(arg robot_name)/wheel1_link"/>
+        <origin xyz="-0.157067 -0.090625 0.059154" rpy="0 0 2.094395102393195"/>
+        <axis xyz="0 1 0" rpy="0 0 0"/>	
+        <limit effort="200.0" velocity="23.5"/>
+    </joint>
+
+
+    <!-- Wheel1 Link description -->
+    <link name="$(arg robot_name)/wheel1_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://mobile_robot_unal_description/meshes/Robotino3_SplitWheel.dae" scale="0.01 0.01 0.01"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+            <geometry>
+                <!-- <mesh filename="package://mobile_robot_unal_description/meshes/Robotino3_SplitWheel.dae" scale="0.01 0.01 0.01"/> -->
+                <!-- <cylinder radius="0.06" length="0.052"/> -->
+                <sphere radius="0.06"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 0 0" xyz="0.000091 -0.000123 -0.000182"/>
+            <mass value="0.315" />
+            <inertia    ixx="0.000353139" 
+                        iyy="0.000706278" 
+                        izz="0.000353139" 
+                        ixy="0.0" 
+                        ixz="0.0" 
+                        iyz="0.0" />
+        </inertial>
+    </link>
+
+    <!-- Wheel 2 Joint (attaching mobile_base_link and wheel2_link)-->
+    <joint name="wheel2_joint" type="continuous">
+        <parent link="$(arg robot_name)/mobile_base_link"/>
+        <child link="$(arg robot_name)/wheel2_link"/>
+        <origin xyz="0.156867 -0.090625 0.059154" rpy="0 0 -2.094395102393195"/>
+        <axis xyz="0 1 0" rpy="0 0 0"/>	
+        <limit effort="200.0" velocity="23.5"/>
+    </joint>  
+
+    <!-- Wheel2 Link description -->
+    <link name="$(arg robot_name)/wheel2_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://mobile_robot_unal_description/meshes/Robotino3_SplitWheel.dae" scale="0.01 0.01 0.01"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+            <geometry>
+                <!-- <mesh filename="package://mobile_robot_unal_description/meshes/Robotino3_SplitWheel.dae" scale="0.01 0.01 0.01"/> -->
+                <!-- <cylinder radius="0.06" length="0.052"/> -->
+                <sphere radius="0.06"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 0 0" xyz="0.000091 -0.000123 -0.000182"/>
+            <mass value="0.315" />
+            <inertia    ixx="0.000353139" 
+                        iyy="0.000706278" 
+                        izz="0.000353139" 
+                        ixy="0.0" 
+                        ixz="0.0" 
+                        iyz="0.0" />
+        </inertial>
+    </link>
+
+    <!-- #################################################################################### -->
+    <!-- Platform to attach manipulator-->
+    <xacro:if value="$(arg mobile_manipulator)">
+        
+        <!-- Platform Joint (attaching mobile_base_link and wheel2_link)-->
+        <joint name="platform_joint" type="fixed">
+            <parent link="$(arg robot_name)/mobile_base_link"/>
+            <child link="$(arg robot_name)/platform_link"/>
+            <origin xyz="0.0 0.0 0.32" rpy="0.0 0.0 0.0"/>
+        </joint>  
+        
+        <link name="$(arg robot_name)/platform_link">
+            <visual>
+                <origin xyz="0.0 0.0 -0.02" rpy="0.0 0.0 0.0"/>
+                <geometry>
+                    <cylinder radius="0.2" length="0.04"/>
+                </geometry>
+                <material name="grey">
+                    <color rgba="0.5 0.5 0.5 1.0"/>
+                </material>
+            </visual>
+        </link>
+        
+        <!-- Load Manipulator -->
+        <xacro:include filename="$(find manipulator_unal_description)/urdf/manipulator.urdf.xacro" />
+        
+    </xacro:if>
+
+    <!-- #################################################################################### -->
+    <!-- Include Transmission -->
+    <xacro:if value="$(arg load_transmission)">
+        <xacro:include filename="$(find mobile_robot_unal_description)/urdf/mobile_base_transmission.urdf.xacro" />
+    </xacro:if>
+
+    <!-- Include Gazebo -->
+    <xacro:if value="$(arg load_gazebo)">
+        <xacro:include filename="$(find mobile_robot_unal_description)/urdf/mobile_base.gazebo.xacro" />
+    </xacro:if>
+
+</robot>

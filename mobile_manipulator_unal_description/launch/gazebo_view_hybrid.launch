@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- Arg to change robot name and be able to spawn multiple robots-->
+    <arg name="robot_name" default="mobile_manipulator"/>
+    <arg name="use_transmissions" default="true"/>
+    <arg name="use_gazebo" default="true"/>
+    <arg name="mobile_manipulator" default="true" />
+    <arg name="world_frame" default="false" />
+    <arg name="use_gripper" default="true"/>
+
+    <!-- Load the urdf into the parameter server. -->
+    <arg name="robot_xacro" value="$(find mobile_robot_unal_description)/urdf/mobile_base.urdf.xacro
+                                    robot_name:=$(arg robot_name)
+                                    load_transmission:=$(arg use_transmissions)
+                                    load_gazebo:=$(arg use_gazebo)
+                                    mobile_manipulator:=$(arg mobile_manipulator)
+                                    world_frame:=$(arg world_frame)
+                                    use_gripper_fingers:=$(arg use_gripper)"/>
+
+    <param 
+        name="$(arg robot_name)/robot_description"  
+        command="$(find xacro)/xacro --inorder $(arg robot_xacro)" 
+    />
+
+    <!-- ************************************************************************************************ -->
+    <!-- ************************************************************************************************ -->
+    <!-- Create the Robot State Publisher -->
+    <node 
+        pkg="robot_state_publisher" 
+        type="robot_state_publisher" 
+        name="rob_st_pub" 
+        ns="$(arg robot_name)"
+    />
+
+    <node 
+        pkg="rviz" 
+        type="rviz" 
+        name="rviz_Visualization" 
+        args="-d $(find mobile_manipulator_unal_description)/rviz/config.rviz"
+    />
+
+    <!-- ************************************************************************************************ -->
+    <!-- ************************************************************************************************ -->
+    <!-- Spawn Model in Gazebo-->
+    
+    <!-- Launch Gazebo-->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <!-- <arg name="world_name" value="worlds/empty.world"/>  -->
+        <arg name="world_name" value="$(find mobile_robot_unal_description)/worlds/empty_world.world"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="debug" value="false"/>
+        <arg name="paused" value="true"/>
+        <arg name="recording" value="false"/>
+    </include>
+
+    <!-- Robot initial pose -->
+    <arg name="x" default="0.0"/>
+    <arg name="y" default="0.0"/>
+    <arg name="z" default="0.05"/>
+    <arg name="roll" default="0.0"/>
+    <arg name="pitch" default="0.0"/>
+    <arg name="yaw" default="$(eval 0.0 * 3.141592 / 180.0)"/>
+
+    <node 
+        pkg="gazebo_ros" 
+        type="spawn_model" 
+        name="spawn_$(arg robot_name)"  
+        respawn="false"
+        ns="$(arg robot_name)"
+        args="-x $(arg x) -y $(arg y) -z $(arg z)
+            -R $(arg roll) -P $(arg pitch) -Y $(arg yaw)
+            -urdf 
+            -param robot_description
+            -model $(arg robot_name)"
+    />
+
+    <!-- ************************************************************************************************ -->
+    <!-- ************************************************************************************************ -->
+    <!-- Create controller manager -->
+    
+    <rosparam 
+        file="$(find mobile_manipulator_unal_description)/config/mobile_vel_controller.yaml" 
+        command="load" 
+        ns="$(arg robot_name)"
+    />
+    
+
+    <node
+        name="mobile_robot_ctrller"
+        pkg="controller_manager"
+        type="spawner"
+        respawn="false"
+        output="screen"
+        ns="$(arg robot_name)"
+        args=  "joint_state_controller 
+                wheel0_controller
+                wheel1_controller
+                wheel2_controller"
+    />
+
+    <!--  Tracjectory controller
+
+    <rosparam 
+        file="$(find mobile_manipulator_unal_description)/config/trajectory_controller.yaml" 
+        command="load" 
+        ns="$(arg robot_name)"
+    />
+    
+    <node
+        name="manipulator_ctrller"
+        pkg="controller_manager"
+        type="spawner"
+        respawn="false"
+        output="screen"
+        ns="$(arg robot_name)"
+        args=  "arm_controller
+                gripper_controller"
+    />
+    -->
+
+    <!-- Effort Controller-->
+
+    <rosparam 
+        file="$(find mobile_manipulator_unal_description)/config/manipulator_effort_controller.yaml" 
+        command="load" 
+        ns="$(arg robot_name)"
+    />
+
+    <node
+        name="manipulator_ctrller"
+        pkg="controller_manager"
+        type="spawner"
+        respawn="false"
+        output="screen"
+        ns="$(arg robot_name)"
+        args=  "waist_controller
+                shoulder_controller
+                elbow_controller
+                upper_forearm_controller
+                lower_forearm_controller
+                wrist_controller
+                gripper_controller"
+    />
+
+    <!-- ************************************************************ -->
+    <!-- Launch Odometry node -->
+    <node pkg="mobile_robot_unal_description" type="odometry_node" name="odom" ns="mobile_manipulator" output="log">
+        <param name="input_frame" value="odom"/>
+        <param name="output_frame" value="base_footprint"/>
+        <param name="robot_name" value="mobile_manipulator"/>
+        <param name="initial_x" value="0.0"/>
+        <param name="initial_y" value="0.0"/>
+        <param name="initial_theta" value="$(eval 0.0 * 3.141592 / 180.0)"/>
+    </node>
+
+</launch>

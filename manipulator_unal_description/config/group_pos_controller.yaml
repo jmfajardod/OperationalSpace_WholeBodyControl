@@ -1,0 +1,36 @@
+# Publish all joint states
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 100
+
+arm_controller:
+  type: effort_controllers/JointGroupPositionController
+  joints:
+    - waist_joint
+    - shoulder_joint
+    - elbow_joint
+    - upper_forearm_joint
+    - lower_forearm_joint
+    - wrist_joint
+  waist_joint:
+    pid: {p: 100.0,  d: 1.0, i: 5.0, antiwindup: true, i_clamp_max: 10.0, i_clamp_min: -10.0}
+  shoulder_joint:
+    pid: {p: 100.0,  d: 1.0, i: 5.0}
+  elbow_joint:
+    pid: {p: 100.0,  d: 1.0, i: 5.0}
+  upper_forearm_joint:
+    pid: {p: 100.0,  d: 1.0, i: 5.0}
+  lower_forearm_joint:
+    pid: {p: 100.0,  d: 1.0, i: 5.0}
+  wrist_joint:
+    pid: {p: 100.0,  d: 1.0, i: 5.0}
+
+# Effort Trajectory Controller
+gripper_controller:
+  type: effort_controllers/JointTrajectoryController
+  joints:
+    - left_finger_joint
+    - right_finger_joint
+  gains:
+    left_finger_joint: {p: 100.0,  d: 1.0, i: 0.0}
+    right_finger_joint: {p: 100.0,  d: 1.0, i: 0.0}

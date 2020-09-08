@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<launch>
+    
+    <!-- Launch Gazebo-->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="worlds/empty.world"/> 
+        <arg name="use_sim_time" value="true"/>
+        <arg name="debug" value="false"/>
+        <arg name="paused" value="true"/>
+        <arg name="recording" value="false"/>
+    </include>
+
+    <!-- Launch RViz-->
+    <node 
+        pkg="rviz" 
+        type="rviz" 
+        name="rviz_Visualization" 
+        args="-d $(find mobile_manipulator_unal_description)/rviz/multiple_robots_config.rviz"
+    />
+
+    <!-- ************************************************************************************************ -->
+    <!-- Spawn Model in Gazebo-->
+    <include file="$(find mobile_manipulator_unal_description)/launch/spawn_model.launch">
+        <arg name="robot_name" value="mobile_manipulator"/>
+        <arg name="x" default="-1.0"/>
+        <arg name="y" default="0.0"/>
+        <arg name="yaw" default="$(eval -90.0 * 3.141592 / 180.0)"/>
+    </include>
+
+    <!-- Launch Odometry node -->
+    <node pkg="mobile_robot_unal_description" type="odometry_node" name="odom" ns="mobile_manipulator" output="screen">
+        <param name="input_frame" value="odom"/>
+        <param name="output_frame" value="base_footprint"/>
+        <param name="robot_name" value="mobile_manipulator"/>
+        <param name="initial_x" value="-1.0"/>
+        <param name="initial_y" value="0.0"/>
+        <param name="initial_theta" value="$(eval -90.0 * 3.141592 / 180.0)"/>
+    </node>
+
+    <!-- ************************************************************************************************ -->
+    <!-- Spawn Model in Gazebo-->
+    <include file="$(find mobile_manipulator_unal_description)/launch/spawn_model.launch">
+        <arg name="robot_name" value="mobile_manipulator2"/>
+        <arg name="x" default="1.0"/>
+        <arg name="y" default="0.0"/>
+        <arg name="yaw" default="3.14"/>
+    </include>
+
+    <!-- Launch Odometry node -->
+    <node pkg="mobile_robot_unal_description" type="odometry_node" name="odom" ns="mobile_manipulator2" output="screen">
+        <param name="input_frame" value="odom"/>
+        <param name="output_frame" value="base_footprint"/>
+        <param name="robot_name" value="mobile_manipulator2"/>
+        <param name="initial_x" value="1.0"/>
+        <param name="initial_y" value="0.0"/>
+        <param name="initial_theta" value="3.14"/>
+    </node>
+
+    <!-- ************************************************************************************************ -->
+    <!-- Spawn Model in Gazebo-->
+    <include file="$(find mobile_manipulator_unal_description)/launch/spawn_model.launch">
+        <arg name="robot_name" value="mobile_manipulator3"/>
+        <arg name="x" default="-1.0"/>
+        <arg name="y" default="2.0"/>
+        <arg name="yaw" default="$(eval 0.0 * 3.141592 / 180.0)"/>
+    </include>
+
+    <!-- Launch Odometry node -->
+    <node pkg="mobile_robot_unal_description" type="odometry_node" name="odom" ns="mobile_manipulator3" output="screen">
+        <param name="input_frame" value="odom"/>
+        <param name="output_frame" value="base_footprint"/>
+        <param name="robot_name" value="mobile_manipulator3"/>
+        <param name="initial_x" value="-1.0"/>
+        <param name="initial_y" value="2.0"/>
+        <param name="initial_theta" value="0.0"/>
+    </node>
+
+    <!-- ************************************************************************************************ -->
+    <!-- Spawn Model in Gazebo-->
+    <include file="$(find mobile_manipulator_unal_description)/launch/spawn_model.launch">
+        <arg name="robot_name" value="mobile_manipulator4"/>
+        <arg name="x" default="1.0"/>
+        <arg name="y" default="2.0"/>
+        <arg name="yaw" default="$(eval 180.0 * 3.141592 / 180.0)"/>
+    </include>
+
+    <!-- Launch Odometry node -->
+    <node pkg="mobile_robot_unal_description" type="odometry_node" name="odom" ns="mobile_manipulator4" output="screen">
+        <param name="input_frame" value="odom"/>
+        <param name="output_frame" value="base_footprint"/>
+        <param name="robot_name" value="mobile_manipulator4"/>
+        <param name="initial_x" value="1.0"/>
+        <param name="initial_y" value="2.0"/>
+        <param name="initial_theta" value="$(eval 180.0 * 3.141592 / 180.0)"/>
+    </node>
+
+</launch>    

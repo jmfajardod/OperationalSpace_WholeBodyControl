@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- Arg to change robot name and be able to spawn multiple robots-->
+    <arg name="robot_name" default="Robot1"/>
+    <arg name="use_transmissions" default="true"/>
+    <arg name="use_gazebo" default="true"/>
+    <arg name="use_gripper" default="true"/>
+
+    <!-- Load the urdf into the parameter server. -->
+    <arg name="robot_xacro" value="$(find manipulator_unal_description)/urdf/manipulator.urdf.xacro
+                                    robot_name:=$(arg robot_name)
+                                    load_transmission:=$(arg use_transmissions)
+                                    load_gazebo:=$(arg use_gazebo)
+                                    use_gripper_fingers:=$(arg use_gripper)"/>
+
+    <param name="$(arg robot_name)/robot_description"  command="$(find xacro)/xacro --inorder $(arg robot_xacro)" />
+    <param name="robot_description"  command="$(find xacro)/xacro --inorder $(arg robot_xacro)" />
+
+    <!-- ************************************************************************************************ -->
+    <!-- ************************************************************************************************ -->
+    <!-- Create the Robot State Publisher -->
+    <node 
+        pkg="robot_state_publisher" 
+        type="robot_state_publisher" 
+        name="rob_st_pub" 
+        ns="$(arg robot_name)"
+    />
+
+    <node 
+        pkg="rviz" 
+        type="rviz" 
+        name="rviz_Visualization" 
+        args="-d $(find manipulator_unal_description)/rviz/config.rviz"
+    />
+
+    <!-- ************************************************************************************************ -->
+    <!-- ************************************************************************************************ -->
+    <!-- Spawn Model in Gazebo-->
+    
+    <!-- Launch Gazebo-->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="worlds/empty.world"/> 
+        <arg name="use_sim_time" value="true"/>
+        <arg name="debug" value="false"/>
+        <arg name="paused" value="true"/>
+        <arg name="recording" value="false"/>
+    </include>
+
+    <!-- Robot initial pose -->
+    <arg name="x" default="0.0"/>
+    <arg name="y" default="0.0"/>
+    <arg name="z" default="0.01"/>
+    <arg name="roll" default="0.0"/>
+    <arg name="pitch" default="0.0"/>
+    <arg name="yaw" default="$(eval 90.0 * 3.141592 / 180.0)"/>
+
+    <node 
+        pkg="gazebo_ros" 
+        type="spawn_model" 
+        name="spawn_$(arg robot_name)"  
+        respawn="false"
+        ns="$(arg robot_name)"
+        args="-x $(arg x) -y $(arg y) -z $(arg z)
+            -R $(arg roll) -P $(arg pitch) -Y $(arg yaw)
+            -urdf 
+            -param robot_description
+            -model $(arg robot_name)"
+    />
+    
+
+    <!-- ************************************************************************************************ -->
+    <!-- ************************************************************************************************ -->
+    <!-- Create controller manager -->
+    
+    <rosparam 
+        file="$(find manipulator_unal_description)/config/controller.yaml" 
+        command="load" 
+        ns="$(arg robot_name)"
+    />
+
+    <node
+        name="Robot_ctrller"
+        pkg="controller_manager"
+        type="spawner"
+        respawn="false"
+        output="screen"
+        ns="$(arg robot_name)"
+        args=  "joint_state_controller 
+                arm_controller
+                gripper_controller"
+    />
+    
+    
+</launch>

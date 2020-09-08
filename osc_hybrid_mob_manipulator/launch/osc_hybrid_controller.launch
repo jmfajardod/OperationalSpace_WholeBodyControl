@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="robot_name" default="mobile_manipulator"/>
+    
+    <!-- Mobile Platform vel publisher -->
+    <include file="$(find robotino_vel_publisher)/launch/global_vel_publisher.launch">
+        <arg name="robot_name" value="$(arg robot_name)"/>
+    </include> 
+    
+    
+    <!-- OSC Controller-->
+    <node pkg="osc_hybrid_mob_manipulator" type="osc_hybrid" name="osc_controller" ns="$(arg robot_name)" output="screen">
+        <rosparam file="$(find osc_hybrid_mob_manipulator)/config/config.yaml" command="load"/>
+    </node>
+
+</launch>

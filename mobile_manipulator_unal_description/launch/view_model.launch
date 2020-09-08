@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<launch>
+    
+    <!-- Arg to change robot name and be able to spawn multiple robots-->
+    <arg name="robot_name" default="mobile_manipulator"/>
+    <arg name="use_transmissions" default="true"/>
+    <arg name="mobile_manipulator" default="true" />
+    <arg name="world_frame" default="false" />
+
+    <!-- Load the urdf into the parameter server. -->
+    <arg name="robot_xacro" value="$(find mobile_robot_unal_description)/urdf/mobile_base.urdf.xacro
+                                    robot_name:=$(arg robot_name)
+                                    load_transmission:=$(arg use_transmissions)
+                                    mobile_manipulator:=$(arg mobile_manipulator)
+                                    world_frame:=$(arg world_frame)"/>
+
+    <param 
+        name="$(arg robot_name)/robot_description"  
+        command="$(find xacro)/xacro --inorder $(arg robot_xacro)" 
+    />
+
+    <!-- ************************************************************************************************ -->
+    <!-- ************************************************************************************************ -->
+    <!-- Create the Robot State Publisher -->
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_st_pub" ns="$(arg robot_name)"/>
+
+    <node pkg="rviz" type="rviz" name="rviz_Visualization" args="-d $(find mobile_manipulator_unal_description)/rviz/config.rviz"/>
+
+    <!-- ************************************************************************************************ -->
+    <!-- ************************************************************************************************ -->
+    <!-- Create Joint State Publisher-->
+
+    <node pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" name="joint" ns="$(arg robot_name)"/>
+    
+
+</launch>

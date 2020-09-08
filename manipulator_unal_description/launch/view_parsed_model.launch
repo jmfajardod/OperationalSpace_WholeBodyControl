@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<launch>
+    
+    <!-- Arg to change robot name and be able to spawn multiple robots-->
+    <arg name="robot_name" default="manipulator"/>
+    <arg name="use_transmissions" default="true"/>
+
+    <!-- Parse URDF xacro and save it to test.urdf-->
+    <node 
+    pkg="xacro" 
+    type="xacro" 
+    name="parser" 
+    args="-o    $(find manipulator_unal_description)/urdf/manipulator.urdf
+                $(find manipulator_unal_description)/urdf/manipulator.xacro"
+    />
+    <!-- Load the urdf into the parameter server. -->
+    <param 
+        name="$(arg robot_name)/robot_description"  
+        textfile="$(find manipulator_unal_description)/urdf/manipulator.urdf"
+    />
+    <!-- ************************************************************************************************ -->
+    <!-- ************************************************************************************************ -->
+    <!-- Create the Robot State Publisher -->
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_st_pub" ns="$(arg robot_name)"/>
+
+    <node pkg="rviz" type="rviz" name="rviz_Visualization" args="-d $(find manipulator_unal_description)/rviz/config.rviz"/>
+
+    <!-- ************************************************************************************************ -->
+    <!-- ************************************************************************************************ -->
+    <!-- Create Joint State Publisher-->
+
+    <node pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" name="joint" ns="$(arg robot_name)"/>
+    
+
+</launch>

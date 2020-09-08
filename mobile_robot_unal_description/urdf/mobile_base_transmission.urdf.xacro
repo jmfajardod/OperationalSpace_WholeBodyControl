@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<robot name="robotino_transmissions" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <!-- Wheel0 Tranmission -->
+    <transmission name="trans_wheel0">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="wheel0_joint">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="wheel0_motor">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+    <!-- Wheel1 Tranmission -->
+    <transmission name="trans_wheel1">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="wheel1_joint">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="wheel1_motor">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+
+    <!-- Wheel2 Tranmission -->
+    <transmission name="trans_wheel2">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="wheel2_joint">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="wheel2_motor">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+</robot>

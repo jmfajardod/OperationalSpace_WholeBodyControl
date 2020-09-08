@@ -1,0 +1,19 @@
+# Publish all joint states
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 100
+
+# Joint Effort Controller
+wheel0_controller:
+  type: effort_controllers/JointEffortController
+  joint: wheel0_joint
+
+# Joint Effort Controller
+wheel1_controller:
+  type: effort_controllers/JointEffortController
+  joint: wheel1_joint
+
+# Joint Effort Controller
+wheel2_controller:
+  type: effort_controllers/JointEffortController
+  joint: wheel2_joint
