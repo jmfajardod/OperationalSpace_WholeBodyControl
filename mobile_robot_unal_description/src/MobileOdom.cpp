@@ -159,6 +159,8 @@ bool MobileOdom::readParameters()
     if (!nodeHandle_.getParam("initial_y", init_y))             return false;
     if (!nodeHandle_.getParam("initial_theta", init_theta))     return false;
 
+    if (!nodeHandle_.getParam("loop_rate", frecuency_rate))     return false;
+
     output_rf = robot_name + "/" + output_rf;  
 
     joint_state_topic = "/" + robot_name + "/joint_states";

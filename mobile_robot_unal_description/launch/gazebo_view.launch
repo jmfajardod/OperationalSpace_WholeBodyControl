@@ -109,6 +109,7 @@
         <param name="initial_x" value="0.0"/>
         <param name="initial_y" value="0.0"/>
         <param name="initial_theta" value="0.0"/>
+        <param name="loop_rate" value="1000"/>
     </node>
 
 </launch>

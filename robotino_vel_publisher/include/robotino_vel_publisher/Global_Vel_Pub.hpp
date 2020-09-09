@@ -74,6 +74,8 @@ private:
     double wheel_radius;
     double wheel_sep;
 
+	int odom_rate;
+
     // Eigen variables
     Eigen::MatrixXd J1;
     Eigen::MatrixXd J2;

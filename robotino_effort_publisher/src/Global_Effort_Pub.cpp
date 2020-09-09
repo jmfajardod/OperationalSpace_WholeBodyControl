@@ -36,7 +36,8 @@ GlobalEffortPub::GlobalEffortPub(ros::NodeHandle& nodeHandle) :
     Jacob_trans(Eigen::MatrixXd::Zero(3,3)),
     tau(Eigen::VectorXd::Zero(3)),
     f(Eigen::VectorXd::Zero(3)),
-    Rot_mat(Eigen::MatrixXd::Zero(3,3))
+    Rot_mat(Eigen::MatrixXd::Zero(3,3)),
+    odom_rate(1000)
 {
     if (!readParameters()) {
         ROS_ERROR("Could not read parameters.");
@@ -110,6 +111,7 @@ bool GlobalEffortPub::readParameters()
     if (!nodeHandle_.getParam("wheel_2_topic", wheel_2_name))   return false;
     if (!nodeHandle_.getParam("wheel_radius", wheel_radius))   return false;
     if (!nodeHandle_.getParam("wheel_sep", wheel_sep))   return false;
+    if (!nodeHandle_.getParam("loop_rate", odom_rate))   return false;
 
     wheel_0_command_topic = "/" + robot_name + "/" + wheel_0_name + "/command";
     wheel_1_command_topic = "/" + robot_name + "/" + wheel_1_name + "/command";
@@ -126,64 +128,66 @@ bool GlobalEffortPub::readParameters()
 void GlobalEffortPub::spin()
 {   
     // Create loop rate object
-    ros::Rate loop_rate(80);
+    ros::Rate loop_rate(odom_rate);
 
     // Create transforms listeners
-    //tf2_ros::TransformListener tfListener(tfBuffer);
+    tf2_ros::TransformListener tfListener(tfBuffer);
     geometry_msgs::TransformStamped transformStamped;
 
     while (ros::ok())
     {
-        tf2_ros::TransformListener tfListener(tfBuffer);
+        //tf2_ros::Buffer tfBuffer;
+        //tf2_ros::TransformListener tfListener(tfBuffer);
+        
         // Get transformation
         try{
-            transformStamped = tfBuffer.lookupTransform(robot_frame,"odom", ros::Time::now(),ros::Duration(1.0));
-            
-            tf2::Quaternion q;
-
-            q.setX(transformStamped.transform.rotation.x);
-            q.setY(transformStamped.transform.rotation.y);
-            q.setZ(transformStamped.transform.rotation.z);
-            q.setW(transformStamped.transform.rotation.w);
-
-            tf2::Matrix3x3 rot_matrix;
-            double roll, pitch, yaw;
-            rot_matrix.setRotation(q);
-            rot_matrix.getRPY(roll, pitch, yaw);
-
-            Rot_mat = Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
-
-            std::cout << "Rot_mat: \n" << Rot_mat << std::endl;
-            std::cout << "Rot_mat inverse: \n" << Rot_mat.inverse() << std::endl;
-            std::cout << "Force Vector Global: \n" << f << std::endl;
-
-            // Pass Force vector from world frame to local robot frame
-            tau = Rot_mat * f;
-
-            std::cout << "Force Vector local: \n" << tau << std::endl;
-
-            // Find torque of wheels
-            tau = Jacob_trans * tau;
-
-            // Create messages
-            std_msgs::Float64 command0;
-            std_msgs::Float64 command1;
-            std_msgs::Float64 command2;
-
-            command0.data = tau(0);
-            command1.data = tau(1);
-            command2.data = tau(2);
-
-            pub_command_wheel_0.publish(command0);
-            pub_command_wheel_1.publish(command1);
-            pub_command_wheel_2.publish(command2);
-
-            std::cout << "Torques: \n" << tau << std::endl;
+            transformStamped = tfBuffer.lookupTransform(robot_frame,"odom", ros::Time::now(),ros::Duration(0.002));
         }
         catch (tf2::TransformException &ex) {
             ROS_WARN("%s",ex.what());
             continue;
         }
+            
+        tf2::Quaternion q;
+
+        q.setX(transformStamped.transform.rotation.x);
+        q.setY(transformStamped.transform.rotation.y);
+        q.setZ(transformStamped.transform.rotation.z);
+        q.setW(transformStamped.transform.rotation.w);
+
+        tf2::Matrix3x3 rot_matrix;
+        double roll, pitch, yaw;
+        rot_matrix.setRotation(q);
+        rot_matrix.getRPY(roll, pitch, yaw);
+
+        Rot_mat = Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+
+        //std::cout << "Rot_mat: \n" << Rot_mat << std::endl;
+        //std::cout << "Rot_mat inverse: \n" << Rot_mat.inverse() << std::endl;
+        //std::cout << "Force Vector Global: \n" << f << std::endl;
+
+        // Pass Force vector from world frame to local robot frame
+        tau = Rot_mat * f;
+
+        //std::cout << "Force Vector local: \n" << tau << std::endl;
+
+        // Find torque of wheels
+        tau = Jacob_trans * tau;
+
+        // Create messages
+        std_msgs::Float64 command0;
+        std_msgs::Float64 command1;
+        std_msgs::Float64 command2;
+
+        command0.data = tau(0);
+        command1.data = tau(1);
+        command2.data = tau(2);
+
+        pub_command_wheel_0.publish(command0);
+        pub_command_wheel_1.publish(command1);
+        pub_command_wheel_2.publish(command2);
+
+        //std::cout << "Torques: \n" << tau << std::endl;
 
         //ROS_INFO("Found transform");
 
