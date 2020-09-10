@@ -9,8 +9,16 @@ As of now the implementation uses a hybrid control, with the stack of tasks for 
 
 ## To create a csv from a rosbag
 
-Run the command
+Run the command:
 
 >
 > <code> rostopic echo -b Odometry.bag -p /gazebo/model_states > gazebo.csv </code>
+>
+
+## To save selected topics for EKF test
+
+Run the command:
+
+>
+> <code> rosbag record /Robotino/commands/velocity /Robotino/odom /clock /gazebo/model_states </code>
 >
