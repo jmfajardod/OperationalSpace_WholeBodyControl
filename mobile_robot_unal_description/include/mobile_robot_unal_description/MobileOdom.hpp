@@ -91,8 +91,8 @@ private:
 	float radius;
 	float wheel_sep;
 
-	int frecuency_rate;
-	int loop_rate;
+	int  frecuency_rate;
+	bool broadcast_tf;
 
 	std::string odometry_topic;
 	nav_msgs::Odometry odom_msg;

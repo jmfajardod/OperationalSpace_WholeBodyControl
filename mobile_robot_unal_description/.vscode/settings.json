@@ -11,6 +11,7 @@
         "matrixf": "cpp",
         "random": "cpp",
         "boundingbox": "cpp",
-        "boundingsphere": "cpp"
+        "boundingsphere": "cpp",
+        "shape": "cpp"
     }
 }

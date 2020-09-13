@@ -5,6 +5,7 @@
     <arg name="robot_name" default="Robotino"/>
     <arg name="use_transmissions" default="true"/>
     <arg name="use_gazebo" default="true"/>
+    <arg name="use_EKF" default="true"/>
 
     <!-- Load the urdf into the parameter server. -->
     <arg name="robot_xacro" value="$(find mobile_robot_unal_description)/urdf/mobile_base.urdf.xacro
@@ -28,6 +29,14 @@
 
     <node 
         pkg="rviz" 
+        if="$(arg use_EKF)"
+        type="rviz" 
+        name="rviz_Visualization" 
+        args="-d $(find mobile_robot_unal_description)/rviz/config_EKF.rviz"
+    />
+    <node 
+        pkg="rviz" 
+        unless="$(arg use_EKF)"
         type="rviz" 
         name="rviz_Visualization" 
         args="-d $(find mobile_robot_unal_description)/rviz/config.rviz"
@@ -110,6 +119,27 @@
         <param name="initial_y" value="0.0"/>
         <param name="initial_theta" value="0.0"/>
         <param name="loop_rate" value="1000"/>
+        <param unless="$(arg use_EKF)" name="broadcast_transform" value="true"/>
+        <param if="$(arg use_EKF)" name="broadcast_transform" value="false"/>
+    </node>
+
+    <!-- ************************************************************************************************ -->
+    <!-- ************************************************************************************************ -->
+    <!-- Launch EKF node -->
+
+    <node if="$(arg use_EKF)" pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf" ns="$(arg robot_name)">
+        <param name="output_frame" value="odom_combined"/>
+        <param name="base_footprint_frame" value="$(arg robot_name)/base_footprint"/>
+        
+        <param name="freq" value="1000"/>
+        <param name="sensor_timeout" value="1.0"/>
+
+        <param name="odom_used" value="true"/>
+        <param name="imu_used" value="true"/>
+        <param name="vo_used" value="false"/>
+        
+        <param name="debug" value="false"/>
+        <param name="self_diagnose" value="false"/>
     </node>
 
 </launch>

@@ -158,6 +158,17 @@
         </inertial>
     </link>
 
+    <!-- IMU Joint (attaching mobile_base_link and imu_link)-->
+    <joint name="imu_joint" type="fixed">
+        <parent link="$(arg robot_name)/mobile_base_link"/>
+        <child link="$(arg robot_name)/imu_link"/>
+        <origin xyz="0.0 -0.06 0.10" rpy="0 0 0"/>
+    </joint>
+
+    <!-- IMU Link description -->
+    <link name="$(arg robot_name)/imu_link"/>
+    
+
     <!-- #################################################################################### -->
     <!-- Platform to attach manipulator-->
     <xacro:if value="$(arg mobile_manipulator)">

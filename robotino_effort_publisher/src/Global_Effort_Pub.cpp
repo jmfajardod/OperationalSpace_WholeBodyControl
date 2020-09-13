@@ -106,6 +106,7 @@ GlobalEffortPub::~GlobalEffortPub()
 bool GlobalEffortPub::readParameters()
 {
     if (!nodeHandle_.getParam("robot_name", robot_name))        return false;
+    if (!nodeHandle_.getParam("odometry_frame", odom_frame))        return false;
     if (!nodeHandle_.getParam("wheel_0_topic", wheel_0_name))   return false;
     if (!nodeHandle_.getParam("wheel_1_topic", wheel_1_name))   return false;
     if (!nodeHandle_.getParam("wheel_2_topic", wheel_2_name))   return false;
@@ -141,7 +142,7 @@ void GlobalEffortPub::spin()
         
         // Get transformation
         try{
-            transformStamped = tfBuffer.lookupTransform(robot_frame,"odom", ros::Time::now(),ros::Duration(0.002));
+            transformStamped = tfBuffer.lookupTransform(robot_frame, odom_frame, ros::Time::now(),ros::Duration(0.002));
         }
         catch (tf2::TransformException &ex) {
             ROS_WARN("%s",ex.what());

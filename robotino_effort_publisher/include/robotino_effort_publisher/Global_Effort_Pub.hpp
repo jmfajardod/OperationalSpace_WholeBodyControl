@@ -65,6 +65,7 @@ private:
 
     std::string robot_name;
 	std::string robot_frame;
+	std::string odom_frame;
     std::string wheel_0_name;
     std::string wheel_1_name;
     std::string wheel_2_name;

@@ -1,4 +1,5 @@
 robot_name: Robotino
+odometry_frame: odom_combined
 wheel_0_topic: wheel0_controller
 wheel_1_topic: wheel1_controller
 wheel_2_topic: wheel2_controller

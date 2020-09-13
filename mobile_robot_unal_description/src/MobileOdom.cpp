@@ -114,6 +114,7 @@ MobileOdom::MobileOdom(ros::NodeHandle& nodeHandle) :
     radius(0.060), 
     wheel_sep(0.1817),
     frecuency_rate(200),
+    broadcast_tf(true),
     scale(0.1),
     J1(Eigen::MatrixXd::Zero(3,3)),
     J2(Eigen::MatrixXd::Identity(3,3)),
@@ -181,7 +182,7 @@ MobileOdom::MobileOdom(ros::NodeHandle& nodeHandle) :
     odom_transform_.transform.rotation.w = q.getW();
 
     // Tf2 broadcaster
-    broadcaster_.sendTransform(odom_transform_); // Broadcast transform
+    if(broadcast_tf)    broadcaster_.sendTransform(odom_transform_); // Broadcast transform
 
     // Odometry msg initialization
     odom_msg.header.frame_id = input_rf;
@@ -236,7 +237,8 @@ bool MobileOdom::readParameters()
     if (!nodeHandle_.getParam("initial_y", init_y))             return false;
     if (!nodeHandle_.getParam("initial_theta", init_theta))     return false;
 
-    if (!nodeHandle_.getParam("loop_rate", frecuency_rate))     return false;
+    if (!nodeHandle_.getParam("loop_rate", frecuency_rate))     ROS_INFO("Frequency not found, default value: %i", frecuency_rate);
+    if (!nodeHandle_.getParam("broadcast_transform", broadcast_tf))     ROS_INFO("Broadcast tf not found, default value: True");
 
     output_rf = robot_name + "/" + output_rf;  
 
@@ -332,7 +334,7 @@ void MobileOdom::spin()
         odom_transform_.transform.rotation.w = tr_mat.getRotation().getW();
 
         // Broadcast tf from robot to odom
-        broadcaster_.sendTransform(odom_transform_);
+        if(broadcast_tf)    broadcaster_.sendTransform(odom_transform_);
 
         // Odometry message 
         odom_msg.header.stamp = ros::Time::now();

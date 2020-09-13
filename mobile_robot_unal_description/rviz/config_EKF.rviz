@@ -117,8 +117,6 @@ Visualization Manager:
           Value: false
         Robotino/wheel2_link:
           Value: false
-        odom:
-          Value: true
         odom_combined:
           Value: true
       Marker Scale: 2
@@ -127,7 +125,7 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        odom:
+        odom_combined:
           Robotino/base_footprint:
             Robotino/mobile_base_link:
               Robotino/imu_link:
@@ -138,15 +136,13 @@ Visualization Manager:
                 {}
               Robotino/wheel2_link:
                 {}
-        odom_combined:
-          {}
       Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: odom
+    Fixed Frame: odom_combined
     Frame Rate: 30
   Name: root
   Tools:
@@ -186,7 +182,7 @@ Visualization Manager:
       Name: Current View
       Near Clip Distance: 0.009999999776482582
       Pitch: 0.9203977584838867
-      Target Frame: odom
+      Target Frame: odom_combined
       Value: XYOrbit (rviz)
       Yaw: 4.703557014465332
     Saved: ~

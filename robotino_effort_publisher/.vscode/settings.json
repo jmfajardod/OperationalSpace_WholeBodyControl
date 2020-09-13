@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "*.cpp": "cpp",
+        "*.world": "xml",
         "cctype": "cpp",
         "clocale": "cpp",
         "cmath": "cpp",
@@ -62,7 +63,11 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "core": "cpp"
+        "core": "cpp",
+        "condition_variable": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "mutex": "cpp"
     },
     "python.autoComplete.extraPaths": [
         "/home/josefajardo/catkin_ws/devel/lib/python2.7/dist-packages",
