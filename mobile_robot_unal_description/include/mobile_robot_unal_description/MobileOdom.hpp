@@ -21,6 +21,8 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2/LinearMath/Quaternion.h>
 
+#include <std_srvs/SetBool.h>
+
 namespace mobile_odometry {
 
 /*!
@@ -53,6 +55,12 @@ private:
 	*	Publisher
 	*/
 	ros::Publisher pub_odom;
+
+	/*
+	*  Service servers
+	*/
+	ros::ServiceServer service_reset_odom_;
+	ros::ServiceServer service_reset_odom_cov_;
 
 	/*!
 	*	TF objects
@@ -119,6 +127,21 @@ private:
 	* Function to refresh publisher and subscribers
 	*/
 	void spin();
+
+	/*!
+	* Service callback function to reset odometry
+	* @param req the request of the service
+	* @param res the reply of the service
+	*/
+	bool reset_odometry(std_srvs::SetBool::Request  &req, std_srvs::SetBool::Response &res);
+
+	/*!
+	* Service callback function to reset odometry covariance
+	* @param req the request of the service
+	* @param res the reply of the service
+	*/
+	bool reset_odom_cov(std_srvs::SetBool::Request  &req, std_srvs::SetBool::Response &res);
+
 };
 
 } /* namespace */

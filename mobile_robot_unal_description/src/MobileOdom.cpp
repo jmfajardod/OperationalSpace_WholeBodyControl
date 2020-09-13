@@ -2,6 +2,9 @@
 
 namespace mobile_odometry {
 
+////////////////////////////////////////////////////////////////////////////////
+// Callback function to obtain the velocity of the wheels
+
 void MobileOdom::Joint_state_Callback_function(const sensor_msgs::JointState jointState){
 
     int counterJoints = 0;
@@ -34,6 +37,74 @@ void MobileOdom::Joint_state_Callback_function(const sensor_msgs::JointState joi
     */
     //ROS_INFO("Velocities %f %f %f", phi_0_dot, phi_1_dot, phi_2_dot);
 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Service to reset odometry
+bool MobileOdom::reset_odometry(std_srvs::SetBool::Request  &req, 
+                                std_srvs::SetBool::Response &res){
+    
+    // Reset tranformation
+    odom_transform_.header.stamp = ros::Time::now();
+    odom_transform_.header.frame_id = input_rf;
+    odom_transform_.child_frame_id  = output_rf;
+    odom_transform_.transform.translation.x = 0.0;
+    odom_transform_.transform.translation.y = 0.0;
+    odom_transform_.transform.translation.z = 0.0;
+    odom_transform_.transform.rotation.x = 0.0;
+    odom_transform_.transform.rotation.y = 0.0;
+    odom_transform_.transform.rotation.z = 0.0;
+    odom_transform_.transform.rotation.w = 1.0;
+
+    // Reset odometry msg 
+    odom_msg.header.frame_id = input_rf;
+    odom_msg.child_frame_id  = output_rf;
+
+    odom_msg.pose.covariance[0]  = 1e-6;
+    odom_msg.pose.covariance[7]  = 1e-6;
+    odom_msg.pose.covariance[14] = 1000.0;
+    odom_msg.pose.covariance[21] = 1000.0;
+    odom_msg.pose.covariance[28] = 1000.0;
+    odom_msg.pose.covariance[35] = 1e-6;
+
+    odom_msg.twist.covariance[0]   = 1e-6;
+    odom_msg.twist.covariance[7]   = 1e-6;
+    odom_msg.twist.covariance[14]  = 1000.0;
+    odom_msg.twist.covariance[21]  = 1000.0;
+    odom_msg.twist.covariance[28]  = 1000.0;
+    odom_msg.twist.covariance[35]  = 1e-6;
+
+    pub_odom.publish(odom_msg);
+
+    res.success = true; 
+
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Service to reset odometry covariance
+bool MobileOdom::reset_odom_cov(std_srvs::SetBool::Request  &req, 
+                                std_srvs::SetBool::Response &res){
+
+    // Odometry msg initialization
+    odom_msg.pose.covariance[0]  = 1e-6;
+    odom_msg.pose.covariance[7]  = 1e-6;
+    odom_msg.pose.covariance[14] = 1000.0;
+    odom_msg.pose.covariance[21] = 1000.0;
+    odom_msg.pose.covariance[28] = 1000.0;
+    odom_msg.pose.covariance[35] = 1e-6;
+
+    odom_msg.twist.covariance[0]   = 1e-6;
+    odom_msg.twist.covariance[7]   = 1e-6;
+    odom_msg.twist.covariance[14]  = 1000.0;
+    odom_msg.twist.covariance[21]  = 1000.0;
+    odom_msg.twist.covariance[28]  = 1000.0;
+    odom_msg.twist.covariance[35]  = 1e-6;
+
+
+    res.success = true; 
+
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,30 +183,36 @@ MobileOdom::MobileOdom(ros::NodeHandle& nodeHandle) :
     // Tf2 broadcaster
     broadcaster_.sendTransform(odom_transform_); // Broadcast transform
 
-    // Joint states subscriber
-    joint_sts_sub_ = nodeHandle_.subscribe(joint_state_topic , 10, 
-                                        &MobileOdom::Joint_state_Callback_function, this);
-
     // Odometry msg initialization
     odom_msg.header.frame_id = input_rf;
     odom_msg.child_frame_id  = output_rf;
 
-    odom_msg.pose.covariance[0]  = 0.0;
-    odom_msg.pose.covariance[7]  = 0.0;
+    odom_msg.pose.covariance[0]  = 1e-6;
+    odom_msg.pose.covariance[7]  = 1e-6;
     odom_msg.pose.covariance[14] = 1000.0;
     odom_msg.pose.covariance[21] = 1000.0;
     odom_msg.pose.covariance[28] = 1000.0;
-    odom_msg.pose.covariance[35] = 0.0;
+    odom_msg.pose.covariance[35] = 1e-6;
 
-    odom_msg.twist.covariance[0]   = 0.0;
-    odom_msg.twist.covariance[7]   = 0.0;
+    odom_msg.twist.covariance[0]   = 1e-6;
+    odom_msg.twist.covariance[7]   = 1e-6;
     odom_msg.twist.covariance[14]  = 1000.0;
     odom_msg.twist.covariance[21]  = 1000.0;
     odom_msg.twist.covariance[28]  = 1000.0;
-    odom_msg.twist.covariance[35]  = 0.0;
+    odom_msg.twist.covariance[35]  = 1e-6;
+
+    // Joint states subscriber
+    joint_sts_sub_ = nodeHandle_.subscribe(joint_state_topic , 10, 
+                                        &MobileOdom::Joint_state_Callback_function, this);
 
     // Odometry topic publisher
     pub_odom= nodeHandle_.advertise<nav_msgs::Odometry>(odometry_topic, 10);
+
+    // Reset odometry service
+    service_reset_odom_ = nodeHandle.advertiseService("reset_odom", &MobileOdom::reset_odometry, this );
+    
+    // Reset odometry covariance
+    service_reset_odom_cov_ = nodeHandle.advertiseService("reset_odom_cov", &MobileOdom::reset_odom_cov, this );
 
     // Call the spin function of this class
     spin();
@@ -267,9 +344,9 @@ void MobileOdom::spin()
         odom_msg.pose.pose.orientation.z = tr_mat.getRotation().getZ();
         odom_msg.pose.pose.orientation.w = tr_mat.getRotation().getW();
 
-        odom_msg.pose.covariance[0]  = scale*x_dot(0)*step_time;
-        odom_msg.pose.covariance[7]  = scale*x_dot(1)*step_time;
-        odom_msg.pose.covariance[35] = scale*x_dot(2)*step_time;
+        odom_msg.pose.covariance[0]  += scale*abs(x_dot(0))*step_time;
+        odom_msg.pose.covariance[7]  += scale*abs(x_dot(1))*step_time;
+        odom_msg.pose.covariance[35] += scale*abs(x_dot(2))*step_time;
 
         odom_msg.twist.twist.linear.x  = x_dot(0);
         odom_msg.twist.twist.linear.y  = x_dot(1);
@@ -278,9 +355,9 @@ void MobileOdom::spin()
         odom_msg.twist.twist.angular.y = 0.0;
         odom_msg.twist.twist.angular.z = x_dot(2);
 
-        odom_msg.twist.covariance[0]  = scale*x_dot(0);
-        odom_msg.twist.covariance[7]  = scale*x_dot(1);
-        odom_msg.twist.covariance[35] = scale*x_dot(2);
+        odom_msg.twist.covariance[0]  = scale*abs(x_dot(0));
+        odom_msg.twist.covariance[7]  = scale*abs(x_dot(1));
+        odom_msg.twist.covariance[35] = scale*abs(x_dot(2));
 
         pub_odom.publish(odom_msg);
         
