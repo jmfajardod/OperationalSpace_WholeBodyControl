@@ -17,6 +17,8 @@
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/Pose.h>
 
+#include<nav_msgs/Odometry.h>
+
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -48,7 +50,8 @@ private:
 	*	Subscribers
 	*/
 	ros::Subscriber subs_cmd_vel_;
-	
+	ros::Subscriber subs_odom_;
+
 	/*
 	* Publisher 
 	*/
@@ -64,10 +67,12 @@ private:
 
     std::string robot_name;
 	std::string robot_frame;
-	std::string odom_frame;
+	std::string odom_topic;
+
     std::string wheel_0_name;
     std::string wheel_1_name;
     std::string wheel_2_name;
+
     std::string wheel_0_command_topic;
     std::string wheel_1_command_topic;
     std::string wheel_2_command_topic;
@@ -86,11 +91,6 @@ private:
     Eigen::VectorXd q_dot;
     Eigen::VectorXd x_dot;
 
-	/*!
-	*	TF objects
-	*/ 
-	tf2_ros::Buffer tfBuffer;
-
 	/*
 	Functions
 	*/
@@ -106,6 +106,12 @@ private:
 	*  @param msg the cmd_vel received
 	*/
 	void Cmd_vel_callback(const geometry_msgs::Twist msg);
+
+	/*!
+	*  ROS topic callback
+	*  @param msg the odometry message received
+	*/
+	void Odom_callback(const nav_msgs::Odometry msg);
     
     /*!
 	* Function to read parameters from server
@@ -113,10 +119,6 @@ private:
 	*/
     bool readParameters();
 
-	/*!
-	* Function that performs the publication of messages
-	*/
-	void spin();
 };
 
 } /* namespace */

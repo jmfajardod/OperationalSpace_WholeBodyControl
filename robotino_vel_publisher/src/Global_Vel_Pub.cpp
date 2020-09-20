@@ -27,6 +27,53 @@ void GlobalVelPub::Cmd_vel_callback(const geometry_msgs::Twist msg){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Callback function of Odometry
+void GlobalVelPub::Odom_callback(const nav_msgs::Odometry msg){
+
+    tf2::Quaternion q;
+
+    q.setX(msg.pose.pose.orientation.x);
+    q.setY(msg.pose.pose.orientation.y);
+    q.setZ(msg.pose.pose.orientation.z);
+    q.setW(msg.pose.pose.orientation.w);
+
+    tf2::Matrix3x3 rot_matrix;
+    double roll, pitch, yaw;
+    rot_matrix.setRotation(q);
+    rot_matrix.getRPY(roll, pitch, yaw);
+
+    Rot_mat = Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+
+    // std::cout << "Rot_mat: \n" << Rot_mat << std::endl;
+    // std::cout << "Rot_mat inverse: \n" << Rot_mat.transpose() << std::endl;
+    // std::cout << "X_dot Global: \n" << x_dot << std::endl;
+
+    // Pass X_dot from world frame to local robot frame
+    q_dot = Rot_mat.transpose() * x_dot;
+
+    // std::cout << "X_dot local: \n" << q_dot << std::endl;
+
+    // Find rotations of wheels
+    q_dot = Jacob_inv * q_dot;
+
+    // Create messages
+    std_msgs::Float64 command0;
+    std_msgs::Float64 command1;
+    std_msgs::Float64 command2;
+
+    command0.data = q_dot(0);
+    command1.data = q_dot(1);
+    command2.data = q_dot(2);
+
+    pub_command_wheel_0.publish(command0);
+    pub_command_wheel_1.publish(command1);
+    pub_command_wheel_2.publish(command2);
+
+    // std::cout << "Q_dot: \n" << q_dot << std::endl;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Constructor
 GlobalVelPub::GlobalVelPub(ros::NodeHandle& nodeHandle) :
     nodeHandle_(nodeHandle),
@@ -82,13 +129,16 @@ GlobalVelPub::GlobalVelPub(ros::NodeHandle& nodeHandle) :
     subs_cmd_vel_= nodeHandle_.subscribe("/"+ robot_name +"/commands/velocity" , 10, 
                                         &GlobalVelPub::Cmd_vel_callback, this);
 
+    subs_odom_= nodeHandle_.subscribe("/"+ robot_name +"/" + odom_topic , 10, 
+                                        &GlobalVelPub::Odom_callback, this);
+
     // Init publisher
     pub_command_wheel_0 = nodeHandle_.advertise<std_msgs::Float64>(wheel_0_command_topic, 10);
     pub_command_wheel_1 = nodeHandle_.advertise<std_msgs::Float64>(wheel_1_command_topic, 10);
     pub_command_wheel_2 = nodeHandle_.advertise<std_msgs::Float64>(wheel_2_command_topic, 10);
     
     // Call the spin function of the class
-    spin();
+    ros::spin();
 
 }
 
@@ -103,7 +153,7 @@ GlobalVelPub::~GlobalVelPub()
 bool GlobalVelPub::readParameters()
 {
     if (!nodeHandle_.getParam("robot_name", robot_name))        return false;
-    if (!nodeHandle_.getParam("odometry_frame", odom_frame))        return false;
+    if (!nodeHandle_.getParam("odometry_topic", odom_topic))        return false;
     if (!nodeHandle_.getParam("wheel_0_topic", wheel_0_name))   return false;
     if (!nodeHandle_.getParam("wheel_1_topic", wheel_1_name))   return false;
     if (!nodeHandle_.getParam("wheel_2_topic", wheel_2_name))   return false;
@@ -120,81 +170,6 @@ bool GlobalVelPub::readParameters()
     ROS_INFO("Robot Frame: %s", robot_frame.c_str());
     
     return true;
-}
-////////////////////////////////////////////////////////////////////////////////
-// Function to publish topic at rate
-void GlobalVelPub::spin()
-{   
-    // Create loop rate object
-    ros::Rate loop_rate(odom_rate);
-
-    // Create transforms listeners
-    tf2_ros::TransformListener tfListener(tfBuffer);
-    geometry_msgs::TransformStamped transformStamped;
-
-    while (ros::ok())
-    {
-        //tf2_ros::Buffer tfBuffer;
-        //tf2_ros::TransformListener tfListener(tfBuffer);
-        
-        // Get transformation
-        try{
-            transformStamped = tfBuffer.lookupTransform(robot_frame,odom_frame, ros::Time::now(), ros::Duration(0.002));
-        }
-        catch (tf2::TransformException &ex) {
-            //ROS_WARN("%s",ex.what());
-            continue;
-        }
-
-        tf2::Quaternion q;
-
-        q.setX(transformStamped.transform.rotation.x);
-        q.setY(transformStamped.transform.rotation.y);
-        q.setZ(transformStamped.transform.rotation.z);
-        q.setW(transformStamped.transform.rotation.w);
-
-        tf2::Matrix3x3 rot_matrix;
-        double roll, pitch, yaw;
-        rot_matrix.setRotation(q);
-        rot_matrix.getRPY(roll, pitch, yaw);
-
-        Rot_mat = Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
-
-        // std::cout << "Rot_mat: \n" << Rot_mat << std::endl;
-        // std::cout << "Rot_mat inverse: \n" << Rot_mat.inverse() << std::endl;
-        // std::cout << "X_dot Global: \n" << x_dot << std::endl;
-
-        // Pass X_dot from world frame to local robot frame
-        q_dot = Rot_mat * x_dot;
-
-        // std::cout << "X_dot local: \n" << q_dot << std::endl;
-
-        // Find rotations of wheels
-        q_dot = Jacob_inv * q_dot;
-
-        // Create messages
-        std_msgs::Float64 command0;
-        std_msgs::Float64 command1;
-        std_msgs::Float64 command2;
-
-        command0.data = q_dot(0);
-        command1.data = q_dot(1);
-        command2.data = q_dot(2);
-
-        pub_command_wheel_0.publish(command0);
-        pub_command_wheel_1.publish(command1);
-        pub_command_wheel_2.publish(command2);
-
-        // std::cout << "Q_dot: \n" << q_dot << std::endl;
-    
-        //ROS_INFO("Found transform");
-
-        // Set time and sleep
-        ros::spinOnce();
-        loop_rate.sleep();
-    }
-    ROS_INFO("Exit spin function");
-    ros::requestShutdown();
 }
 
 } /* namespace */

@@ -261,26 +261,21 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz/XYOrbit
-      Distance: 5.98647928237915
+      Angle: 0
+      Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Focal Point:
-        X: 0.9368258714675903
-        Y: -1.7409453392028809
-        Z: 7.152557373046875e-7
-      Focal Shape Fixed Size: false
-      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.1853975057601929
+      Scale: 38.95976638793945
       Target Frame: odom_combined
-      Value: XYOrbit (rviz)
-      Yaw: 4.6335554122924805
+      Value: TopDownOrtho (rviz)
+      X: 0.8469685912132263
+      Y: -2.878418445587158
     Saved: ~
 Window Geometry:
   Displays:

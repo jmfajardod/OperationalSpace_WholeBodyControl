@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   roscpp
   std_msgs
+  nav_msgs
   tf2
   tf2_ros
 )
@@ -33,6 +34,7 @@ catkin_package(
     geometry_msgs 
     roscpp 
     std_msgs
+    nav_msgs
     tf2
     tf2_ros
   DEPENDS 
