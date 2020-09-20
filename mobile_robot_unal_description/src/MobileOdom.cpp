@@ -120,7 +120,8 @@ MobileOdom::MobileOdom(ros::NodeHandle& nodeHandle) :
     J2(Eigen::MatrixXd::Identity(3,3)),
     Jacob(Eigen::MatrixXd::Zero(3,3)),
     q_dot(Eigen::VectorXd::Zero(3)),
-    x_dot(Eigen::VectorXd::Zero(3))
+    x_dot_local(Eigen::VectorXd::Zero(3)),
+    x_dot_global(Eigen::VectorXd::Zero(3))
 {
     // Read parameters
     if (!readParameters()) {
@@ -276,10 +277,10 @@ void MobileOdom::spin()
 
         //std::cout << "Rotation Matrix: \n" << Rot_mat << std::endl; // For Debug
 
-        x_dot = Jacob * q_dot; // q_dot in Robot(Local) Reference frame
-        x_dot =  Rot_mat * x_dot; // q_dot in Global Reference frame
+        x_dot_local  = Jacob * q_dot; // q_dot in Robot(Local) Reference frame
+        x_dot_global =  Rot_mat * x_dot_local; // q_dot in Global Reference frame
 
-        ROS_INFO("VEL_I: \n %f \n %f \n %f \n", x_dot(0),x_dot(1),x_dot(2));
+        ROS_INFO("VEL_I: \n %f \n %f \n %f \n", x_dot_global(0),x_dot_global(1),x_dot_global(2));
 
         // Find new values of X, Y and Theta
         double step_time = 1.0/double(frecuency_rate);
@@ -288,22 +289,22 @@ void MobileOdom::spin()
         
         //-----------------------------------------------------//
         // Check that x velocity is greater than 0.005 m/s
-        if(abs(x_dot(0))>=0.005){  
-            new_x = odom_transform_.transform.translation.x + x_dot(0)*step_time;
+        if(abs(x_dot_global(0))>=0.005){  
+            new_x = odom_transform_.transform.translation.x + x_dot_global(0)*step_time;
         }
         else{
             new_x = odom_transform_.transform.translation.x;
         }
         //-----------------------------------------------------//
         // Check that y velocity is greater than 0.005 m/s
-        if(abs(x_dot(1))>=0.005){
-            new_y = odom_transform_.transform.translation.y + x_dot(1)*step_time;
+        if(abs(x_dot_global(1))>=0.005){
+            new_y = odom_transform_.transform.translation.y + x_dot_global(1)*step_time;
         }
         else{
             new_y = odom_transform_.transform.translation.y;
         }
         
-        new_theta = yaw + x_dot(2)*step_time;
+        new_theta = yaw + x_dot_global(2)*step_time;
 
         //ROS_INFO("New %f %f %f", new_x, new_y, new_theta);
 
@@ -346,20 +347,20 @@ void MobileOdom::spin()
         odom_msg.pose.pose.orientation.z = tr_mat.getRotation().getZ();
         odom_msg.pose.pose.orientation.w = tr_mat.getRotation().getW();
 
-        odom_msg.pose.covariance[0]  += scale*abs(x_dot(0))*step_time;
-        odom_msg.pose.covariance[7]  += scale*abs(x_dot(1))*step_time;
-        odom_msg.pose.covariance[35] += scale*abs(x_dot(2))*step_time;
+        odom_msg.pose.covariance[0]  += scale*abs(x_dot_global(0))*step_time;
+        odom_msg.pose.covariance[7]  += scale*abs(x_dot_global(1))*step_time;
+        odom_msg.pose.covariance[35] += scale*abs(x_dot_global(2))*step_time;
 
-        odom_msg.twist.twist.linear.x  = x_dot(0);
-        odom_msg.twist.twist.linear.y  = x_dot(1);
+        odom_msg.twist.twist.linear.x  = x_dot_local(0);
+        odom_msg.twist.twist.linear.y  = x_dot_local(1);
         odom_msg.twist.twist.linear.z  = 0.0;
         odom_msg.twist.twist.angular.x = 0.0;
         odom_msg.twist.twist.angular.y = 0.0;
-        odom_msg.twist.twist.angular.z = x_dot(2);
+        odom_msg.twist.twist.angular.z = x_dot_local(2);
 
-        odom_msg.twist.covariance[0]  = scale*abs(x_dot(0));
-        odom_msg.twist.covariance[7]  = scale*abs(x_dot(1));
-        odom_msg.twist.covariance[35] = scale*abs(x_dot(2));
+        odom_msg.twist.covariance[0]  = scale*abs(x_dot_local(0));
+        odom_msg.twist.covariance[7]  = scale*abs(x_dot_local(1));
+        odom_msg.twist.covariance[35] = scale*abs(x_dot_local(2));
 
         pub_odom.publish(odom_msg);
         

@@ -103,7 +103,8 @@ private:
 	Eigen::MatrixXd J2;
 	Eigen::MatrixXd Jacob;
 	Eigen::Matrix3d Rot_mat;
-	Eigen::VectorXd x_dot;
+	Eigen::VectorXd x_dot_local;
+	Eigen::VectorXd x_dot_global;
 	Eigen::VectorXd q_dot;
 
 

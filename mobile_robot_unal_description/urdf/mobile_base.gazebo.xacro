@@ -31,28 +31,10 @@
         <plugin name="imu_plugin" filename="libgazebo_ros_imu.so">
             <alwaysOn>true</alwaysOn>
             <bodyName>$(arg robot_name)/imu_link</bodyName>
-            <frameName>$(arg robot_name)/imu_link</frameName>
             <topicName>imu_data</topicName>
             <serviceName>imu_service</serviceName>
             <gaussianNoise>0.05</gaussianNoise>
-            <updateRate>500</updateRate>
-            <imu>
-                <noise>
-                <type>gaussian</type>
-                <rate>
-                    <mean>0.0</mean>
-                    <stddev>2e-4</stddev>
-                    <bias_mean>0.0000075</bias_mean>
-                    <bias_stddev>0.0000008</bias_stddev>
-                </rate>
-                <accel>
-                    <mean>0.0</mean>
-                    <stddev>1.7e-2</stddev>
-                    <bias_mean>0.1</bias_mean>
-                    <bias_stddev>0.001</bias_stddev>
-                </accel>
-                </noise>
-            </imu>
+            <updateRate>500.0</updateRate>
         </plugin>
     </gazebo>
 
