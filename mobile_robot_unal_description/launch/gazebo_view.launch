@@ -127,6 +127,7 @@
     <!-- ************************************************************************************************ -->
     <!-- Launch EKF node -->
 
+    <!--
     <node if="$(arg use_EKF)" pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf" ns="$(arg robot_name)">
         <param name="output_frame" value="odom"/>
         <param name="base_footprint_frame" value="$(arg robot_name)/base_footprint"/>
@@ -141,6 +142,7 @@
         <param name="debug" value="false"/>
         <param name="self_diagnose" value="false"/>
     </node>
+    -->
 
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true" ns="$(arg robot_name)">
         <rosparam command="load" file="$(find mobile_robot_unal_description)/config/ekf_params.yaml" />

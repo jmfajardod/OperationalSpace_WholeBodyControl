@@ -1,4 +1,5 @@
 robot_name: mobile_manipulator
+odom_topic: odometry/filtered
 manipulator_dof_names: 
   - waist_joint
   - shoulder_joint

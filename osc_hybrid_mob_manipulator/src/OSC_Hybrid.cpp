@@ -140,7 +140,7 @@ OscHybridController::OscHybridController(ros::NodeHandle& nodeHandle) :
     // Create subscribers
     subs_joint_state_= nodeHandle_.subscribe("/"+ robot_name +"/joint_states" , 10, 
                                         &OscHybridController::jointState_CB, this);
-    subs_odometry_   = nodeHandle_.subscribe("/"+ robot_name +"/odom" , 10, 
+    subs_odometry_   = nodeHandle_.subscribe("/"+ robot_name +"/" + odometry_topic , 10, 
                                         &OscHybridController::odometry_CB, this);
     
     
@@ -175,6 +175,7 @@ OscHybridController::~OscHybridController()
 bool OscHybridController::readParameters()
 {
     if (!nodeHandle_.getParam("robot_name", robot_name))        return false;
+    if (!nodeHandle_.getParam("odom_topic", odometry_topic))        return false;
     if (!nodeHandle_.getParam("manipulator_dof_names", manipulator_dofs))        return false;
     if (!nodeHandle_.getParam("manipulator_controllers", manipulator_controllers))        return false;
 
@@ -291,7 +292,7 @@ void OscHybridController::spin(){
 
             }
             
-            effortSolver_.AvoidJointLimits(&tau_zero, &tau_result, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
+            //effortSolver_.AvoidJointLimits(&tau_zero, &tau_result, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
             //std::cout << "Tau result after avoid limits: \n" << tau_result << std::endl;
             
             /********************/

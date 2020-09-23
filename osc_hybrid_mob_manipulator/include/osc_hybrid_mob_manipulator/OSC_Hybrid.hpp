@@ -82,6 +82,8 @@ private:
     std::string robot_name;
 	std::string robot_frame;
 
+	std::string odometry_topic;
+
 	std::vector<std::string> manipulator_dofs;
 	std::vector<std::string> manipulator_controllers;
 
