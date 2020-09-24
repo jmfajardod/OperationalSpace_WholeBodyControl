@@ -7,9 +7,10 @@ Panels:
         - /Global Options1
         - /Status1
         - /TF1
-        - /TF1/Frames1
         - /TF1/Tree1
         - /RobotModel1
+        - /RobotModel1/Links1/Robot1/base_gripper_link1
+        - /RobotModel1/Links1/Robot1/base_gripper_link1/Orientation1
       Splitter Ratio: 0.5
     Tree Height: 416
   - Class: rviz/Selection
@@ -65,11 +66,23 @@ Visualization Manager:
           Value: true
         Robot1/base_link:
           Value: true
+        Robot1/end_effector_link:
+          Value: true
+        Robot1/gripper_bar_link:
+          Value: true
+        Robot1/gripper_prop_link:
+          Value: true
+        Robot1/left_finger_link:
+          Value: true
         Robot1/lower_forearm_link:
+          Value: true
+        Robot1/right_finger_link:
           Value: true
         Robot1/shoulder_link:
           Value: true
-        Robot1/tcp_link:
+        Robot1/tcp_bar_link:
+          Value: true
+        Robot1/tcp_gripper_link:
           Value: true
         Robot1/upper_arm_link:
           Value: true
@@ -93,8 +106,17 @@ Visualization Manager:
                   Robot1/lower_forearm_link:
                     Robot1/wrist_link:
                       Robot1/base_gripper_link:
-                        Robot1/tcp_link:
-                          {}
+                        Robot1/end_effector_link:
+                          Robot1/gripper_bar_link:
+                            Robot1/tcp_bar_link:
+                              Robot1/left_finger_link:
+                                {}
+                              Robot1/right_finger_link:
+                                {}
+                              Robot1/tcp_gripper_link:
+                                {}
+                          Robot1/gripper_prop_link:
+                            {}
       Update Interval: 0
       Value: true
     - Alpha: 0.30000001192092896
@@ -117,7 +139,31 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        Robot1/end_effector_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        Robot1/gripper_bar_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Robot1/gripper_prop_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Robot1/left_finger_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         Robot1/lower_forearm_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Robot1/right_finger_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -127,7 +173,11 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        Robot1/tcp_link:
+        Robot1/tcp_bar_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        Robot1/tcp_gripper_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -184,25 +234,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 0.8918536901473999
+      Distance: 0.8538776636123657
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.20831994712352753
-        Y: -0.08782579004764557
+        X: 0.3203173875808716
+        Y: 0.04467801749706268
         Z: -1.341104507446289e-7
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7053985595703125
+      Pitch: 0.8353984355926514
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 5.26857852935791
+      Yaw: 5.168587684631348
     Saved: ~
 Window Geometry:
   Displays:

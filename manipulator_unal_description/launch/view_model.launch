@@ -12,7 +12,7 @@
 
     <param 
         name="$(arg robot_name)/robot_description"  
-        command="$(find xacro)/xacro --inorder $(arg robot_xacro)" 
+        command="$(find xacro)/xacro $(arg robot_xacro)" 
     />
 
     <!-- ************************************************************************************************ -->

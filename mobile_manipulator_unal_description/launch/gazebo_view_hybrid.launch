@@ -99,7 +99,7 @@
                 wheel2_controller"
     />
 
-    <!--  Tracjectory controller
+    <!--  Trajectory controller
 
     <rosparam 
         file="$(find mobile_manipulator_unal_description)/config/trajectory_controller.yaml" 
