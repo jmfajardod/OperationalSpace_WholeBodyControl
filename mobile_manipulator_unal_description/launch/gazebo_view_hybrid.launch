@@ -20,7 +20,16 @@
 
     <param 
         name="$(arg robot_name)/robot_description"  
-        command="$(find xacro)/xacro --inorder $(arg robot_xacro)" 
+        command="$(find xacro)/xacro $(arg robot_xacro)" 
+    />
+
+    <!-- Parse URDF xacro and save it to a urdf-->
+    <node 
+        pkg="xacro" 
+        type="xacro" 
+        name="parser" 
+        args="$(find mobile_manipulator_unal_description)/urdf/mobile_manipulator.xacro
+              -o $(find mobile_manipulator_unal_description)/urdf/mobile_manipulator.urdf"
     />
 
     <!-- ************************************************************************************************ -->
