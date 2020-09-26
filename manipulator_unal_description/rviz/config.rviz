@@ -6,12 +6,10 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /TF1
-        - /TF1/Tree1
-        - /RobotModel1
+        - /TF1/Frames1
         - /RobotModel1/Links1/Robot1/base_gripper_link1
         - /RobotModel1/Links1/Robot1/base_gripper_link1/Orientation1
-      Splitter Ratio: 0.5
+      Splitter Ratio: 0.7852941155433655
     Tree Height: 416
   - Class: rviz/Selection
     Name: Selection
@@ -67,21 +65,21 @@ Visualization Manager:
         Robot1/base_link:
           Value: true
         Robot1/end_effector_link:
-          Value: true
+          Value: false
         Robot1/gripper_bar_link:
-          Value: true
+          Value: false
         Robot1/gripper_prop_link:
-          Value: true
+          Value: false
         Robot1/left_finger_link:
-          Value: true
+          Value: false
         Robot1/lower_forearm_link:
           Value: true
         Robot1/right_finger_link:
-          Value: true
+          Value: false
         Robot1/shoulder_link:
           Value: true
         Robot1/tcp_bar_link:
-          Value: true
+          Value: false
         Robot1/tcp_gripper_link:
           Value: true
         Robot1/upper_arm_link:
@@ -96,7 +94,7 @@ Visualization Manager:
       Name: TF
       Show Arrows: false
       Show Axes: true
-      Show Names: false
+      Show Names: true
       Tree:
         world:
           Robot1/base_link:
@@ -234,7 +232,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 0.8538776636123657
+      Distance: 0.9289986491203308
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -249,10 +247,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7153985500335693
+      Pitch: 0.6203988194465637
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 5.003586292266846
+      Yaw: 5.128590106964111
     Saved: ~
 Window Geometry:
   Displays:
