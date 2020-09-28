@@ -94,7 +94,7 @@ Visualization Manager:
       Name: TF
       Show Arrows: false
       Show Axes: true
-      Show Names: true
+      Show Names: false
       Tree:
         world:
           Robot1/base_link:
@@ -232,25 +232,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 0.9289986491203308
+      Distance: 0.8175188302993774
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.22097676992416382
-        Y: 0.04544787108898163
+        X: 0.26825064420700073
+        Y: 0.12698416411876678
         Z: -1.341104507446289e-7
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6203988194465637
+      Pitch: 0.5703988671302795
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 5.128590106964111
+      Yaw: 5.0135884284973145
     Saved: ~
 Window Geometry:
   Displays:

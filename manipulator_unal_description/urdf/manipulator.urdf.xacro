@@ -64,7 +64,7 @@
     <!-- Waist Joint (attaching waist_link and shoulder_link)-->
     <joint name="waist_joint" type="revolute">
         <axis xyz="0 0 1"/>
-        <limit effort="100" lower="${-pi}" upper="${pi}" velocity="${pi}"/>
+        <limit  lower="${-pi}" upper="${pi}" velocity="3.1" effort="10.6"/>
         <origin rpy="0 0 0" xyz="0 0 0.0787"/>
         <parent link="$(arg robot_name)/base_link"/>
         <child link="$(arg robot_name)/shoulder_link"/>
@@ -100,7 +100,7 @@
     <!-- Shoulder Joint (attaching shoulder_link and upper_arm_link)-->
     <joint name="shoulder_joint" type="revolute">
         <axis xyz="0 0 1"/>
-        <limit effort="100" lower="${radians(-106)}" upper="${radians(101)}" velocity="${pi}"/>
+        <limit lower="${radians(-106)}" upper="${radians(101)}" velocity="3.1" effort="21.2"/>
         <origin rpy="${-pi/2} 0 0" xyz="0 0 0.04805"/>
         <parent link="$(arg robot_name)/shoulder_link"/>
         <child link="$(arg robot_name)/upper_arm_link"/>
@@ -137,7 +137,7 @@
     <!-- Elbow Joint (attaching upper_arm_link and upper_forearm_link)-->
     <joint name="elbow_joint" type="revolute">
         <axis xyz="0 0 1"/>
-        <limit effort="100" lower="${radians(-92)}" upper="${radians(101)}" velocity="${pi}"/>
+        <limit lower="${radians(-92)}" upper="${radians(101)}" velocity="3.1" effort="21.2" />
         <origin rpy="${pi} 0 ${-pi/2}" xyz="0.05955 -0.3 0.0"/>
         <parent link="$(arg robot_name)/upper_arm_link"/>
         <child link="$(arg robot_name)/upper_forearm_link"/>
@@ -174,7 +174,7 @@
     <!-- Upper Forearm Joint (attaching upper_forearm_link and lowe_forearm_link)-->
     <joint name="upper_forearm_joint" type="revolute">
         <axis xyz="0 0 1"/>
-        <limit effort="100" lower="${radians(-180)}" upper="${radians(180)}" velocity="${pi}"/>
+        <limit lower="${radians(-180)}" upper="${radians(180)}" velocity="3.1" effort="10.6"/>
         <origin rpy="${pi/2} 0 0" xyz="0 -0.2 0"/>
         <parent link="$(arg robot_name)/upper_forearm_link"/>
         <child link="$(arg robot_name)/lower_forearm_link"/>
@@ -210,7 +210,7 @@
     <!-- Lower Forearm Joint (attaching lower_forearm_link and wrist_link)-->
     <joint name="lower_forearm_joint" type="revolute">
         <axis xyz="0 0 1"/>
-        <limit effort="100" lower="${radians(-130)}" upper="${radians(107)}" velocity="${pi}"/>
+        <limit lower="${radians(-130)}" upper="${radians(107)}" velocity="3.1" effort="10.6" />
         <origin rpy="${-pi/2} 0 0" xyz="0 0 0.1"/>
         <parent link="$(arg robot_name)/lower_forearm_link"/>
         <child link="$(arg robot_name)/wrist_link"/>
@@ -246,7 +246,7 @@
     <!-- Wrist Joint (attaching wrist_link and gripper)-->
     <joint name="wrist_joint" type="revolute">
         <axis xyz="0 0 1"/>
-        <limit effort="100" lower="${-pi}" upper="${pi}" velocity="${pi}"/>
+        <limit lower="${-pi}" upper="${pi}" velocity="3.1" effort="4.1"/>
         <origin rpy="${pi/2} ${pi} 0" xyz="0 -0.069744 0"/>
         <parent link="$(arg robot_name)/wrist_link"/>
         <child link="$(arg robot_name)/base_gripper_link"/>
