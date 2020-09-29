@@ -181,7 +181,7 @@
   <!-- Waist Joint (attaching waist_link and shoulder_link)-->
   <joint name="waist_joint" type="revolute">
     <axis xyz="0 0 1"/>
-    <limit effort="100" lower="-3.14159265359" upper="3.14159265359" velocity="3.14159265359"/>
+    <limit effort="10.6" lower="-3.14159265359" upper="3.14159265359" velocity="3.1"/>
     <origin rpy="0 0 0" xyz="0 0 0.0787"/>
     <parent link="mobile_manipulator/base_link"/>
     <child link="mobile_manipulator/shoulder_link"/>
@@ -210,7 +210,7 @@
   <!-- Shoulder Joint (attaching shoulder_link and upper_arm_link)-->
   <joint name="shoulder_joint" type="revolute">
     <axis xyz="0 0 1"/>
-    <limit effort="100" lower="-1.85004900711" upper="1.76278254451" velocity="3.14159265359"/>
+    <limit effort="21.2" lower="-1.85004900711" upper="1.76278254451" velocity="3.1"/>
     <origin rpy="-1.57079632679 0 0" xyz="0 0 0.04805"/>
     <parent link="mobile_manipulator/shoulder_link"/>
     <child link="mobile_manipulator/upper_arm_link"/>
@@ -239,7 +239,7 @@
   <!-- Elbow Joint (attaching upper_arm_link and upper_forearm_link)-->
   <joint name="elbow_joint" type="revolute">
     <axis xyz="0 0 1"/>
-    <limit effort="100" lower="-1.60570291183" upper="1.76278254451" velocity="3.14159265359"/>
+    <limit effort="21.2" lower="-1.60570291183" upper="1.76278254451" velocity="3.1"/>
     <origin rpy="3.14159265359 0 -1.57079632679" xyz="0.05955 -0.3 0.0"/>
     <parent link="mobile_manipulator/upper_arm_link"/>
     <child link="mobile_manipulator/upper_forearm_link"/>
@@ -268,7 +268,7 @@
   <!-- Upper Forearm Joint (attaching upper_forearm_link and lowe_forearm_link)-->
   <joint name="upper_forearm_joint" type="revolute">
     <axis xyz="0 0 1"/>
-    <limit effort="100" lower="-3.14159265359" upper="3.14159265359" velocity="3.14159265359"/>
+    <limit effort="10.6" lower="-3.14159265359" upper="3.14159265359" velocity="3.1"/>
     <origin rpy="1.57079632679 0 0" xyz="0 -0.2 0"/>
     <parent link="mobile_manipulator/upper_forearm_link"/>
     <child link="mobile_manipulator/lower_forearm_link"/>
@@ -297,7 +297,7 @@
   <!-- Lower Forearm Joint (attaching lower_forearm_link and wrist_link)-->
   <joint name="lower_forearm_joint" type="revolute">
     <axis xyz="0 0 1"/>
-    <limit effort="100" lower="-2.26892802759" upper="1.86750229963" velocity="3.14159265359"/>
+    <limit effort="10.6" lower="-2.26892802759" upper="1.86750229963" velocity="3.1"/>
     <origin rpy="-1.57079632679 0 0" xyz="0 0 0.1"/>
     <parent link="mobile_manipulator/lower_forearm_link"/>
     <child link="mobile_manipulator/wrist_link"/>
@@ -326,7 +326,7 @@
   <!-- Wrist Joint (attaching wrist_link and gripper)-->
   <joint name="wrist_joint" type="revolute">
     <axis xyz="0 0 1"/>
-    <limit effort="100" lower="-3.14159265359" upper="3.14159265359" velocity="3.14159265359"/>
+    <limit effort="4.1" lower="-3.14159265359" upper="3.14159265359" velocity="3.1"/>
     <origin rpy="1.57079632679 3.14159265359 0" xyz="0 -0.069744 0"/>
     <parent link="mobile_manipulator/wrist_link"/>
     <child link="mobile_manipulator/base_gripper_link"/>
