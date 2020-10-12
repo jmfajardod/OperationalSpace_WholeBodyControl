@@ -33,7 +33,7 @@ public:
      * KP_C and KD_C are the cartesian gains
      * KP_J and KD_J are the joint gains
 	 */
-	void changeGains(double kp_c, double kd_c, double kp_j, double kd_j);
+	//void changeGains(double kp_c, double kd_c, double kp_j, double kd_j);
 
     /*!
 	 * Function to change the maximum linear velocity of the end effector
@@ -90,14 +90,23 @@ public:
      * Effort Task
      * Hold/ Achieve an Orientation
     */
-    void AchieveOrientation(Eigen::VectorXd *tau_zero, 
-                            Eigen::VectorXd *tau_result,
-                            Eigen::Matrix3d rot_mat_desired,  
-                            Eigen::MatrixXd M,
-                            Eigen::VectorXd C_t,
-                            Eigen::VectorXd g_t,
-                            dart::dynamics::SkeletonPtr mRobot,
-                            dart::dynamics::BodyNode* mEndEffector);
+    void AchieveOrientationAxis(Eigen::VectorXd *tau_zero, 
+                                Eigen::VectorXd *tau_result,
+                                Eigen::Matrix3d rot_mat_desired,  
+                                Eigen::MatrixXd M,
+                                Eigen::VectorXd C_t,
+                                Eigen::VectorXd g_t,
+                                dart::dynamics::SkeletonPtr mRobot,
+                                dart::dynamics::BodyNode* mEndEffector);
+    
+    void AchieveOrientationQuat(Eigen::VectorXd *tau_zero, 
+                                Eigen::VectorXd *tau_result,
+                                Eigen::Matrix3d rot_mat_desired,  
+                                Eigen::MatrixXd M,
+                                Eigen::VectorXd C_t,
+                                Eigen::VectorXd g_t,
+                                dart::dynamics::SkeletonPtr mRobot,
+                                dart::dynamics::BodyNode* mEndEffector);
 
     /*!
      * Effort Task
@@ -139,10 +148,10 @@ public:
 
 private:
 
-    double kp_cartesian_;
-    double kd_cartesian_;
-    double kp_joints_;
-    double kd_joints_;
+    Eigen::MatrixXd kp_cartesian_;
+    Eigen::MatrixXd kd_cartesian_;
+    Eigen::MatrixXd kp_joints_;
+    Eigen::MatrixXd kd_joints_;
 
     double max_vel_;
 

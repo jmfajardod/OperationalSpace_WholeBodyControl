@@ -9,12 +9,23 @@ using namespace dart::math;
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor
 EffortTask::EffortTask(){
-    kp_cartesian_ = 400.0;
-    kd_cartesian_ = 40.0;
-    kp_joints_    = 400.0;
-    kd_joints_    = 40.0;
+    kp_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
+    kp_cartesian_.topLeftCorner(3, 3) = 200.0*Eigen::MatrixXd::Identity(3, 3); // Position gains
+    kp_cartesian_.bottomRightCorner(3, 3) = 200.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains
 
-    max_vel_ = 0.7; // m/s
+    kd_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
+    kd_cartesian_.topLeftCorner(3, 3) = 10.0*Eigen::MatrixXd::Identity(3, 3); // Position gains
+    kd_cartesian_.bottomRightCorner(3, 3) = 20.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains
+
+    kp_joints_ = Eigen::MatrixXd::Identity(9, 9);
+    kp_joints_.topLeftCorner(3, 3) = 10.0*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
+    kp_joints_.bottomRightCorner(6, 6) = 200.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains
+
+    kd_joints_ = Eigen::MatrixXd::Identity(9, 9);
+    kd_joints_.topLeftCorner(3, 3) = 0.1*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
+    kd_joints_.bottomRightCorner(6, 6) = 20.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains
+
+    max_vel_ = 0.5; // m/s
 
     joint_margin_ = 0.175; // 10 deg
     eta_firas_    = 0.01;
@@ -30,12 +41,14 @@ EffortTask::~EffortTask()
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function to change the Gains
+/*
 void EffortTask::changeGains(double kp_c, double kd_c, double kp_j, double kd_j){
     kp_cartesian_ = kp_c;
     kd_cartesian_ = kd_c;
     kp_joints_    = kp_j;
     kd_joints_    = kd_j;
 }
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function to change the maximum velocity of the end effector
@@ -115,7 +128,10 @@ void EffortTask::AchieveCartesian(  Eigen::VectorXd *tau_zero,
 
     Eigen::Vector3d de = -mEndEffector->getLinearVelocity();  // Velocity error (Target velocity is zero)
 
-    Eigen::Vector3d f_t_star =  kp_cartesian_ * e + kd_cartesian_ * de; // Command force vector
+    Eigen::Matrix3d kp = kp_cartesian_.topLeftCorner(3, 3);
+    Eigen::Matrix3d kd = kd_cartesian_.topLeftCorner(3, 3);
+
+    Eigen::Vector3d f_t_star =  kd*de + kp*e ; // Command force vector
     //std::cout << "F star: \n" << f_t_star << std::endl;
 
     Eigen::VectorXd tau_star =  Alpha_t * f_t_star + niu_t + p_t; // Command torques vector for task
@@ -154,7 +170,7 @@ void EffortTask::AchieveJointConf(  Eigen::VectorXd *tau_zero,
     Eigen::VectorXd e = q_desired - mRobot->getPositions(); // Position error
     Eigen::VectorXd de = q_dot_desired - mRobot->getVelocities();  // Velocity error (Target velocity is zero)
 
-    Eigen::VectorXd f_t_star =  kp_joints_ * e + kd_joints_ * de; // Command force vector
+    Eigen::VectorXd f_t_star = kd_joints_ * de; // kp_joints_ * e + kd_joints_ * de
     //std::cout << "F star: \n" << f_t_star << std::endl;
 
     Eigen::VectorXd tau_star = M*f_t_star + C_t + g_t;  // Command torques vector for task
@@ -169,16 +185,16 @@ void EffortTask::AchieveJointConf(  Eigen::VectorXd *tau_zero,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Function to calculate the efforts required to Hold/Achieve a joint configuration
+// Function to calculate the efforts required to Hold/Achieve a cartesian orientation
 
-void EffortTask::AchieveOrientation(Eigen::VectorXd *tau_zero, 
-                                    Eigen::VectorXd *tau_result,
-                                    Eigen::Matrix3d rot_mat_desired, 
-                                    Eigen::MatrixXd M,
-                                    Eigen::VectorXd C_t,
-                                    Eigen::VectorXd g_t,
-                                    dart::dynamics::SkeletonPtr mRobot,
-                                    dart::dynamics::BodyNode* mEndEffector){
+void EffortTask::AchieveOrientationAxis(Eigen::VectorXd *tau_zero, 
+                                        Eigen::VectorXd *tau_result,
+                                        Eigen::Matrix3d rot_mat_desired, 
+                                        Eigen::MatrixXd M,
+                                        Eigen::VectorXd C_t,
+                                        Eigen::VectorXd g_t,
+                                        dart::dynamics::SkeletonPtr mRobot,
+                                        dart::dynamics::BodyNode* mEndEffector){
 
     // ------------------------------------------//
     // ------------------------------------------//
@@ -221,11 +237,17 @@ void EffortTask::AchieveOrientation(Eigen::VectorXd *tau_zero,
     //std::cout << "Axis of vector u_world: \n"  << axis_desired  << std::endl;
     //std::cout << "Angle of vector u_world: \n" << angle_desired << std::endl;
 
-    Eigen::VectorXd angular_vel =  mEndEffector->getAngularJacobian() * mRobot->getVelocities();
+    Eigen::Vector3d angular_vel =  mEndEffector->getAngularJacobian() * mRobot->getVelocities();
     //std::cout << "Angular velocity vector: \n"  << angular_vel << std::endl;
 
-    Eigen::Vector3d f_t_star =  axis_desired * kp_cartesian_ * angle_desired - kd_cartesian_ * angular_vel; // Command force vector
+    Eigen::Matrix3d kp = kp_cartesian_.bottomRightCorner(3, 3);
+    Eigen::Matrix3d kd = kd_cartesian_.bottomRightCorner(3, 3);
+
+    Eigen::Vector3d f_t_star =  kp * axis_desired * angle_desired - kd * angular_vel; // Command force vector
     //std::cout << "F star: \n" << f_t_star << std::endl;
+
+    // ------------------------------------------//
+    // ------------------------------------------//
 
     Eigen::VectorXd tau_star =  Alpha_t * f_t_star + niu_t + p_t; // Command torques vector for task
     tau_star =  Jacob_t.transpose() * tau_star;
@@ -237,6 +259,80 @@ void EffortTask::AchieveOrientation(Eigen::VectorXd *tau_zero,
     *tau_result = tau_star + N_t * *tau_zero;  
     *tau_zero   = *tau_result;
     //std::cout << "Forces: \n" << tau_result << std::endl;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Function to calculate the efforts required to Hold/Achieve a cartesian orientation
+
+void EffortTask::AchieveOrientationQuat(Eigen::VectorXd *tau_zero, 
+                                        Eigen::VectorXd *tau_result,
+                                        Eigen::Matrix3d rot_mat_desired, 
+                                        Eigen::MatrixXd M,
+                                        Eigen::VectorXd C_t,
+                                        Eigen::VectorXd g_t,
+                                        dart::dynamics::SkeletonPtr mRobot,
+                                        dart::dynamics::BodyNode* mEndEffector){
+
+    // ------------------------------------------//
+    // ------------------------------------------//
+    std::size_t dofs = mEndEffector->getNumDependentGenCoords();
+
+    AngularJacobian Jacob_t = mEndEffector->getAngularJacobian(); // Angular Jacobian
+    //std::cout << "Angular Jacob: \n" << Jacob_t << std::endl;
+
+    Eigen::MatrixXd Alpha_t = Jacob_t * M.inverse() * Jacob_t.transpose(); // Symmetric Inertia Matrix
+    Alpha_t = Alpha_t.inverse() ;
+    //std::cout << "Alpha_t: \n" << Alpha_t << std::endl;
+
+    Eigen::MatrixXd Jacob_dash_t = M.inverse() * Jacob_t.transpose() * Alpha_t; // Dynamically consistent inverse jacobian
+    //std::cout << "Inverse Angular Jacobian: \n" << Jacob_dash_t << std::endl;
+
+    AngularJacobian Jacob_dot = mEndEffector->getAngularJacobianDeriv(); // Derivative of jacobian
+    Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
+    //std::cout << "Angular Jacobian dot: \n" << Jacob_dot << std::endl;
+    //std::cout << "Q dot: \n" << q_dot << std::endl;
+
+    Eigen::VectorXd niu_t = Jacob_dash_t.transpose() * C_t  - Alpha_t * Jacob_dot * q_dot; // Operational Coriolis vector  
+    //std::cout << "Niu t: \n" << niu_t << std::endl;
+
+    Eigen::VectorXd p_t = Jacob_dash_t.transpose() * g_t; // Operational Gravity vector
+    //std::cout << "P t: \n" << p_t << std::endl;
+
+    // ------------------------------------------//
+    // ------------------------------------------//
+    // Error Calculation
+
+    Eigen::Matrix3d R_world_EE = mEndEffector->getWorldTransform().rotation();
+    //std::cout << "Rotation matrix from W to EE: \n" << R_world_EE << std::endl;
+
+    Eigen::Quaterniond q_des(rot_mat_desired);
+    Eigen::Quaterniond q_act(R_world_EE);
+    
+    Eigen::Vector3d e_ori = q_des.w()*q_act.vec() - q_act.w() * q_des.vec() + q_des.vec().cross(q_act.vec());
+    std::cout << "Orientation error: \n" << e_ori << std::endl;
+
+    Eigen::VectorXd angular_vel =  mEndEffector->getAngularJacobian() * mRobot->getVelocities();
+
+    Eigen::Matrix3d kp = kp_cartesian_.bottomRightCorner(3, 3);
+    Eigen::Matrix3d kd = kd_cartesian_.bottomRightCorner(3, 3);
+    
+    Eigen::Vector3d f_t_star =  kd*(-angular_vel) - kp*(e_ori); // Command force vector
+    //std::cout << "F star: \n" << f_t_star << std::endl;
+
+    // ------------------------------------------//
+    // ------------------------------------------//
+
+    Eigen::VectorXd tau_star =  Alpha_t * f_t_star + niu_t + p_t; // Command torques vector for task
+    tau_star =  Jacob_t.transpose() * tau_star;
+    //std::cout << "Tau star: \n" << tau_star << std::endl;
+
+    Eigen::MatrixXd N_t =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_t.transpose() * Jacob_dash_t.transpose(); // Null space
+    //std::cout << "N_t: \n" << N_t << std::endl;
+
+    *tau_result = tau_star + N_t * *tau_zero;  
+    *tau_zero   = *tau_result;
+    //std::cout << "Forces: \n" << tau_result << std::endl;
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -265,8 +361,8 @@ void EffortTask::MakeStraightLine(  Eigen::VectorXd *tau_zero,
     Eigen::MatrixXd Jacob_dash_t = M.inverse() * Jacob_t.transpose() * Alpha_t; // Dynamically consistent inverse jacobian
     //std::cout << "Inverse Jacobian: \n" << Jacob_dash_t << std::endl;
 
-    LinearJacobian Jacob_dot    = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
-    Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
+    LinearJacobian Jacob_dot = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
+    Eigen::VectorXd q_dot    = mRobot->getVelocities();                // Derivative of the joints
     //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
 
@@ -285,12 +381,15 @@ void EffortTask::MakeStraightLine(  Eigen::VectorXd *tau_zero,
     Eigen::Vector3d x_error =  mTarget - mEndEffector->getWorldTransform().translation(); // Position error
     //std::cout<< "Cartesian error: \n" << x_error << std::endl;
 
-    Eigen::Vector3d x_dot_desired = (kp_cartesian_/kd_cartesian_)*x_error;
+    Eigen::Matrix3d kp = kp_cartesian_.topLeftCorner(3, 3);
+    Eigen::Matrix3d kd = kd_cartesian_.topLeftCorner(3, 3);
+
+    Eigen::Vector3d x_dot_desired = kp*kd.inverse()*x_error;
 
     double scale = std::min(1.0, (max_vel_ / x_dot_desired.norm()));
     //std::cout << "Scale V: \n" << scale << std::endl;
 
-    Eigen::Vector3d f_t_star =  -kd_cartesian_ * (mEndEffector->getLinearVelocity() - scale*x_dot_desired); // Command force vector
+    Eigen::Vector3d f_t_star =  (-1.0*kd) * (mEndEffector->getLinearVelocity() - scale*x_dot_desired); // Command force vector
     //std::cout << "F star: \n" << f_t_star << std::endl;
 
     Eigen::VectorXd tau_star =  Alpha_t * f_t_star + niu_t + p_t; // Command torques vector for task

@@ -3,6 +3,7 @@
 #include <iostream> 
 #include <algorithm> 
 #include <Eigen/Dense>
+#include <Eigen/Geometry> 
 #include <math.h> 
 #include <vector>
 
@@ -31,8 +32,6 @@
 #include <dart/utils/utils.hpp>
 
 #include <osc_hybrid_mob_manipulator/Effort_Tasks.hpp>
-
-#include <osc_hybrid_mob_manipulator/Velocity_Tasks.hpp>
 
 namespace osc_hybrid_controller {
 
@@ -130,7 +129,7 @@ private:
 	 * 
 	*/
 	effort_tasks::EffortTask effortSolver_;
-	vel_tasks::VelocityTask  velSolver_;
+	//vel_tasks::VelocityTask  velSolver_;
 
 	/*
 	Functions

@@ -39,8 +39,10 @@
         pkg="robot_state_publisher" 
         type="robot_state_publisher" 
         name="rob_st_pub" 
-        ns="$(arg robot_name)"
-    />
+        ns="$(arg robot_name)">
+            <rosparam param="publish_frequency">1500</rosparam>
+    </node>
+    
 
     <node 
         pkg="rviz" 
@@ -168,7 +170,7 @@
         <param if="$(arg use_EKF)" name="broadcast_transform" value="false"/>
     </node>
 
-    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true" ns="mobile_manipulator">
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" output="log" clear_params="true" ns="mobile_manipulator">
         <rosparam command="load" file="$(find mobile_manipulator_unal_description)/config/ekf_config.yaml" />
     
         <rosparam param="initial_state">   [0.0,  0.0,  0.0,

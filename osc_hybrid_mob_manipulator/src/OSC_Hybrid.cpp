@@ -102,7 +102,7 @@ void OscHybridController::odometry_CB(const nav_msgs::Odometry msg){
 // Constructor
 OscHybridController::OscHybridController(ros::NodeHandle& nodeHandle) :
     nodeHandle_(nodeHandle),
-    frecuency_rate(100),
+    frecuency_rate(1000),
     q_k(Eigen::VectorXd::Zero(9)),
     q_dot_k(Eigen::VectorXd::Zero(9)),
     tau_zero(Eigen::VectorXd::Zero(9)),
@@ -227,109 +227,64 @@ void OscHybridController::spin(){
             Eigen::Vector3d targetPos = Eigen::Vector3d::Zero(); 
             targetPos << 3.0, 3.5, 0.737; //0.54, 0.001, 0.737;
 
+            // Desired rotation matrix
+            Eigen::Matrix3d R_world_desired = Eigen::MatrixXd::Zero(3,3);
+            R_world_desired = Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitZ()); //Eigen::MatrixXd::Identity(3, 3);
+
             // Joint Conf Desired
             Eigen::VectorXd q_desired = Eigen::VectorXd::Zero(9);
             q_desired(0) = q_k(0);
             q_desired(1) = q_k(1);
             q_desired(2) = q_k(2);
 
-            // Desired rotation matrix
-            Eigen::Matrix3d R_world_desired = Eigen::MatrixXd::Zero(3,3);
-            R_world_desired = Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitZ()); //Eigen::MatrixXd::Identity(3, 3);
-
-            // Desired target for line
-            Eigen::Vector3d targetLine = Eigen::Vector3d::Zero(); 
-            targetLine << 1.0, 0.5, 0.537;
-
             /******************************/
             // Task Definition for effort
 
-            Eigen::Vector3d Pos_error_vector = targetPos - mEndEffector_->getWorldTransform().translation();
-            double pos_error = Pos_error_vector.norm();
-            //std::cout << "Pos_error: \n" << pos_error << std::endl;
+            tau_zero = Eigen::VectorXd::Zero(9);
 
-            if(pos_error<0.5){
+            q_desired = q_k;
 
-                if(state != 1){
-                    ROS_INFO("Transition ocurred");
-                    state = 1;
-                    transition_tau = tau_result;
-                    transition_q_dot = q_dot_result;
-                    init_trans_time = ros::Time::now().toSec();
-                    transition_state = true;
-                }
-                
-                q_desired = q_k;
+            effortSolver_.AchieveJointConf(&tau_zero, &tau_result, q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
+            std::cout << "Tau result after achieve joint: \n" << tau_result << std::endl;
+            
+            effortSolver_.AchieveOrientationAxis(&tau_zero, &tau_result, R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ ); 
+            std::cout << "Tau result after achieve ori: \n" << tau_result << std::endl;
+            
+            //effortSolver_.AchieveCartesian(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
+            //std::cout << "Tau result after achieve cart pos: \n" << tau_result << std::endl;
 
-                effortSolver_.AchieveJointConf(&tau_zero, &tau_result, q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-                //std::cout << "Tau result after achieve joint: \n" << tau_result << std::endl;
-                
-                effortSolver_.AchieveOrientation(&tau_zero, &tau_result, R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ ); 
-                //std::cout << "Tau result after achieve ori: \n" << tau_result << std::endl;
-                
-                effortSolver_.AchieveCartesian(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-                //std::cout << "Tau result after achieve cart pos: \n" << tau_result << std::endl;
+            effortSolver_.MakeStraightLine(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
+            std::cout << "Tau result after make line: \n" << tau_result << std::endl;
 
-                //effortSolver_.MakeStraightLine(&tau_zero, &tau_result, targetLine, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-                //std::cout << "Tau result after make line: \n" << tau_result << std::endl;
-
-                //effortSolver_.CartesianAvoidSing(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-                //std::cout << "Tau result after achieve cart pos avoiding sing: \n" << tau_result << std::endl;
-            }
-            else{
-
-                if(state != 2){
-                    ROS_INFO("Transition ocurred");
-                    state = 2;
-                    transition_tau = tau_result;
-                    transition_q_dot = q_dot_result;
-                    init_trans_time = ros::Time::now().toSec();
-                    transition_state = true;
-                }
-                
-                effortSolver_.AchieveJointConf(&tau_zero, &tau_result, q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-                //std::cout << "Tau result after achieve joint: \n" << tau_result << std::endl;
-
-            }
+            //effortSolver_.CartesianAvoidSing(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
+            //std::cout << "Tau result after achieve cart pos avoiding sing: \n" << tau_result << std::endl;
             
             //effortSolver_.AvoidJointLimits(&tau_zero, &tau_result, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-            //std::cout << "Tau result after avoid limits: \n" << tau_result << std::endl;
             
-            /********************/
-            // Transition factors
-            double current_delta_time = ros::Time::now().toSec() - init_trans_time;
-            if(current_delta_time>transition_period && transition_state){
-                ROS_INFO("Transition ended");
-                transition_state = false;
-            }
-
-            double factor_prev = 0.0;
-            double factor_current = 1.0;
-            if(transition_state){
-                
-                factor_prev = (1+cos(transition_omega * current_delta_time ))/2;
-                factor_current = 1-factor_prev;
-
-                tau_result = transition_tau*factor_prev + tau_result*factor_current;
-            }
-
+            
+            std::cout << "Tau result : \n" << tau_result << std::endl;
             /******************************/
-            // Task Definition for velocity
+            // Admittance controller
+            // send_vel -> q_dot_result
+            
+            Eigen::MatrixXd damp_des_   = 100.0*Eigen::MatrixXd::Identity(3, 3);
+            Eigen::MatrixXd inertia_des = 1.0*Eigen::MatrixXd::Identity(3, 3);
 
-            velSolver_.AchieveJointConf(&q_dot_zero, &q_dot_result, q_desired, dart_robotSkeleton, mEndEffector_);
-            //std::cout << "Vel result after achieve joint conf: \n" << q_dot_result << std::endl;
+            damp_des_ = damp_des_.inverse();
 
-            if(state==1){
-                velSolver_.AchieveOrientation(&q_dot_zero, &q_dot_result, R_world_desired, M, dart_robotSkeleton, mEndEffector_);
-                //std::cout << "Vel result after achieve orient: \n" << q_dot_result << std::endl;
-            }
+            Eigen::VectorXd mob_base_tor = Eigen::VectorXd::Zero(3);
+            Eigen::VectorXd mob_base_vel = Eigen::VectorXd::Zero(3);
 
-            velSolver_.AchieveCartesian(&q_dot_zero, &q_dot_result, targetPos, M, dart_robotSkeleton, mEndEffector_);
-            //std::cout << "Vel result after achieve cart pos: \n" << q_dot_result << std::endl;
+            mob_base_tor << tau_result(0), tau_result(1), tau_result(2);
+            std::cout << "Tau mobile base : \n" << mob_base_tor << std::endl;
 
-            if(transition_state){
-                q_dot_result = transition_q_dot*factor_prev + q_dot_result*factor_current;
-            }
+            mob_base_vel = damp_des_*mob_base_tor - damp_des_*inertia_des*Eigen::VectorXd::Zero(3);
+
+            q_dot_result(0) = mob_base_vel(0);
+            q_dot_result(1) = mob_base_vel(1);
+            q_dot_result(2) = mob_base_vel(2);
+
+            std::cout << "Vel Command: \n" << q_dot_result << std::endl;
 
             /******************************/
             // Limit efforts
@@ -350,17 +305,14 @@ void OscHybridController::spin(){
 
             for (size_t ii = 0; ii < 9; ii++){
                 if(ii<2){ // Mobile platform efforts linear vel
-                    if( abs(q_dot_result(ii)) > 0.2 )  q_dot_result(ii) = q_dot_result(ii) * (0.2/abs(q_dot_result(ii)));
+                    if( abs(q_dot_result(ii)) > 0.7 )  q_dot_result(ii) = q_dot_result(ii) * (0.7/abs(q_dot_result(ii)));
                 }
                 else if(ii<3){ // Mobile platform angular vel
                     if( abs(q_dot_result(ii)) > 1.75 )  q_dot_result(ii) = q_dot_result(ii) * (1.75/abs(q_dot_result(ii)));
                 }
-                else{    // Manipulator angular vel
-                    if( abs(q_dot_result(ii)) > 3.0)  q_dot_result(ii) = q_dot_result(ii) * (3.0/abs(q_dot_result(ii)));
-                }
             }
 
-            //std::cout << "Limited Vel: \n" << q_dot_result << std::endl;
+            std::cout << "Limited Vel: \n" << q_dot_result << std::endl;
 
             /******************************/
             // Publish commands to mobile platform
