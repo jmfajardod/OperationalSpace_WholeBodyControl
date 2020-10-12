@@ -245,24 +245,24 @@ void OscHybridController::spin(){
             q_desired = q_k;
 
             effortSolver_.AchieveJointConf(&tau_zero, &tau_result, q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-            std::cout << "Tau result after achieve joint: \n" << tau_result << std::endl;
+            //std::cout << "Tau result after achieve joint: \n" << tau_result << std::endl;
             
-            effortSolver_.AchieveOrientationAxis(&tau_zero, &tau_result, R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ ); 
-            std::cout << "Tau result after achieve ori: \n" << tau_result << std::endl;
+            effortSolver_.AchieveOrientationAxis2(&tau_zero, &tau_result, R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ ); 
+            //std::cout << "Tau result after achieve ori: \n" << tau_result << std::endl;
             
             //effortSolver_.AchieveCartesian(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
             //std::cout << "Tau result after achieve cart pos: \n" << tau_result << std::endl;
 
             effortSolver_.MakeStraightLine(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-            std::cout << "Tau result after make line: \n" << tau_result << std::endl;
+            //std::cout << "Tau result after make line: \n" << tau_result << std::endl;
 
             //effortSolver_.CartesianAvoidSing(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
             //std::cout << "Tau result after achieve cart pos avoiding sing: \n" << tau_result << std::endl;
             
             //effortSolver_.AvoidJointLimits(&tau_zero, &tau_result, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
+            //std::cout << "Tau result after Avoid joint limits : \n" << tau_result << std::endl;
             
-            
-            std::cout << "Tau result : \n" << tau_result << std::endl;
+            //std::cout << "Tau result : \n" << tau_result << std::endl;
             /******************************/
             // Admittance controller
             // send_vel -> q_dot_result
@@ -276,7 +276,7 @@ void OscHybridController::spin(){
             Eigen::VectorXd mob_base_vel = Eigen::VectorXd::Zero(3);
 
             mob_base_tor << tau_result(0), tau_result(1), tau_result(2);
-            std::cout << "Tau mobile base : \n" << mob_base_tor << std::endl;
+            //std::cout << "Tau mobile base : \n" << mob_base_tor << std::endl;
 
             mob_base_vel = damp_des_*mob_base_tor - damp_des_*inertia_des*Eigen::VectorXd::Zero(3);
 
@@ -284,7 +284,7 @@ void OscHybridController::spin(){
             q_dot_result(1) = mob_base_vel(1);
             q_dot_result(2) = mob_base_vel(2);
 
-            std::cout << "Vel Command: \n" << q_dot_result << std::endl;
+            //std::cout << "Vel Command: \n" << q_dot_result << std::endl;
 
             /******************************/
             // Limit efforts
@@ -312,7 +312,7 @@ void OscHybridController::spin(){
                 }
             }
 
-            std::cout << "Limited Vel: \n" << q_dot_result << std::endl;
+            //std::cout << "Limited Vel: \n" << q_dot_result << std::endl;
 
             /******************************/
             // Publish commands to mobile platform
