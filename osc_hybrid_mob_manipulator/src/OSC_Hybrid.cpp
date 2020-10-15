@@ -253,7 +253,7 @@ void OscHybridController::spin(){
             //effortSolver_.AchieveCartesian(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
             //std::cout << "Tau result after achieve cart pos: \n" << tau_result << std::endl;
 
-            effortSolver_.MakeStraightLine(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
+            //effortSolver_.MakeStraightLine(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
             //std::cout << "Tau result after make line: \n" << tau_result << std::endl;
 
             //effortSolver_.CartesianAvoidSing(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );

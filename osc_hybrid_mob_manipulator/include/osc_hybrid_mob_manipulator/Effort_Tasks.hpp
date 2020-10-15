@@ -107,7 +107,7 @@ public:
                                 Eigen::VectorXd g_t,
                                 dart::dynamics::SkeletonPtr mRobot,
                                 dart::dynamics::BodyNode* mEndEffector);
-    
+
     void AchieveOrientationQuat(Eigen::VectorXd *tau_zero, 
                                 Eigen::VectorXd *tau_result,
                                 Eigen::Matrix3d rot_mat_desired,  
@@ -125,6 +125,15 @@ public:
                                 Eigen::VectorXd g_t,
                                 dart::dynamics::SkeletonPtr mRobot,
                                 dart::dynamics::BodyNode* mEndEffector);
+
+    void AchieveOrientationQuat3(Eigen::VectorXd *tau_zero, 
+                            Eigen::VectorXd *tau_result,
+                            Eigen::Matrix3d rot_mat_desired,  
+                            Eigen::MatrixXd M,
+                            Eigen::VectorXd C_t,
+                            Eigen::VectorXd g_t,
+                            dart::dynamics::SkeletonPtr mRobot,
+                            dart::dynamics::BodyNode* mEndEffector);
 
     /*!
      * Effort Task
