@@ -60,118 +60,120 @@ public:
 	 */
     void changeLowThSing(double new_low_thr);
 
-    /*!
-     * Effort Task
-     * Hold/ Achieve a Cartesian Position
-    */
-    void AchieveCartesian(  Eigen::VectorXd *tau_zero, 
-                            Eigen::VectorXd *tau_result,
-                            Eigen::Vector3d mTarget,
-                            Eigen::MatrixXd M,
-                            Eigen::VectorXd C_t,
-                            Eigen::VectorXd g_t,
-                            dart::dynamics::SkeletonPtr mRobot,
-                            dart::dynamics::BodyNode* mEndEffector);
+    /***********************************************************************************/
+    /***********************************************************************************/
+    // Joint Tasks
 
     /*!
      * Effort Task
      * Hold/ Achieve a Joint Configuration
     */
-    void AchieveJointConf(  Eigen::VectorXd *tau_zero, 
-                            Eigen::VectorXd *tau_result,
-                            Eigen::VectorXd q_desired, 
-                            Eigen::MatrixXd M,
+    void AchieveJointConf(  Eigen::VectorXd q_desired, 
+                            Eigen::MatrixXd M, 
                             Eigen::VectorXd C_t,
                             Eigen::VectorXd g_t,
                             dart::dynamics::SkeletonPtr mRobot,
-                            dart::dynamics::BodyNode* mEndEffector);
-
-    /*!
-     * Effort Task
-     * Hold/ Achieve an Orientation
-    */
-    void AchieveOrientationAxis(Eigen::VectorXd *tau_zero, 
-                                Eigen::VectorXd *tau_result,
-                                Eigen::Matrix3d rot_mat_desired,  
-                                Eigen::MatrixXd M,
-                                Eigen::VectorXd C_t,
-                                Eigen::VectorXd g_t,
-                                dart::dynamics::SkeletonPtr mRobot,
-                                dart::dynamics::BodyNode* mEndEffector);
-
-    void AchieveOrientationAxis2(Eigen::VectorXd *tau_zero, 
-                                Eigen::VectorXd *tau_result,
-                                Eigen::Matrix3d rot_mat_desired,  
-                                Eigen::MatrixXd M,
-                                Eigen::VectorXd C_t,
-                                Eigen::VectorXd g_t,
-                                dart::dynamics::SkeletonPtr mRobot,
-                                dart::dynamics::BodyNode* mEndEffector);
-
-    void AchieveOrientationQuat(Eigen::VectorXd *tau_zero, 
-                                Eigen::VectorXd *tau_result,
-                                Eigen::Matrix3d rot_mat_desired,  
-                                Eigen::MatrixXd M,
-                                Eigen::VectorXd C_t,
-                                Eigen::VectorXd g_t,
-                                dart::dynamics::SkeletonPtr mRobot,
-                                dart::dynamics::BodyNode* mEndEffector);
-
-    void AchieveOrientationQuat2(Eigen::VectorXd *tau_zero, 
-                                Eigen::VectorXd *tau_result,
-                                Eigen::Matrix3d rot_mat_desired,  
-                                Eigen::MatrixXd M,
-                                Eigen::VectorXd C_t,
-                                Eigen::VectorXd g_t,
-                                dart::dynamics::SkeletonPtr mRobot,
-                                dart::dynamics::BodyNode* mEndEffector);
-
-    void AchieveOrientationQuat3(Eigen::VectorXd *tau_zero, 
-                            Eigen::VectorXd *tau_result,
-                            Eigen::Matrix3d rot_mat_desired,  
-                            Eigen::MatrixXd M,
-                            Eigen::VectorXd C_t,
-                            Eigen::VectorXd g_t,
-                            dart::dynamics::SkeletonPtr mRobot,
-                            dart::dynamics::BodyNode* mEndEffector);
-
-    /*!
-     * Effort Task
-     * Make a StraigthLine
-    */
-    void MakeStraightLine(  Eigen::VectorXd *tau_zero, 
-                            Eigen::VectorXd *tau_result,
-                            Eigen::Vector3d mTarget,
-                            Eigen::MatrixXd M,
-                            Eigen::VectorXd C_t,
-                            Eigen::VectorXd g_t,
-                            dart::dynamics::SkeletonPtr mRobot,
-                            dart::dynamics::BodyNode* mEndEffector);
+                            dart::dynamics::BodyNode* mEndEffector,
+                            Eigen::VectorXd *tau_total,
+                            Eigen::MatrixXd *Null_space_iter);
 
     /*!
      * Effort Task
      * Avoid Joint Limits
     */
-    void AvoidJointLimits(  Eigen::VectorXd *tau_zero, 
-                            Eigen::VectorXd *tau_result,
-                            Eigen::MatrixXd M,
-                            Eigen::VectorXd C_t,
-                            Eigen::VectorXd g_t,
-                            dart::dynamics::SkeletonPtr mRobot,
-                            dart::dynamics::BodyNode* mEndEffector);
+    void AvoidJointLimits(Eigen::MatrixXd M, 
+                        Eigen::VectorXd C_t,
+                        Eigen::VectorXd g_t,
+                        dart::dynamics::SkeletonPtr mRobot,
+                        dart::dynamics::BodyNode* mEndEffector,
+                        Eigen::VectorXd *tau_total,
+                        Eigen::MatrixXd *Null_space_iter);
+
+    /***********************************************************************************/
+    /***********************************************************************************/
+    // Position tasks
 
     /*!
      * Effort Task
-     * Hold/ Achieve a Cartesian Position avoiding singularities
+     * Hold/ Achieve a Cartesian Position
     */
-    void CartesianAvoidSing(Eigen::VectorXd *tau_zero, 
-                            Eigen::VectorXd *tau_result,
-                            Eigen::Vector3d mTarget,
-                            Eigen::MatrixXd M,
+    void AchieveCartesian(  Eigen::Vector3d mTarget, 
+                            Eigen::MatrixXd M, 
                             Eigen::VectorXd C_t,
                             Eigen::VectorXd g_t,
                             dart::dynamics::SkeletonPtr mRobot,
-                            dart::dynamics::BodyNode* mEndEffector);
+                            dart::dynamics::BodyNode* mEndEffector,
+                            Eigen::VectorXd *tau_total,
+                            Eigen::MatrixXd *Null_space_iter);
+
+    /*!
+     * Effort Task
+     * Make a StraigthLine
+    */
+    void MakeStraightLine(  Eigen::Vector3d mTarget, 
+                            Eigen::MatrixXd M, 
+                            Eigen::VectorXd C_t,
+                            Eigen::VectorXd g_t,
+                            dart::dynamics::SkeletonPtr mRobot,
+                            dart::dynamics::BodyNode* mEndEffector,
+                            Eigen::VectorXd *tau_total,
+                            Eigen::MatrixXd *Null_space_iter);
+
+
+    /***********************************************************************************/
+    /***********************************************************************************/
+    // Orientation tasks
+
+    /*!
+     * Effort Task
+     * Hold/ Achieve an Orientation
+    */
+    void AchieveOrientationAxis1(Eigen::Matrix3d rot_mat_desired, 
+                                Eigen::MatrixXd M,
+                                Eigen::VectorXd C_t,
+                                Eigen::VectorXd g_t,
+                                dart::dynamics::SkeletonPtr mRobot,
+                                dart::dynamics::BodyNode* mEndEffector,
+                                Eigen::VectorXd *tau_total,
+                                Eigen::MatrixXd *Null_space_iter);
+
+    void AchieveOrientationAxis2(Eigen::Matrix3d rot_mat_desired, 
+                                Eigen::MatrixXd M,
+                                Eigen::VectorXd C_t,
+                                Eigen::VectorXd g_t,
+                                dart::dynamics::SkeletonPtr mRobot,
+                                dart::dynamics::BodyNode* mEndEffector,
+                                Eigen::VectorXd *tau_total,
+                                Eigen::MatrixXd *Null_space_iter);
+
+    void AchieveOrientationQuat1(Eigen::Matrix3d rot_mat_desired, 
+                                Eigen::MatrixXd M,
+                                Eigen::VectorXd C_t,
+                                Eigen::VectorXd g_t,
+                                dart::dynamics::SkeletonPtr mRobot,
+                                dart::dynamics::BodyNode* mEndEffector,
+                                Eigen::VectorXd *tau_total,
+                                Eigen::MatrixXd *Null_space_iter);
+
+    void AchieveOrientationQuat2(Eigen::Matrix3d rot_mat_desired, 
+                                Eigen::MatrixXd M,
+                                Eigen::VectorXd C_t,
+                                Eigen::VectorXd g_t,
+                                dart::dynamics::SkeletonPtr mRobot,
+                                dart::dynamics::BodyNode* mEndEffector,
+                                Eigen::VectorXd *tau_total,
+                                Eigen::MatrixXd *Null_space_iter);
+
+    void AchieveOrientationQuat3(Eigen::Matrix3d rot_mat_desired, 
+                                Eigen::MatrixXd M,
+                                Eigen::VectorXd C_t,
+                                Eigen::VectorXd g_t,
+                                dart::dynamics::SkeletonPtr mRobot,
+                                dart::dynamics::BodyNode* mEndEffector,
+                                Eigen::VectorXd *tau_total,
+                                Eigen::MatrixXd *Null_space_iter);
+
+
 
 private:
 

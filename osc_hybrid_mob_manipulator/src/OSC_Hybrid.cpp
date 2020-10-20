@@ -240,29 +240,35 @@ void OscHybridController::spin(){
             /******************************/
             // Task Definition for effort
 
-            tau_zero = Eigen::VectorXd::Zero(9);
+            tau_result = Eigen::VectorXd::Zero(9);
+            Eigen::MatrixXd Null_space = Eigen::MatrixXd::Identity(9,9);
+
+            std::cout << "Initial tau: \n" << tau_result << std::endl;
+            std::cout << "Initial Null space: \n" << Null_space << std::endl;
 
             q_desired = q_k;
 
-            effortSolver_.AchieveJointConf(&tau_zero, &tau_result, q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-            //std::cout << "Tau result after achieve joint: \n" << tau_result << std::endl;
-            
-            effortSolver_.AchieveOrientationAxis2(&tau_zero, &tau_result, R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ ); 
-            //std::cout << "Tau result after achieve ori: \n" << tau_result << std::endl;
-            
-            //effortSolver_.AchieveCartesian(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
+            effortSolver_.AvoidJointLimits(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
+            std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
+
+            //effortSolver_.AchieveCartesian(targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
             //std::cout << "Tau result after achieve cart pos: \n" << tau_result << std::endl;
+            //std::cout << "Null space after achieve cart pos: \n" << Null_space << std::endl;
 
-            //effortSolver_.MakeStraightLine(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-            //std::cout << "Tau result after make line: \n" << tau_result << std::endl;
+            effortSolver_.MakeStraightLine(targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            std::cout << "Tau result after straight line: \n" << tau_result << std::endl;
+            std::cout << "Null space after straight line: \n" << Null_space << std::endl;
 
-            //effortSolver_.CartesianAvoidSing(&tau_zero, &tau_result, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-            //std::cout << "Tau result after achieve cart pos avoiding sing: \n" << tau_result << std::endl;
-            
-            //effortSolver_.AvoidJointLimits(&tau_zero, &tau_result, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-            //std::cout << "Tau result after Avoid joint limits : \n" << tau_result << std::endl;
+            effortSolver_.AchieveOrientationQuat3(R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
+            std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
+            std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
+
+            effortSolver_.AchieveJointConf(q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            std::cout << "Tau result after achieve joint: \n" << tau_result << std::endl;
             
             //std::cout << "Tau result : \n" << tau_result << std::endl;
+
             /******************************/
             // Admittance controller
             // send_vel -> q_dot_result
@@ -491,10 +497,9 @@ void OscHybridController::loadDARTModel(){
     q_desired(1) = q_k(1);
     q_desired(2) = q_k(2);
 
-    effortSolver_.AchieveJointConf(&tau_zero, &tau_result, q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-    effortSolver_.AvoidJointLimits(&tau_zero, &tau_result, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-    
-    state = 0;
+    //effortSolver_.AchieveJointConf(&tau_zero, &tau_result, q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
+    //effortSolver_.AvoidJointLimits(&tau_zero, &tau_result, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
+    //state = 0;
 
 }
 
