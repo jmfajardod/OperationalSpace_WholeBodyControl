@@ -129,7 +129,6 @@ private:
 	 * 
 	*/
 	effort_tasks::EffortTask effortSolver_;
-	//vel_tasks::VelocityTask  velSolver_;
 
 	/*
 	Functions

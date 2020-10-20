@@ -191,12 +191,14 @@ void EffortTask::AvoidJointLimits(Eigen::MatrixXd M,
         if(rho_low <= joint_margin_){
             gamma_low = eta_firas_ * ( (1/rho_low) - (1/joint_margin_) ) * (1/(rho_low*rho_low));
             close2limit = true;
-            std::cout << "Joint " << ii << " is close LOW to limit, gamma: " << gamma_low << std::endl; 
+
+            //std::cout << "Joint " << ii << " is close LOW to limit, gamma: " << gamma_low << std::endl; 
         } 
         if(rho_up <= joint_margin_){
             gamma_up = -eta_firas_ * ( (1/rho_up) - (1/joint_margin_) ) * (1/(rho_up*rho_up));
             close2limit = true;
-            std::cout << "Joint " << ii << " is close HIGH to limit, gamma: " << gamma_up << std::endl; 
+
+            //std::cout << "Joint " << ii << " is close HIGH to limit, gamma: " << gamma_up << std::endl; 
         } 
 
         f_star(ii) = gamma_low + gamma_up;
