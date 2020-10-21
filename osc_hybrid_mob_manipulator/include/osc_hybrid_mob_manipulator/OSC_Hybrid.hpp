@@ -74,6 +74,11 @@ private:
 	ros::Publisher pub_manipulator_dof_5;
 	ros::Publisher pub_manipulator_dof_6;
 
+	/*
+	* TF Broadcaster
+	*/
+	
+
 	/*!
 	* Variables 
 	*/

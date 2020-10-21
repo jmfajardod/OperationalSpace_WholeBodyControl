@@ -40,15 +40,9 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTarget,
     //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
 
-    Eigen::VectorXd niu_t = Jacob_dash_t.transpose() * C_t  - Alpha_t * Jacob_dot * q_dot; // Operational Coriolis vector  
-    //std::cout << "Niu t: \n" << niu_t << std::endl;
-
-    Eigen::VectorXd p_t = Jacob_dash_t.transpose() * g_t; // Operational Gravity vector
-    //std::cout << "P t: \n" << p_t << std::endl;
-
     // ------------------------------------------//
     // ------------------------------------------//
-    // Calc Operational Force due to task
+    // Calc Operational acceleration due to task
 
     //std::cout<< "Cartesian Target: \n" << mTarget << std::endl;
     //std::cout<< "EE Pos: \n" << mEndEffector->getWorldTransform().translation() << std::endl;
@@ -63,9 +57,29 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTarget,
     Eigen::Matrix3d kd = kd_cartesian_.topLeftCorner(3, 3);
 
     Eigen::Vector3d x_star =  kd*de + kp*e ; // Command force vector
-    //std::cout << "F star: \n" << f_t_star << std::endl;
+    if(compensate_topdown){
+        x_star = x_star - Jacob_dash_t.transpose() * *tau_total;
+    }
 
-    Eigen::VectorXd f_t_star =  Alpha_t * x_star + niu_t + p_t; // Command forces vector for task
+    // ------------------------------------------//
+    // ------------------------------------------//
+    // Calc Operational force due to task
+
+    Eigen::VectorXd f_t_star = Eigen::VectorXd::Zero(3);
+    if(compensate_jtspace){
+        f_t_star =  Alpha_t * ( x_star - Jacob_dot * q_dot);
+    }
+    else{
+        Eigen::VectorXd niu_t = Jacob_dash_t.transpose() * C_t  - Alpha_t * Jacob_dot * q_dot; // Operational Coriolis vector  
+        //std::cout << "Niu t: \n" << niu_t << std::endl;
+
+        Eigen::VectorXd p_t = Jacob_dash_t.transpose() * g_t; // Operational Gravity vector
+        //std::cout << "P t: \n" << p_t << std::endl;
+
+        f_t_star =  Alpha_t * x_star + niu_t + p_t; // Command forces vector for task
+    }
+
+    //std::cout << "F star: \n" << f_t_star << std::endl;
 
     // ------------------------------------------//
     // ------------------------------------------//
@@ -130,15 +144,12 @@ void EffortTask::MakeStraightLine(  Eigen::Vector3d mTarget,
     //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
 
-    Eigen::VectorXd niu_t = Jacob_dash_t.transpose() * C_t  - Alpha_t * Jacob_dot * q_dot; // Operational Coriolis vector  
-    //std::cout << "Niu t: \n" << niu_t << std::endl;
+    if(!compensate_jtspace){
 
-    Eigen::VectorXd p_t = Jacob_dash_t.transpose() * g_t; // Operational Gravity vector
-    //std::cout << "P t: \n" << p_t << std::endl;
-
+    }
     // ------------------------------------------//
     // ------------------------------------------//
-    // Calc Operational Force due to task
+    // Calc Operational acceleration due to task
 
     //std::cout<< "Cartesian Target: \n" << mTarget << std::endl;
     //std::cout<< "EE Pos: \n" << mEndEffector->getWorldTransform().translation() << std::endl;
@@ -156,8 +167,28 @@ void EffortTask::MakeStraightLine(  Eigen::Vector3d mTarget,
     //std::cout << "Scale V: \n" << scale << std::endl;
 
     Eigen::Vector3d x_star =  (-1.0*kd) * (mEndEffector->getLinearVelocity() - scale*x_dot_desired); // Command force vector
-    
-    Eigen::VectorXd f_t_star =  Alpha_t * x_star + niu_t + p_t; // Command forces vector for task
+    if(compensate_topdown){
+        x_star = x_star - Jacob_dash_t.transpose() * *tau_total;
+    }
+
+    // ------------------------------------------//
+    // ------------------------------------------//
+    // Calc Operational force due to task
+
+    Eigen::VectorXd f_t_star = Eigen::VectorXd::Zero(3);
+    if(compensate_jtspace){
+        f_t_star =  Alpha_t * ( x_star - Jacob_dot * q_dot);
+    }
+    else{
+        Eigen::VectorXd niu_t = Jacob_dash_t.transpose() * C_t  - Alpha_t * Jacob_dot * q_dot; // Operational Coriolis vector  
+        //std::cout << "Niu t: \n" << niu_t << std::endl;
+
+        Eigen::VectorXd p_t = Jacob_dash_t.transpose() * g_t; // Operational Gravity vector
+        //std::cout << "P t: \n" << p_t << std::endl;
+
+        f_t_star =  Alpha_t * x_star + niu_t + p_t; // Command forces vector for task
+    }
+
     //std::cout << "F star: \n" << f_t_star << std::endl;
 
     // ------------------------------------------//

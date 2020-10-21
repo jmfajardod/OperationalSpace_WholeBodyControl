@@ -173,7 +173,8 @@ public:
                                 Eigen::VectorXd *tau_total,
                                 Eigen::MatrixXd *Null_space_iter);
 
-
+    bool compensate_topdown;
+    bool compensate_jtspace;
 
 private:
 

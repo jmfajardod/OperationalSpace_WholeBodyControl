@@ -9,6 +9,11 @@ using namespace dart::math;
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor
 EffortTask::EffortTask(){
+
+    compensate_topdown  = true;
+    compensate_jtspace  = true;
+
+    // Gain Matrices definition
     kp_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
     kp_cartesian_.topLeftCorner(3, 3) = 200.0*Eigen::MatrixXd::Identity(3, 3); // Position gains
     kp_cartesian_.bottomRightCorner(3, 3) = 200.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains
@@ -18,20 +23,19 @@ EffortTask::EffortTask(){
     kd_cartesian_.bottomRightCorner(3, 3) = 20.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains
 
     kp_joints_ = Eigen::MatrixXd::Identity(9, 9);
-    kp_joints_.topLeftCorner(3, 3) = 10.0*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
-    kp_joints_.bottomRightCorner(6, 6) = 200.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains
+    kp_joints_.topLeftCorner(3, 3) = 0.1*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
+    kp_joints_.bottomRightCorner(6, 6) = 0.5*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains
 
     kd_joints_ = Eigen::MatrixXd::Identity(9, 9);
-    kd_joints_.topLeftCorner(3, 3) = 0.1*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
+    kd_joints_.topLeftCorner(3, 3) = 2.0*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
     kd_joints_.bottomRightCorner(6, 6) = 20.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains
 
+    // Max vel for straight line task
     max_vel_ = 0.3; // m/s
 
+    // Parameters for avoid joint limits task
     joint_margin_ = 0.175; // 10 deg
     eta_firas_    = 0.01;
-
-    singularity_thres_high_ = 0.1;
-    singularity_thres_low_  = 0.05;
 }
 ////////////////////////////////////////////////////////////////////////////////
 // Destructor
@@ -106,14 +110,20 @@ void EffortTask::AchieveJointConf(  Eigen::VectorXd q_desired,
     Eigen::VectorXd e = q_desired - mRobot->getPositions(); // Position error
     Eigen::VectorXd de = q_dot_desired - mRobot->getVelocities();  // Velocity error (Target velocity is zero)
 
-    Eigen::VectorXd q_star = kd_joints_ * de; // kp_joints_ * e + kd_joints_ * de
-    //std::cout << "F star: \n" << f_t_star << std::endl;
+    Eigen::VectorXd q_star = kd_joints_ * de ;//+ kp_joints_ * e; 
 
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc Joint torque due to task
+    
+    Eigen::VectorXd tau_star = Eigen::VectorXd::Zero(dofs);
+    if(compensate_jtspace){
+        tau_star = M * q_star ;  // Command torques vector for task
+    }
+    else{
+        tau_star = M * q_star + C_t + g_t;  // Command torques vector for task
+    }
 
-    Eigen::VectorXd tau_star = M*q_star + C_t + g_t;  // Command torques vector for task
     //std::cout << "Tau star: \n" << tau_star << std::endl;
 
     // ------------------------------------------//
@@ -240,17 +250,33 @@ void EffortTask::AvoidJointLimits(Eigen::MatrixXd M,
         Eigen::MatrixXd Jacob_dash_t = M.inverse() * Jacob_t.transpose() * Alpha_t; // Dynamically consistent inverse jacobian
         //std::cout << "Inverse Jacobian: \n" << Jacob_dash_t << std::endl;
 
-        Eigen::VectorXd niu_t = Jacob_dash_t.transpose() * C_t ; // Operational Coriolis vector  
-        //std::cout << "Niu t: \n" << niu_t << std::endl;
+        // ------------------------------------------//
+        // ------------------------------------------//
+        // Calc Operational acceleration due to task
 
-        Eigen::VectorXd p_t = Jacob_dash_t.transpose() * g_t; // Operational Gravity vector
-        //std::cout << "P t: \n" << p_t << std::endl;
+        if(compensate_topdown){
+            gamma_vector = gamma_vector - Jacob_dash_t.transpose() * *tau_total;
+        }
 
         // ------------------------------------------//
         // ------------------------------------------//
-        // Calc Operational Force due to task
+        // Calc Operational force due to task
 
-        Eigen::VectorXd f_t_star =  Alpha_t * gamma_vector + niu_t + p_t; // Command forces vector for task
+        Eigen::VectorXd f_t_star = Eigen::VectorXd::Zero(3);
+        if(compensate_jtspace){
+            f_t_star =  Alpha_t * gamma_vector;
+        }
+        else{
+            Eigen::VectorXd niu_t = Jacob_dash_t.transpose() * C_t ; // Operational Coriolis vector  
+            //std::cout << "Niu t: \n" << niu_t << std::endl;
+
+            Eigen::VectorXd p_t = Jacob_dash_t.transpose() * g_t; // Operational Gravity vector
+            //std::cout << "P t: \n" << p_t << std::endl;
+
+            f_t_star =  Alpha_t * gamma_vector + niu_t + p_t; // Command forces vector for task
+        }
+
+        //std::cout << "F star: \n" << f_t_star << std::endl;
 
         // ------------------------------------------//
         // ------------------------------------------//

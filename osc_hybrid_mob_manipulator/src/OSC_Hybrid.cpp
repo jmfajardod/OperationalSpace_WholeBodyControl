@@ -229,13 +229,14 @@ void OscHybridController::spin(){
 
             // Desired rotation matrix
             Eigen::Matrix3d R_world_desired = Eigen::MatrixXd::Zero(3,3);
-            R_world_desired = Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitZ()); //Eigen::MatrixXd::Identity(3, 3);
+            R_world_desired = Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitZ()); //Eigen::MatrixXd::Identity(3, 3);
 
             // Joint Conf Desired
             Eigen::VectorXd q_desired = Eigen::VectorXd::Zero(9);
             q_desired(0) = q_k(0);
             q_desired(1) = q_k(1);
             q_desired(2) = q_k(2);
+            //q_desired = q_k;
 
             /******************************/
             // Task Definition for effort
@@ -246,9 +247,7 @@ void OscHybridController::spin(){
             //std::cout << "Initial tau: \n" << tau_result << std::endl;
             //std::cout << "Initial Null space: \n" << Null_space << std::endl;
 
-            q_desired = q_k;
-
-            effortSolver_.AvoidJointLimits(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            //effortSolver_.AvoidJointLimits(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
             //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
             //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
 
@@ -260,20 +259,27 @@ void OscHybridController::spin(){
             //std::cout << "Tau result after straight line: \n" << tau_result << std::endl;
             //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
 
-            effortSolver_.AchieveOrientationQuat3(R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
+            //effortSolver_.AchieveOrientationQuat3(R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
             //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
             //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
 
             effortSolver_.AchieveJointConf(q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
             //std::cout << "Tau result after achieve joint: \n" << tau_result << std::endl;
-            
+
+            if(effortSolver_.compensate_jtspace){
+                tau_result =  tau_result + C_k + g_k;
+            }
+
             //std::cout << "Tau result : \n" << tau_result << std::endl;
 
             /******************************/
             // Admittance controller
             // send_vel -> q_dot_result
             
-            Eigen::MatrixXd damp_des_   = 100.0*Eigen::MatrixXd::Identity(3, 3);
+            Eigen::MatrixXd damp_des_     = Eigen::MatrixXd::Identity(3, 3) ;
+            damp_des_.topLeftCorner(2, 2) = 100.0*Eigen::MatrixXd::Identity(2, 2); // Liner vel damping
+            damp_des_(2,2) = 50.0 ; // Angular vel damping (10.0)
+
             Eigen::MatrixXd inertia_des = 1.0*Eigen::MatrixXd::Identity(3, 3);
 
             damp_des_ = damp_des_.inverse();
@@ -484,22 +490,6 @@ void OscHybridController::loadDARTModel(){
     dart_robotSkeleton->setMobile(false);
     dart_robotSkeleton->setPositions(q_k);
     dart_robotSkeleton->setVelocities(q_dot_k);
-
-    M = dart_robotSkeleton->getMassMatrix();  // Mass Matrix
-    //std::cout << "Mass Matrix: \n" << M << std::endl;
-
-    C_k = dart_robotSkeleton->getCoriolisForces();  // Coriolis vector forces
-    g_k = dart_robotSkeleton->getGravityForces();   // Gravity vector forces
-
-    // Joint Conf Desired
-    Eigen::VectorXd q_desired = Eigen::VectorXd::Zero(9);
-    q_desired(0) = q_k(0);
-    q_desired(1) = q_k(1);
-    q_desired(2) = q_k(2);
-
-    //effortSolver_.AchieveJointConf(&tau_zero, &tau_result, q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-    //effortSolver_.AvoidJointLimits(&tau_zero, &tau_result, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-    //state = 0;
 
 }
 
