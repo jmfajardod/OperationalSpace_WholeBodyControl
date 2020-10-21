@@ -58,7 +58,7 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTarget,
 
     Eigen::Vector3d x_star =  kd*de + kp*e ; // Command force vector
     if(compensate_topdown){
-        x_star = x_star - Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star + Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
@@ -165,7 +165,7 @@ void EffortTask::MakeStraightLine(  Eigen::Vector3d mTarget,
 
     Eigen::Vector3d x_star =  (-1.0*kd) * (mEndEffector->getLinearVelocity() - scale*x_dot_desired); // Command force vector
     if(compensate_topdown){
-        x_star = x_star - Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star + Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//

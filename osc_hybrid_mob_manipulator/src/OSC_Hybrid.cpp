@@ -255,7 +255,7 @@ void OscHybridController::spin(){
         //std::cout << "Initial tau: \n" << tau_result << std::endl;
         //std::cout << "Initial Null space: \n" << Null_space << std::endl;
 
-        //effortSolver_.AvoidJointLimits(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        effortSolver_.AvoidJointLimits(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
         //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
 
@@ -267,7 +267,7 @@ void OscHybridController::spin(){
         //std::cout << "Tau result after straight line: \n" << tau_result << std::endl;
         //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
 
-        effortSolver_.AchieveOrientationQuat3(R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
+        effortSolver_.AchieveOrientation(R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
         //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
         //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
 
@@ -278,8 +278,18 @@ void OscHybridController::spin(){
             tau_result =  tau_result + C_k + g_k;
         }
 
-        //std::cout << "Tau result : \n" << tau_result << std::endl;
+        Eigen::VectorXd tau_zero = Eigen::VectorXd::Zero(9);
+        Eigen::VectorXd tau_result2 = Eigen::VectorXd::Zero(9);
 
+        effortSolver_.OLD_AchieveJointConf(&tau_zero, &tau_result2, q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
+        effortSolver_.OLD_AchieveOrientationQuat3(&tau_zero, &tau_result2, R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ ); 
+        effortSolver_.OLD_MakeStraightLine(&tau_zero, &tau_result2, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
+
+        if( ((tau_result-tau_result2).cwiseAbs()).maxCoeff() > 0.1 ){
+            std::cout << "NEW Tau result : \n" << tau_result << std::endl;
+            std::cout << "Old Tau result : \n" << tau_result2 << std::endl;
+            std::cout << "Difference Tau result : \n" << tau_result-tau_result2 << std::endl;
+        }
         /******************************/
         // Admittance controller
         // send_vel -> q_dot_result

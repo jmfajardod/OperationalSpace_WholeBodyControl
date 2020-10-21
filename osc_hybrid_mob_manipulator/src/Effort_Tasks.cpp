@@ -11,7 +11,7 @@ using namespace dart::math;
 EffortTask::EffortTask(){
 
     compensate_topdown  = false;
-    compensate_jtspace  = false;
+    compensate_jtspace  = true;
 
     // Gain Matrices definition
     kp_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
@@ -30,10 +30,18 @@ EffortTask::EffortTask(){
     kd_joints_.topLeftCorner(3, 3) = 2.0*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
     kd_joints_.bottomRightCorner(6, 6) = 5.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (35.0)
 
-    // Max vel for straight line task
+    //--- Select orientation error
+    // 1 - Angle-axis Osorio
+    // 2 - Angle-axis Caccavale
+    // 3 - Quaternion Yuan
+    // 4 - Quaternion Caccavale 1
+    // 5 - Quaternion Caccavale 2
+    ori_error_mode = 5;
+
+    //--- Max vel for straight line task
     max_vel_ = 0.3; // m/s
 
-    // Parameters for avoid joint limits task
+    //--- Parameters for avoid joint limits task
     joint_margin_ = 0.175; // 10 deg
     eta_firas_    = 0.01;
 }
@@ -255,7 +263,7 @@ void EffortTask::AvoidJointLimits(Eigen::MatrixXd M,
         // Calc Operational acceleration due to task
 
         if(compensate_topdown){
-            gamma_vector = gamma_vector - Jacob_dash_t.transpose() * *tau_total;
+            gamma_vector = gamma_vector + Jacob_dash_t.transpose() * *tau_total;
         }
 
         // ------------------------------------------//

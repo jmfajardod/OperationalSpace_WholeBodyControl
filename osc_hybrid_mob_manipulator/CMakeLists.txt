@@ -83,6 +83,7 @@ add_executable(osc_hybrid
   src/Effort_Tasks.cpp
   src/Position_Tasks.cpp
   src/Orientation_Tasks.cpp
+  src/Old_tasks.cpp
 )
 
 add_dependencies(osc_hybrid
