@@ -10,8 +10,8 @@ using namespace dart::math;
 // Constructor
 EffortTask::EffortTask(){
 
-    compensate_topdown  = true;
-    compensate_jtspace  = true;
+    compensate_topdown  = false;
+    compensate_jtspace  = false;
 
     // Gain Matrices definition
     kp_cartesian_ = Eigen::MatrixXd::Identity(6, 6);

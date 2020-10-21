@@ -144,9 +144,6 @@ void EffortTask::MakeStraightLine(  Eigen::Vector3d mTarget,
     //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
 
-    if(!compensate_jtspace){
-
-    }
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc Operational acceleration due to task
