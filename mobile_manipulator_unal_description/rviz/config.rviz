@@ -177,12 +177,14 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        desired_pose:
+          Value: true
         mobile_manipulator/base_footprint:
-          Value: true
+          Value: false
         mobile_manipulator/base_gripper_link:
-          Value: true
+          Value: false
         mobile_manipulator/base_link:
-          Value: true
+          Value: false
         mobile_manipulator/end_effector_link:
           Value: false
         mobile_manipulator/gripper_bar_link:
@@ -194,7 +196,7 @@ Visualization Manager:
         mobile_manipulator/left_finger_link:
           Value: false
         mobile_manipulator/lower_forearm_link:
-          Value: true
+          Value: false
         mobile_manipulator/mobile_base_link:
           Value: false
         mobile_manipulator/platform_link:
@@ -202,15 +204,15 @@ Visualization Manager:
         mobile_manipulator/right_finger_link:
           Value: false
         mobile_manipulator/shoulder_link:
-          Value: true
+          Value: false
         mobile_manipulator/tcp_bar_link:
           Value: false
         mobile_manipulator/tcp_gripper_link:
           Value: true
         mobile_manipulator/upper_arm_link:
-          Value: true
+          Value: false
         mobile_manipulator/upper_forearm_link:
-          Value: true
+          Value: false
         mobile_manipulator/wheel0_link:
           Value: false
         mobile_manipulator/wheel1_link:
@@ -218,7 +220,7 @@ Visualization Manager:
         mobile_manipulator/wheel2_link:
           Value: false
         mobile_manipulator/wrist_link:
-          Value: true
+          Value: false
         odom:
           Value: true
       Marker Scale: 1
@@ -228,6 +230,8 @@ Visualization Manager:
       Show Names: false
       Tree:
         odom:
+          desired_pose:
+            {}
           mobile_manipulator/base_footprint:
             mobile_manipulator/mobile_base_link:
               mobile_manipulator/imu_link:
@@ -287,15 +291,15 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 3.3693976402282715
+      Distance: 2.9650700092315674
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 2.051295042037964
-        Y: 0.9405171871185303
+        X: 0.5027526617050171
+        Y: -0.14921748638153076
         Z: -7.301568984985352e-7
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806

@@ -15,6 +15,7 @@
 
 #include <sensor_msgs/JointState.h>
 
+#include <geometry_msgs/Transform.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PointStamped.h>
@@ -22,6 +23,7 @@
 
 #include <nav_msgs/Odometry.h>
 
+#include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -61,6 +63,7 @@ private:
 	*/
 	ros::Subscriber subs_joint_state_;
 	ros::Subscriber subs_odometry_;
+	ros::Subscriber subs_desired_pose_;
 	
 	/*
 	* Publisher 
@@ -77,7 +80,9 @@ private:
 	/*
 	* TF Broadcaster
 	*/
-	
+
+	tf2_ros::TransformBroadcaster broadcaster_;
+	geometry_msgs::TransformStamped transformDesiredPos;
 
 	/*!
 	* Variables 
@@ -96,15 +101,6 @@ private:
 	std_msgs::Float64 manipulator_cmd;
 
 	geometry_msgs::Twist mobile_pltfrm_cmd;
-
-	bool transition_state;
-	double init_trans_time;
-	double transition_period;
-	double transition_omega;
-	int  state;
-	
-	bool received_joint_state;
-	bool received_odometry;
 
     // Eigen variables
 	Eigen::MatrixXd M;
@@ -156,6 +152,8 @@ private:
 	*  @param msg the odometry msg received
 	*/
 	void odometry_CB(const nav_msgs::Odometry msg);
+
+	void change_DesPose_CB(const geometry_msgs::Transform msg);
 
     /*!
 	* Function to read parameters from server

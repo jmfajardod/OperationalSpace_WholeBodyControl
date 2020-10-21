@@ -24,11 +24,11 @@ EffortTask::EffortTask(){
 
     kp_joints_ = Eigen::MatrixXd::Identity(9, 9);
     kp_joints_.topLeftCorner(3, 3) = 0.1*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
-    kp_joints_.bottomRightCorner(6, 6) = 0.5*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains
+    kp_joints_.bottomRightCorner(6, 6) = 5.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains
 
     kd_joints_ = Eigen::MatrixXd::Identity(9, 9);
     kd_joints_.topLeftCorner(3, 3) = 2.0*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
-    kd_joints_.bottomRightCorner(6, 6) = 20.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains
+    kd_joints_.bottomRightCorner(6, 6) = 5.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (35.0)
 
     // Max vel for straight line task
     max_vel_ = 0.3; // m/s
@@ -110,7 +110,7 @@ void EffortTask::AchieveJointConf(  Eigen::VectorXd q_desired,
     Eigen::VectorXd e = q_desired - mRobot->getPositions(); // Position error
     Eigen::VectorXd de = q_dot_desired - mRobot->getVelocities();  // Velocity error (Target velocity is zero)
 
-    Eigen::VectorXd q_star = kd_joints_ * de ;//+ kp_joints_ * e; 
+    Eigen::VectorXd q_star = kd_joints_ * de ;// + kp_joints_ * e; 
 
     // ------------------------------------------//
     // ------------------------------------------//

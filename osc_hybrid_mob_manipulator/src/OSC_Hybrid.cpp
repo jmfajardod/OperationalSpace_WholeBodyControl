@@ -54,8 +54,6 @@ void OscHybridController::jointState_CB(const sensor_msgs::JointState msg){
         }
 
     }    
-    
-    received_joint_state = true;
 
     /******************************/
     //std::cout << "Joint Pos: \n" << q_k << std::endl;
@@ -88,13 +86,25 @@ void OscHybridController::odometry_CB(const nav_msgs::Odometry msg){
     q_dot_k(1) = msg.twist.twist.linear.y;
     q_dot_k(2) = msg.twist.twist.angular.z;
 
-    received_odometry = true;
-
     /******************************/
     //std::cout << "Joint Pos: \n" << q_k << std::endl;
     //std::cout << "Joint Vel: \n" << q_dot_k << std::endl;
 
     return;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Callback function to change the desired pose
+void OscHybridController::change_DesPose_CB(const geometry_msgs::Transform msg){
+
+    transformDesiredPos.transform.translation.x = msg.translation.x;
+    transformDesiredPos.transform.translation.y = msg.translation.y;
+    transformDesiredPos.transform.translation.z = msg.translation.z;
+    transformDesiredPos.transform.rotation.x = msg.rotation.x;
+    transformDesiredPos.transform.rotation.y = msg.rotation.y;
+    transformDesiredPos.transform.rotation.z = msg.rotation.z;
+    transformDesiredPos.transform.rotation.w = msg.rotation.w;
 
 }
 
@@ -107,15 +117,8 @@ OscHybridController::OscHybridController(ros::NodeHandle& nodeHandle) :
     q_dot_k(Eigen::VectorXd::Zero(9)),
     tau_zero(Eigen::VectorXd::Zero(9)),
     tau_result(Eigen::VectorXd::Zero(9)),
-    transition_tau(Eigen::VectorXd::Zero(9)),
     q_dot_result(Eigen::VectorXd::Zero(9)),
-    q_dot_zero(Eigen::VectorXd::Zero(9)),
-    transition_q_dot(Eigen::VectorXd::Zero(9)),
-    state(0),
-    transition_state(false),
-    transition_period(0.5),
-    received_joint_state(false),
-    received_odometry(false)
+    q_dot_zero(Eigen::VectorXd::Zero(9))
 {   
     /******************************/
     // Load parameters
@@ -123,8 +126,6 @@ OscHybridController::OscHybridController(ros::NodeHandle& nodeHandle) :
         ROS_ERROR("Could not read parameters.");
         ros::requestShutdown();
     }
-
-    transition_omega = (2*M_PI)/(2*transition_period);
     
     /******************************/
     // Init messages
@@ -143,6 +144,8 @@ OscHybridController::OscHybridController(ros::NodeHandle& nodeHandle) :
     subs_odometry_   = nodeHandle_.subscribe("/"+ robot_name +"/" + odometry_topic , 10, 
                                         &OscHybridController::odometry_CB, this);
     
+    subs_desired_pose_ = nodeHandle_.subscribe("/"+ robot_name +"/" + "desired_pose" , 10, 
+                                        &OscHybridController::change_DesPose_CB, this);
     
     /******************************/
     // Create publishers
@@ -196,167 +199,172 @@ void OscHybridController::spin(){
     ros::Rate loop_rate(frecuency_rate);
 
     while (ros::ok()){  
+
+        //std::cout << "Joint Pos: \n" << q_k << std::endl;
+        //std::cout << "Joint Vel: \n" << q_dot_k << std::endl;  
+
+        Eigen::VectorXd current_pos =  q_k;
+        Eigen::VectorXd current_vel =  q_dot_k;
+
+        /******************************/
+        // Update state of the DART Model
+
+        dart_robotSkeleton->setPositions(current_pos);
+        dart_robotSkeleton->setVelocities(current_vel);
+
+        M = dart_robotSkeleton->getMassMatrix();  // Mass Matrix
+        //std::cout << "Mass Matrix: \n" << M << std::endl;
+
+        C_k = dart_robotSkeleton->getCoriolisForces();  // Coriolis vector forces
+        g_k = dart_robotSkeleton->getGravityForces();   // Gravity vector forces
+        //std::cout << "Coriolis vector forces: \n" << C_k << std::endl;
+        //std::cout << "Gravity vector forces: \n" << g_k << std::endl;
         
-        // To send commands at least one type of data has to have been received
-        if(received_joint_state || received_odometry){
-            
-            received_joint_state = false;
-            received_odometry = false;
+        /******************************/
+        // Target definition
 
-            //std::cout << "Joint Pos: \n" << q_k << std::endl;
-            //std::cout << "Joint Vel: \n" << q_dot_k << std::endl;   
+        //--- Publish tranform to desired pose frame
+        transformDesiredPos.header.stamp = ros::Time::now();
+        broadcaster_.sendTransform(transformDesiredPos);
 
-            /******************************/
-            // Update state of the DART Model
+        //--- Cartesian Target
+        Eigen::Vector3d targetPos = Eigen::Vector3d::Zero(); 
+        targetPos(0) = transformDesiredPos.transform.translation.x;
+        targetPos(1) = transformDesiredPos.transform.translation.y;
+        targetPos(2) = transformDesiredPos.transform.translation.z;
 
-            dart_robotSkeleton->setPositions(q_k);
-            dart_robotSkeleton->setVelocities(q_dot_k);
+        //--- Desired rotation matrix
+        Eigen::Quaterniond quat_des(transformDesiredPos.transform.rotation.w, transformDesiredPos.transform.rotation.x, transformDesiredPos.transform.rotation.y , transformDesiredPos.transform.rotation.z);
+        Eigen::Matrix3d R_world_desired = quat_des.normalized().toRotationMatrix();
 
-            M = dart_robotSkeleton->getMassMatrix();  // Mass Matrix
-            //std::cout << "Mass Matrix: \n" << M << std::endl;
+        //std::cout << "Rotation matrix: \n" << R_world_desired << std::endl; // Print rot matrix
 
-            C_k = dart_robotSkeleton->getCoriolisForces();  // Coriolis vector forces
-            g_k = dart_robotSkeleton->getGravityForces();   // Gravity vector forces
-            //std::cout << "Coriolis vector forces: \n" << C_k << std::endl;
-            //std::cout << "Gravity vector forces: \n" << g_k << std::endl;
-            
-            /******************************/
-            // Target definition
+        //--- Joint Conf Desired
+        Eigen::VectorXd q_desired = Eigen::VectorXd::Zero(9);
+        q_desired(0) = current_pos(0);
+        q_desired(1) = current_pos(1);
+        q_desired(2) = current_pos(2);
+        //q_desired = current_pos;
 
-            // Cartesian Target
-            Eigen::Vector3d targetPos = Eigen::Vector3d::Zero(); 
-            targetPos << 3.0, 3.5, 0.737; //0.54, 0.001, 0.737;
+        /******************************/
+        // Task Definition for effort
 
-            // Desired rotation matrix
-            Eigen::Matrix3d R_world_desired = Eigen::MatrixXd::Zero(3,3);
-            R_world_desired = Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitZ()); //Eigen::MatrixXd::Identity(3, 3);
+        tau_result = Eigen::VectorXd::Zero(9);
+        Eigen::MatrixXd Null_space = Eigen::MatrixXd::Identity(9,9);
 
-            // Joint Conf Desired
-            Eigen::VectorXd q_desired = Eigen::VectorXd::Zero(9);
-            q_desired(0) = q_k(0);
-            q_desired(1) = q_k(1);
-            q_desired(2) = q_k(2);
-            //q_desired = q_k;
+        //std::cout << "Initial tau: \n" << tau_result << std::endl;
+        //std::cout << "Initial Null space: \n" << Null_space << std::endl;
 
-            /******************************/
-            // Task Definition for effort
+        //effortSolver_.AvoidJointLimits(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
+        //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
 
-            tau_result = Eigen::VectorXd::Zero(9);
-            Eigen::MatrixXd Null_space = Eigen::MatrixXd::Identity(9,9);
+        //effortSolver_.AchieveCartesian(targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //std::cout << "Tau result after achieve cart pos: \n" << tau_result << std::endl;
+        //std::cout << "Null space after achieve cart pos: \n" << Null_space << std::endl;
 
-            //std::cout << "Initial tau: \n" << tau_result << std::endl;
-            //std::cout << "Initial Null space: \n" << Null_space << std::endl;
+        effortSolver_.MakeStraightLine(targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //std::cout << "Tau result after straight line: \n" << tau_result << std::endl;
+        //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
 
-            //effortSolver_.AvoidJointLimits(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-            //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
-            //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
+        effortSolver_.AchieveOrientationQuat3(R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
+        //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
+        //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
 
-            //effortSolver_.AchieveCartesian(targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-            //std::cout << "Tau result after achieve cart pos: \n" << tau_result << std::endl;
-            //std::cout << "Null space after achieve cart pos: \n" << Null_space << std::endl;
+        effortSolver_.AchieveJointConf(q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //std::cout << "Tau result after achieve joint: \n" << tau_result << std::endl;
 
-            effortSolver_.MakeStraightLine(targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-            //std::cout << "Tau result after straight line: \n" << tau_result << std::endl;
-            //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
-
-            //effortSolver_.AchieveOrientationQuat3(R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
-            //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
-            //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
-
-            effortSolver_.AchieveJointConf(q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-            //std::cout << "Tau result after achieve joint: \n" << tau_result << std::endl;
-
-            if(effortSolver_.compensate_jtspace){
-                tau_result =  tau_result + C_k + g_k;
-            }
-
-            //std::cout << "Tau result : \n" << tau_result << std::endl;
-
-            /******************************/
-            // Admittance controller
-            // send_vel -> q_dot_result
-            
-            Eigen::MatrixXd damp_des_     = Eigen::MatrixXd::Identity(3, 3) ;
-            damp_des_.topLeftCorner(2, 2) = 100.0*Eigen::MatrixXd::Identity(2, 2); // Liner vel damping
-            damp_des_(2,2) = 50.0 ; // Angular vel damping (10.0)
-
-            Eigen::MatrixXd inertia_des = 1.0*Eigen::MatrixXd::Identity(3, 3);
-
-            damp_des_ = damp_des_.inverse();
-
-            Eigen::VectorXd mob_base_tor = Eigen::VectorXd::Zero(3);
-            Eigen::VectorXd mob_base_vel = Eigen::VectorXd::Zero(3);
-
-            mob_base_tor << tau_result(0), tau_result(1), tau_result(2);
-            //std::cout << "Tau mobile base : \n" << mob_base_tor << std::endl;
-
-            mob_base_vel = damp_des_*mob_base_tor - damp_des_*inertia_des*Eigen::VectorXd::Zero(3);
-
-            q_dot_result(0) = mob_base_vel(0);
-            q_dot_result(1) = mob_base_vel(1);
-            q_dot_result(2) = mob_base_vel(2);
-
-            //std::cout << "Vel Command: \n" << q_dot_result << std::endl;
-
-            /******************************/
-            // Limit efforts
-
-            for (size_t ii = 0; ii < 9; ii++){
-                if(ii<3){ // Mobile platform efforts
-                    if( abs(tau_result(ii)) > 10.0)  tau_result(ii) = tau_result(ii) * (10.0/abs(tau_result(ii)));
-                }
-                else{    // Manipulator efforts
-                    if( abs(tau_result(ii)) > 10.0)  tau_result(ii) = tau_result(ii) * (10.0/abs(tau_result(ii)));
-                }
-            }
-
-            //std::cout << "Limited Efforts: \n" << tau_result << std::endl;
-
-            /******************************/
-            // Limit Velocities
-
-            for (size_t ii = 0; ii < 9; ii++){
-                if(ii<2){ // Mobile platform efforts linear vel
-                    if( abs(q_dot_result(ii)) > 0.7 )  q_dot_result(ii) = q_dot_result(ii) * (0.7/abs(q_dot_result(ii)));
-                }
-                else if(ii<3){ // Mobile platform angular vel
-                    if( abs(q_dot_result(ii)) > 1.75 )  q_dot_result(ii) = q_dot_result(ii) * (1.75/abs(q_dot_result(ii)));
-                }
-            }
-
-            //std::cout << "Limited Vel: \n" << q_dot_result << std::endl;
-
-            /******************************/
-            // Publish commands to mobile platform
-
-            mobile_pltfrm_cmd.linear.x  = q_dot_result(0);
-            mobile_pltfrm_cmd.linear.y  = q_dot_result(1);
-            mobile_pltfrm_cmd.angular.z = q_dot_result(2);
-
-            pub_mobile_platfrm.publish(mobile_pltfrm_cmd);
-
-            /******************************/
-            // Publish commands to manipulator
-
-            manipulator_cmd.data = tau_result(3);
-            pub_manipulator_dof_1.publish(manipulator_cmd);
-
-            manipulator_cmd.data = tau_result(4);
-            pub_manipulator_dof_2.publish(manipulator_cmd);
-
-            manipulator_cmd.data = tau_result(5);
-            pub_manipulator_dof_3.publish(manipulator_cmd);
-
-            manipulator_cmd.data = tau_result(6);
-            pub_manipulator_dof_4.publish(manipulator_cmd);
-
-            manipulator_cmd.data = tau_result(7);
-            pub_manipulator_dof_5.publish(manipulator_cmd);
-
-            manipulator_cmd.data = tau_result(8);
-            pub_manipulator_dof_6.publish(manipulator_cmd);
-            
+        if(effortSolver_.compensate_jtspace){
+            tau_result =  tau_result + C_k + g_k;
         }
+
+        //std::cout << "Tau result : \n" << tau_result << std::endl;
+
+        /******************************/
+        // Admittance controller
+        // send_vel -> q_dot_result
+        
+        Eigen::MatrixXd damp_des_     = Eigen::MatrixXd::Identity(3, 3) ;
+        damp_des_.topLeftCorner(2, 2) = 100.0*Eigen::MatrixXd::Identity(2, 2); // Liner vel damping
+        damp_des_(2,2) = 30.0 ; // Angular vel damping (10.0)
+
+        Eigen::MatrixXd inertia_des = 1.0*Eigen::MatrixXd::Identity(3, 3);
+
+        damp_des_ = damp_des_.inverse();
+
+        Eigen::VectorXd mob_base_tor = Eigen::VectorXd::Zero(3);
+        Eigen::VectorXd mob_base_vel = Eigen::VectorXd::Zero(3);
+
+        mob_base_tor << tau_result(0), tau_result(1), tau_result(2);
+        //std::cout << "Tau mobile base : \n" << mob_base_tor << std::endl;
+
+        mob_base_vel = damp_des_*mob_base_tor - damp_des_*inertia_des*Eigen::VectorXd::Zero(3);
+
+        q_dot_result(0) = mob_base_vel(0);
+        q_dot_result(1) = mob_base_vel(1);
+        q_dot_result(2) = mob_base_vel(2);
+
+        //std::cout << "Vel Command: \n" << q_dot_result << std::endl;
+
+        /******************************/
+        // Limit efforts
+
+        for (size_t ii = 0; ii < 9; ii++){
+            if(ii<3){ // Mobile platform efforts
+                if( abs(tau_result(ii)) > 10.0)  tau_result(ii) = tau_result(ii) * (10.0/abs(tau_result(ii)));
+            }
+            else{    // Manipulator efforts
+                if( abs(tau_result(ii)) > 10.0)  tau_result(ii) = tau_result(ii) * (10.0/abs(tau_result(ii)));
+            }
+        }
+
+        //std::cout << "Limited Efforts: \n" << tau_result << std::endl;
+
+        /******************************/
+        // Limit Velocities
+
+        for (size_t ii = 0; ii < 9; ii++){
+            if(ii<2){ // Mobile platform efforts linear vel
+                if( abs(q_dot_result(ii)) > 0.7 )  q_dot_result(ii) = q_dot_result(ii) * (0.7/abs(q_dot_result(ii)));
+            }
+            else if(ii<3){ // Mobile platform angular vel
+                if( abs(q_dot_result(ii)) > 1.75 )  q_dot_result(ii) = q_dot_result(ii) * (1.75/abs(q_dot_result(ii)));
+            }
+        }
+
+        //std::cout << "Limited Vel: \n" << q_dot_result << std::endl;
+
+        /******************************/
+        // Publish commands to mobile platform
+
+        mobile_pltfrm_cmd.linear.x  = q_dot_result(0);
+        mobile_pltfrm_cmd.linear.y  = q_dot_result(1);
+        mobile_pltfrm_cmd.angular.z = q_dot_result(2);
+
+        pub_mobile_platfrm.publish(mobile_pltfrm_cmd);
+
+        /******************************/
+        // Publish commands to manipulator
+
+        manipulator_cmd.data = tau_result(3);
+        pub_manipulator_dof_1.publish(manipulator_cmd);
+
+        manipulator_cmd.data = tau_result(4);
+        pub_manipulator_dof_2.publish(manipulator_cmd);
+
+        manipulator_cmd.data = tau_result(5);
+        pub_manipulator_dof_3.publish(manipulator_cmd);
+
+        manipulator_cmd.data = tau_result(6);
+        pub_manipulator_dof_4.publish(manipulator_cmd);
+
+        manipulator_cmd.data = tau_result(7);
+        pub_manipulator_dof_5.publish(manipulator_cmd);
+
+        manipulator_cmd.data = tau_result(8);
+        pub_manipulator_dof_6.publish(manipulator_cmd);
+            
+        //}
 
         /******************************/
         // Set time and sleep
@@ -490,6 +498,29 @@ void OscHybridController::loadDARTModel(){
     dart_robotSkeleton->setMobile(false);
     dart_robotSkeleton->setPositions(q_k);
     dart_robotSkeleton->setVelocities(q_dot_k);
+
+    /*******************************/
+    // Broadcast initial desired pose as original pose
+
+    transformDesiredPos.header.stamp = ros::Time::now();
+    transformDesiredPos.header.frame_id = "odom";
+    transformDesiredPos.child_frame_id = robot_name + "/" + "desired_pose";
+
+    Eigen::Vector3d orig_pos =  mEndEffector_->getWorldTransform().translation() ;
+
+    transformDesiredPos.transform.translation.x = orig_pos(0);
+    transformDesiredPos.transform.translation.y = orig_pos(1);
+    transformDesiredPos.transform.translation.z = orig_pos(2);
+
+    Eigen::Matrix3d R_orig = mEndEffector_->getWorldTransform().rotation(); 
+    Eigen::Quaterniond quat_orig(R_orig);
+
+    transformDesiredPos.transform.rotation.x = quat_orig.x();
+    transformDesiredPos.transform.rotation.y = quat_orig.y();
+    transformDesiredPos.transform.rotation.z = quat_orig.z();
+    transformDesiredPos.transform.rotation.w = quat_orig.w();
+
+    broadcaster_.sendTransform(transformDesiredPos);
 
 }
 
