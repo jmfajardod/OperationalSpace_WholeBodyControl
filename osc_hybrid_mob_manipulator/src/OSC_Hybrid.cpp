@@ -255,24 +255,29 @@ void OscHybridController::spin(){
         //std::cout << "Initial tau: \n" << tau_result << std::endl;
         //std::cout << "Initial Null space: \n" << Null_space << std::endl;
 
-        effortSolver_.AvoidJointLimits(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-        //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
-        //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
+        Eigen::Vector3d x_error =  targetPos - mEndEffector_->getWorldTransform().translation();
 
-        //effortSolver_.AchieveCartesian(targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-        //std::cout << "Tau result after achieve cart pos: \n" << tau_result << std::endl;
-        //std::cout << "Null space after achieve cart pos: \n" << Null_space << std::endl;
-
-        effortSolver_.MakeStraightLine(targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-        //std::cout << "Tau result after straight line: \n" << tau_result << std::endl;
-        //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
+        if(x_error.norm()>0.4){
+            //std::cout << "Goal too far away" << std::endl;
+            effortSolver_.AchieveCartesianMobilRob(targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            effortSolver_.AchieveHeightConstVel(targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        }
+        else{
+            effortSolver_.AchieveCartesianConstVel(targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            //std::cout << "Tau result after straight line: \n" << tau_result << std::endl;
+            //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
+        }
 
         effortSolver_.AchieveOrientation(R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
         //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
         //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
+    
+        //effortSolver_.AvoidJointLimits(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
+        //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
 
         effortSolver_.AchieveJointConf(q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-        //std::cout << "Tau result after achieve joint: \n" << tau_result << std::endl;
+        //std::cout << "Tau result after achieve joint: \n" << tau_result << "\n" << std::endl;
 
         if(effortSolver_.compensate_jtspace){
             tau_result =  tau_result + C_k + g_k;
@@ -284,12 +289,13 @@ void OscHybridController::spin(){
         effortSolver_.OLD_AchieveJointConf(&tau_zero, &tau_result2, q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
         effortSolver_.OLD_AchieveOrientationQuat3(&tau_zero, &tau_result2, R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ ); 
         effortSolver_.OLD_MakeStraightLine(&tau_zero, &tau_result2, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-
-        if( ((tau_result-tau_result2).cwiseAbs()).maxCoeff() > 0.1 ){
+        
+        /*if( ((tau_result-tau_result2).cwiseAbs()).maxCoeff() > 0.1 ){
             std::cout << "NEW Tau result : \n" << tau_result << std::endl;
             std::cout << "Old Tau result : \n" << tau_result2 << std::endl;
             std::cout << "Difference Tau result : \n" << tau_result-tau_result2 << std::endl;
-        }
+        }*/
+        
         /******************************/
         // Admittance controller
         // send_vel -> q_dot_result

@@ -1,0 +1,19 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/opt/ros/melodic/include/**",
+        "/home/josefajardo/tesis_ros_ws/src/tesis_2020/mobile_robot_unal_description/include/**",
+        "/home/josefajardo/tesis_ros_ws/src/tesis_2020/osc_hybrid_mob_manipulator/include/**",
+        "/home/josefajardo/tesis_ros_ws/src/tesis_2020/robotino_effort_publisher/include/**",
+        "/home/josefajardo/tesis_ros_ws/src/tesis_2020/robotino_vel_publisher/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ]
+}

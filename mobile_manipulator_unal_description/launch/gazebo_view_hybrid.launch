@@ -29,7 +29,7 @@
         type="xacro" 
         name="parser" 
         args="$(find mobile_manipulator_unal_description)/urdf/mobile_manipulator.xacro
-              -o $(find mobile_manipulator_unal_description)/urdf/mobile_manipulator.urdf"
+                -o $(find mobile_manipulator_unal_description)/urdf/mobile_manipulator.urdf"
     />
 
     <!-- ************************************************************************************************ -->
@@ -109,26 +109,6 @@
                 wheel1_controller
                 wheel2_controller"
     />
-
-    <!--  Trajectory controller
-
-    <rosparam 
-        file="$(find mobile_manipulator_unal_description)/config/trajectory_controller.yaml" 
-        command="load" 
-        ns="$(arg robot_name)"
-    />
-    
-    <node
-        name="manipulator_ctrller"
-        pkg="controller_manager"
-        type="spawner"
-        respawn="false"
-        output="screen"
-        ns="$(arg robot_name)"
-        args=  "arm_controller
-                gripper_controller"
-    />
-    -->
 
     <!-- Effort Controller-->
 

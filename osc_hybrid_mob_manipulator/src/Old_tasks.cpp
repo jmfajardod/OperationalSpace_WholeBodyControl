@@ -57,7 +57,7 @@ void EffortTask::OLD_MakeStraightLine(  Eigen::VectorXd *tau_zero,
 
     Eigen::Vector3d x_dot_desired = kp*kd.inverse()*x_error;
 
-    double scale = std::min(1.0, (max_vel_ / x_dot_desired.norm()));
+    double scale = std::min(1.0, (max_lineal_vel_ / x_dot_desired.norm()));
     //std::cout << "Scale V: \n" << scale << std::endl;
 
     Eigen::Vector3d f_t_star =  (-1.0*kd) * (mEndEffector->getLinearVelocity() - scale*x_dot_desired); // Command force vector

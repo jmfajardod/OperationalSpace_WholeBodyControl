@@ -108,16 +108,34 @@ public:
 
     /*!
      * Effort Task
-     * Make a StraigthLine
+     * Go to a desired position with constant vel
     */
-    void MakeStraightLine(  Eigen::Vector3d mTarget, 
-                            Eigen::MatrixXd M, 
-                            Eigen::VectorXd C_t,
-                            Eigen::VectorXd g_t,
-                            dart::dynamics::SkeletonPtr mRobot,
-                            dart::dynamics::BodyNode* mEndEffector,
-                            Eigen::VectorXd *tau_total,
-                            Eigen::MatrixXd *Null_space_iter);
+    void AchieveCartesianConstVel(  Eigen::Vector3d mTarget, 
+                                    Eigen::MatrixXd M, 
+                                    Eigen::VectorXd C_t,
+                                    Eigen::VectorXd g_t,
+                                    dart::dynamics::SkeletonPtr mRobot,
+                                    dart::dynamics::BodyNode* mEndEffector,
+                                    Eigen::VectorXd *tau_total,
+                                    Eigen::MatrixXd *Null_space_iter);
+
+    void AchieveCartesianMobilRob(  Eigen::Vector3d mTarget, 
+                                    Eigen::MatrixXd Full_M, 
+                                    Eigen::VectorXd Full_C_t,
+                                    Eigen::VectorXd Full_g_t,
+                                    dart::dynamics::SkeletonPtr mRobot,
+                                    dart::dynamics::BodyNode* mEndEffector,
+                                    Eigen::VectorXd *tau_total,
+                                    Eigen::MatrixXd *Null_space_iter);
+
+    void AchieveHeightConstVel( Eigen::Vector3d mTarget, 
+                                Eigen::MatrixXd M, 
+                                Eigen::VectorXd C_t,
+                                Eigen::VectorXd g_t,
+                                dart::dynamics::SkeletonPtr mRobot,
+                                dart::dynamics::BodyNode* mEndEffector,
+                                Eigen::VectorXd *tau_total,
+                                Eigen::MatrixXd *Null_space_iter);
 
 
     /***********************************************************************************/
@@ -136,6 +154,19 @@ public:
                             dart::dynamics::BodyNode* mEndEffector,
                             Eigen::VectorXd *tau_total,
                             Eigen::MatrixXd *Null_space_iter);
+
+    /*!
+     * Effort Task
+     * Go to a desired orientation with constant vel
+    */
+    void AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired, 
+                                    Eigen::MatrixXd M,
+                                    Eigen::VectorXd C_t,
+                                    Eigen::VectorXd g_t,
+                                    dart::dynamics::SkeletonPtr mRobot,
+                                    dart::dynamics::BodyNode* mEndEffector,
+                                    Eigen::VectorXd *tau_total,
+                                    Eigen::MatrixXd *Null_space_iter);
 
     Eigen::Vector3d ErrorAngleAxis1(Eigen::Matrix3d rot_mat_desired, 
                                     dart::dynamics::SkeletonPtr mRobot,
@@ -157,6 +188,7 @@ public:
                                     dart::dynamics::SkeletonPtr mRobot,
                                     dart::dynamics::BodyNode* mEndEffector);
 
+    Eigen::MatrixXd calcInertiaMatrix(Eigen::MatrixXd Alpha_inv);
 
     void OLD_MakeStraightLine(  Eigen::VectorXd *tau_zero,
                                 Eigen::VectorXd *tau_result,
@@ -195,7 +227,8 @@ private:
     Eigen::MatrixXd kp_joints_;
     Eigen::MatrixXd kd_joints_;
 
-    double max_vel_;
+    double max_lineal_vel_;
+    double max_angular_vel_;
 
     double joint_margin_;
     double eta_firas_;
