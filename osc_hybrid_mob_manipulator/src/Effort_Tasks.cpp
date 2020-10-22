@@ -36,7 +36,7 @@ EffortTask::EffortTask(){
     // 3 - Quaternion Yuan
     // 4 - Quaternion Caccavale 1
     // 5 - Quaternion Caccavale 2
-    ori_error_mode = 1;
+    ori_error_mode = 5;
 
     //--- Max vel for straight line task
     max_lineal_vel_  = 0.3; // m/s
