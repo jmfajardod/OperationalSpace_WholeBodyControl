@@ -10,7 +10,10 @@ using namespace dart::math;
 // Function to calculate the efforts required to Hold/Achieve a cartesian position
 // without the trajectory
 
-void EffortTask::AchieveCartesian(  Eigen::Vector3d mTarget, 
+void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos, 
+                                    Eigen::Vector3d mTargetVel,
+                                    Eigen::Vector3d mTargetAccel, 
+                                    double *svd_position,
                                     Eigen::MatrixXd M, 
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
@@ -38,7 +41,7 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTarget,
 
     Eigen::MatrixXd Alpha_t_inv = Jacob_t * M.inverse() * Jacob_t.transpose(); // Symmetric Inertia Matrix
 
-    Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv);
+    Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv, svd_position);
 
     // ------------------------------------------//
     // ------------------------------------------//
@@ -54,18 +57,18 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTarget,
     //std::cout<< "Cartesian Target: \n" << mTarget << std::endl;
     //std::cout<< "EE Pos: \n" << mEndEffector->getWorldTransform().translation() << std::endl;
 
-    Eigen::Vector3d e =  mTarget - mEndEffector->getWorldTransform().translation() ; // Position error
+    Eigen::Vector3d e =  mTargetPos - mEndEffector->getWorldTransform().translation() ; // Position error
     //std::cout<< "Error : \n" << e << std::endl;
 
-    Eigen::Vector3d de = Eigen::Vector3d::Zero(3) - mEndEffector->getLinearVelocity();  // Velocity error (Target velocity is zero)
+    Eigen::Vector3d de = mTargetVel - mEndEffector->getLinearVelocity();  // Velocity error (Target velocity is zero)
 
     // Obtain Position Gain matrices
     Eigen::Matrix3d kp = kp_cartesian_.topLeftCorner(3, 3);
     Eigen::Matrix3d kd = kd_cartesian_.topLeftCorner(3, 3);
 
-    Eigen::Vector3d x_star =  kd*de + kp*e ; // Command force vector
+    Eigen::Vector3d x_star = mTargetAccel + kd*de + kp*e ; // Command force vector
     if(compensate_topdown){
-        x_star = x_star + Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
@@ -122,6 +125,7 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTarget,
 // Function to calculate the efforts required to Hold/Achieve a cartesian position
 
 void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget, 
+                                            double *svd_position,
                                             Eigen::MatrixXd M, 
                                             Eigen::VectorXd C_t,
                                             Eigen::VectorXd g_t,
@@ -150,7 +154,7 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
 
     Eigen::MatrixXd Alpha_t_inv = Jacob_t * M.inverse() * Jacob_t.transpose(); // Symmetric Inertia Matrix
 
-    Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv);
+    Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv, svd_position);
 
     // ------------------------------------------//
     // ------------------------------------------//
@@ -180,7 +184,7 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
 
     Eigen::Vector3d x_star =  (-1.0*kd) * (mEndEffector->getLinearVelocity() - scale*x_dot_desired); // Command force vector
     if(compensate_topdown){
-        x_star = x_star + Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
@@ -235,7 +239,9 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
 ////////////////////////////////////////////////////////////////////////////////
 // Function to calculate the efforts required to Hold/Achieve a cartesian position
 
-void EffortTask::AchieveCartesianMobilRob(  Eigen::Vector3d mTarget, 
+void EffortTask::AchieveCartesianMobilRob(  Eigen::Vector3d mTargetPos, 
+                                            Eigen::Vector3d mTargetVel,
+                                            Eigen::Vector3d mTargetAccel,
                                             Eigen::MatrixXd Full_M, 
                                             Eigen::VectorXd Full_C_t,
                                             Eigen::VectorXd Full_g_t,
@@ -290,20 +296,15 @@ void EffortTask::AchieveCartesianMobilRob(  Eigen::Vector3d mTarget,
     //std::cout<< "Cartesian Target: \n" << mTarget << std::endl;
     //std::cout<< "EE Pos: \n" << mEndEffector->getWorldTransform().translation() << std::endl;
 
-    Eigen::VectorXd x_error =  (mTarget - mEndEffector->getWorldTransform().translation()).topRows(2); // Position error
+    Eigen::VectorXd x_error =  (mTargetPos - mEndEffector->getWorldTransform().translation()).topRows(2); // Position error
     //std::cout<< "Cartesian error: \n" << x_error << std::endl;
 
     // Obtain Position Gain matrices
     Eigen::MatrixXd kp = 0.003*(kp_cartesian_.topLeftCorner(2, 2));
     Eigen::MatrixXd kd = 0.005*(kd_cartesian_.topLeftCorner(2, 2));
 
-    //Eigen::VectorXd x_dot_desired = kp*kd.inverse()*x_error;
-    //double scale = std::min(1.0, (max_lineal_vel_ / x_dot_desired.norm()));
-    //std::cout << "Scale V: \n" << scale << std::endl;
-    //Eigen::VectorXd x_star =  (-1.0*kd) * ((mEndEffector->getLinearVelocity()).topRows(2) - scale*x_dot_desired); // Command force vector
-    
-    Eigen::VectorXd de = Eigen::VectorXd::Zero(2) - (mEndEffector->getLinearVelocity()).topRows(2);
-    Eigen::VectorXd x_star =  kd*de + kp*x_error ; // Command force vector
+    Eigen::VectorXd de = ( mTargetVel - mEndEffector->getLinearVelocity()).topRows(2);
+    Eigen::VectorXd x_star = mTargetAccel.topRows(2) + kd*de + kp*x_error ; // Command force vector
     
     //std::cout << "Ref accel: \n" << x_star << std::endl; 
 
@@ -362,6 +363,7 @@ void EffortTask::AchieveCartesianMobilRob(  Eigen::Vector3d mTarget,
 // Function to calculate the efforts required to Hold/Achieve a cartesian position
 
 void EffortTask::AchieveHeightConstVel( Eigen::Vector3d mTarget, 
+                                        double *svd_position,
                                         Eigen::MatrixXd M, 
                                         Eigen::VectorXd C_t,
                                         Eigen::VectorXd g_t,
@@ -390,7 +392,7 @@ void EffortTask::AchieveHeightConstVel( Eigen::Vector3d mTarget,
 
     Eigen::MatrixXd Alpha_t_inv = Jacob_t * M.inverse() * Jacob_t.transpose(); // Symmetric Inertia Matrix
 
-    Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv);
+    Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv, svd_position);
 
     //std::cout << "Inertia matrix: \n" << Alpha_t << std::endl;
 
@@ -425,7 +427,7 @@ void EffortTask::AchieveHeightConstVel( Eigen::Vector3d mTarget,
     //std::cout << "Ref Accel: \n" << x_star << std::endl;
     
     if(compensate_topdown){
-        x_star = x_star + Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//

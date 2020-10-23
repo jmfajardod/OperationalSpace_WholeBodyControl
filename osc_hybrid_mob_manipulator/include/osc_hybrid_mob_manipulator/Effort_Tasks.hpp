@@ -97,7 +97,10 @@ public:
      * Effort Task
      * Hold/ Achieve a Cartesian Position
     */
-    void AchieveCartesian(  Eigen::Vector3d mTarget, 
+    void AchieveCartesian(  Eigen::Vector3d mTargetPos, 
+                            Eigen::Vector3d mTargetVel,
+                            Eigen::Vector3d mTargetAccel, 
+                            double *svd_position,
                             Eigen::MatrixXd M, 
                             Eigen::VectorXd C_t,
                             Eigen::VectorXd g_t,
@@ -111,7 +114,8 @@ public:
      * Go to a desired position with constant vel
     */
     void AchieveCartesianConstVel(  Eigen::Vector3d mTarget, 
-                                    Eigen::MatrixXd M, 
+                                    double *svd_position,
+                                    Eigen::MatrixXd M,
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
                                     dart::dynamics::SkeletonPtr mRobot,
@@ -119,7 +123,14 @@ public:
                                     Eigen::VectorXd *tau_total,
                                     Eigen::MatrixXd *Null_space_iter);
 
-    void AchieveCartesianMobilRob(  Eigen::Vector3d mTarget, 
+    /*!
+     * Effort Task
+     * Tasks when goal is too far away
+    */
+
+    void AchieveCartesianMobilRob(  Eigen::Vector3d mTargetPos, 
+                                    Eigen::Vector3d mTargetVel,
+                                    Eigen::Vector3d mTargetAccel,
                                     Eigen::MatrixXd Full_M, 
                                     Eigen::VectorXd Full_C_t,
                                     Eigen::VectorXd Full_g_t,
@@ -128,7 +139,8 @@ public:
                                     Eigen::VectorXd *tau_total,
                                     Eigen::MatrixXd *Null_space_iter);
 
-    void AchieveHeightConstVel( Eigen::Vector3d mTarget, 
+    void AchieveHeightConstVel( Eigen::Vector3d mTarget,
+                                double *svd_position, 
                                 Eigen::MatrixXd M, 
                                 Eigen::VectorXd C_t,
                                 Eigen::VectorXd g_t,
@@ -147,6 +159,9 @@ public:
      * Hold/ Achieve an Orientation
     */
     void AchieveOrientation(Eigen::Matrix3d rot_mat_desired, 
+                            Eigen::Vector3d mTargetVel,
+                            Eigen::Vector3d mTargetAccel,
+                            double *svd_orientation,
                             Eigen::MatrixXd M,
                             Eigen::VectorXd C_t,
                             Eigen::VectorXd g_t,
@@ -159,7 +174,8 @@ public:
      * Effort Task
      * Go to a desired orientation with constant vel
     */
-    void AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired, 
+    void AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired,
+                                    double *svd_orientation,
                                     Eigen::MatrixXd M,
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
@@ -188,34 +204,7 @@ public:
                                     dart::dynamics::SkeletonPtr mRobot,
                                     dart::dynamics::BodyNode* mEndEffector);
 
-    Eigen::MatrixXd calcInertiaMatrix(Eigen::MatrixXd Alpha_inv);
-
-    void OLD_MakeStraightLine(  Eigen::VectorXd *tau_zero,
-                                Eigen::VectorXd *tau_result,
-                                Eigen::Vector3d mTarget, 
-                                Eigen::MatrixXd M, 
-                                Eigen::VectorXd C_t,
-                                Eigen::VectorXd g_t,
-                                dart::dynamics::SkeletonPtr mRobot,
-                                dart::dynamics::BodyNode* mEndEffector);
-
-    void OLD_AchieveOrientationQuat3(Eigen::VectorXd *tau_zero, 
-                                    Eigen::VectorXd *tau_result,
-                                    Eigen::Matrix3d rot_mat_desired, 
-                                    Eigen::MatrixXd M,
-                                    Eigen::VectorXd C_t,
-                                    Eigen::VectorXd g_t,
-                                    dart::dynamics::SkeletonPtr mRobot,
-                                    dart::dynamics::BodyNode* mEndEffector);
-
-    void OLD_AchieveJointConf(  Eigen::VectorXd *tau_zero,
-                                Eigen::VectorXd *tau_result,
-                                Eigen::VectorXd q_desired, 
-                                Eigen::MatrixXd M, 
-                                Eigen::VectorXd C_t,
-                                Eigen::VectorXd g_t,
-                                dart::dynamics::SkeletonPtr mRobot,
-                                dart::dynamics::BodyNode* mEndEffector);
+    Eigen::MatrixXd calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double* min_svd);
 
     bool compensate_topdown;
     bool compensate_jtspace;

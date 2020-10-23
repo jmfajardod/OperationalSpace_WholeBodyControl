@@ -9,20 +9,6 @@ using namespace dart::math;
 using namespace effort_tasks;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Function to wrap angles to [-pi,pi]
-float OscHybridController::constrainAngle(float x){
-    // Wrap to [0,2*pi]
-    x = fmod(x,2*M_PI);
-    if (x < 0)
-        x += 2*M_PI;
-    // Wrap to [-pi,pi]
-    x = fmod(x+M_PI,2*M_PI);
-    if (x < 0)
-        x += 2*M_PI;
-    return x - M_PI;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // Callback function of the joint states
 void OscHybridController::jointState_CB(const sensor_msgs::JointState msg){
 
@@ -96,15 +82,43 @@ void OscHybridController::odometry_CB(const nav_msgs::Odometry msg){
 
 ////////////////////////////////////////////////////////////////////////////////
 // Callback function to change the desired pose
-void OscHybridController::change_DesPose_CB(const geometry_msgs::Transform msg){
+void OscHybridController::change_DesPose_CB(const mobile_manipulator_msgs::Trajectory msg){
 
-    transformDesiredPos.transform.translation.x = msg.translation.x;
-    transformDesiredPos.transform.translation.y = msg.translation.y;
-    transformDesiredPos.transform.translation.z = msg.translation.z;
-    transformDesiredPos.transform.rotation.x = msg.rotation.x;
-    transformDesiredPos.transform.rotation.y = msg.rotation.y;
-    transformDesiredPos.transform.rotation.z = msg.rotation.z;
-    transformDesiredPos.transform.rotation.w = msg.rotation.w;
+    transformDesiredPos.transform.translation.x = msg.pose.translation.x;
+    transformDesiredPos.transform.translation.y = msg.pose.translation.y;
+    transformDesiredPos.transform.translation.z = msg.pose.translation.z;
+    transformDesiredPos.transform.rotation.x    = msg.pose.rotation.x;
+    transformDesiredPos.transform.rotation.y    = msg.pose.rotation.y;
+    transformDesiredPos.transform.rotation.z    = msg.pose.rotation.z;
+    transformDesiredPos.transform.rotation.w    = msg.pose.rotation.w;
+
+    mob_man_traj.pose.translation.x = msg.pose.translation.x;
+    mob_man_traj.pose.translation.y = msg.pose.translation.y;
+    mob_man_traj.pose.translation.z = msg.pose.translation.z;
+    mob_man_traj.vel.linear.x       = msg.vel.linear.x;
+    mob_man_traj.vel.linear.y       = msg.vel.linear.y;
+    mob_man_traj.vel.linear.z       = msg.vel.linear.z;
+    mob_man_traj.accel.linear.x     = msg.accel.linear.x;
+    mob_man_traj.accel.linear.y     = msg.accel.linear.y;
+    mob_man_traj.accel.linear.z     = msg.accel.linear.z;
+
+    mob_man_traj.pose.rotation.x = msg.pose.rotation.x;
+    mob_man_traj.pose.rotation.y = msg.pose.rotation.y;
+    mob_man_traj.pose.rotation.z = msg.pose.rotation.z;
+    mob_man_traj.pose.rotation.w = msg.pose.rotation.w;
+    mob_man_traj.vel.angular.x   = msg.vel.angular.x;
+    mob_man_traj.vel.angular.y   = msg.vel.angular.y;
+    mob_man_traj.vel.angular.z   = msg.vel.angular.z;
+    mob_man_traj.accel.angular.x = msg.accel.angular.x;
+    mob_man_traj.accel.angular.y = msg.accel.angular.y;
+    mob_man_traj.accel.angular.z = msg.accel.angular.z;
+
+    mob_man_traj.joints.joint1 = msg.joints.joint1;
+    mob_man_traj.joints.joint2 = msg.joints.joint2;
+    mob_man_traj.joints.joint3 = msg.joints.joint3;
+    mob_man_traj.joints.joint4 = msg.joints.joint4;
+    mob_man_traj.joints.joint5 = msg.joints.joint5;
+    mob_man_traj.joints.joint6 = msg.joints.joint6;
 
 }
 
@@ -137,6 +151,9 @@ OscHybridController::OscHybridController(ros::NodeHandle& nodeHandle) :
     mobile_pltfrm_cmd.angular.y = 0.0;
     mobile_pltfrm_cmd.angular.z = 0.0;
 
+    mobile_manipulator_data.header.frame_id = "odom";
+    mobile_manipulator_data.header.stamp = ros::Time::now();
+
     /******************************/
     // Create subscribers
     subs_joint_state_= nodeHandle_.subscribe("/"+ robot_name +"/joint_states" , 10, 
@@ -144,7 +161,7 @@ OscHybridController::OscHybridController(ros::NodeHandle& nodeHandle) :
     subs_odometry_   = nodeHandle_.subscribe("/"+ robot_name +"/" + odometry_topic , 10, 
                                         &OscHybridController::odometry_CB, this);
     
-    subs_desired_pose_ = nodeHandle_.subscribe("/"+ robot_name +"/" + "desired_pose" , 10, 
+    subs_desired_traj_ = nodeHandle_.subscribe("/"+ robot_name +"/" + "desired_traj" , 10, 
                                         &OscHybridController::change_DesPose_CB, this);
     
     /******************************/
@@ -157,6 +174,8 @@ OscHybridController::OscHybridController(ros::NodeHandle& nodeHandle) :
     pub_manipulator_dof_4 = nodeHandle_.advertise<std_msgs::Float64>("/"+ robot_name +"/"+ manipulator_controllers.at(3) +"/command" , 10);
     pub_manipulator_dof_5 = nodeHandle_.advertise<std_msgs::Float64>("/"+ robot_name +"/"+ manipulator_controllers.at(4) +"/command" , 10);
     pub_manipulator_dof_6 = nodeHandle_.advertise<std_msgs::Float64>("/"+ robot_name +"/"+ manipulator_controllers.at(5) +"/command" , 10);
+
+    pub_mob_manipulator_data = nodeHandle_.advertise<mobile_manipulator_msgs::MobileManipulator>("/"+ robot_name +"/data" , 10);
     
     /******************************/
     // Load DART Object
@@ -219,6 +238,7 @@ void OscHybridController::spin(){
         g_k = dart_robotSkeleton->getGravityForces();   // Gravity vector forces
         //std::cout << "Coriolis vector forces: \n" << C_k << std::endl;
         //std::cout << "Gravity vector forces: \n" << g_k << std::endl;
+
         
         /******************************/
         // Target definition
@@ -228,23 +248,49 @@ void OscHybridController::spin(){
         broadcaster_.sendTransform(transformDesiredPos);
 
         //--- Cartesian Target
-        Eigen::Vector3d targetPos = Eigen::Vector3d::Zero(); 
-        targetPos(0) = transformDesiredPos.transform.translation.x;
-        targetPos(1) = transformDesiredPos.transform.translation.y;
-        targetPos(2) = transformDesiredPos.transform.translation.z;
+        Eigen::Vector3d targetCartPos = Eigen::Vector3d::Zero(); 
+        Eigen::Vector3d targetCartVel = Eigen::Vector3d::Zero(); 
+        Eigen::Vector3d targetCartAccel = Eigen::Vector3d::Zero(); 
 
-        //--- Desired rotation matrix
-        Eigen::Quaterniond quat_des(transformDesiredPos.transform.rotation.w, transformDesiredPos.transform.rotation.x, transformDesiredPos.transform.rotation.y , transformDesiredPos.transform.rotation.z);
-        Eigen::Matrix3d R_world_desired = quat_des.normalized().toRotationMatrix();
+        targetCartPos(0)   = mob_man_traj.pose.translation.x;
+        targetCartPos(1)   = mob_man_traj.pose.translation.y;
+        targetCartPos(2)   = mob_man_traj.pose.translation.z;
+        targetCartVel(0)   = mob_man_traj.vel.linear.x;
+        targetCartVel(1)   = mob_man_traj.vel.linear.y;
+        targetCartVel(2)   = mob_man_traj.vel.linear.z;
+        targetCartAccel(0) = mob_man_traj.accel.linear.x;
+        targetCartAccel(1) = mob_man_traj.accel.linear.y;
+        targetCartAccel(2) = mob_man_traj.accel.linear.z;
 
-        //std::cout << "Rotation matrix: \n" << R_world_desired << std::endl; // Print rot matrix
+        //--- Orientation target
+        Eigen::Quaterniond quat_des(mob_man_traj.pose.rotation.w, mob_man_traj.pose.rotation.x, mob_man_traj.pose.rotation.y, mob_man_traj.pose.rotation.z);
+        Eigen::Matrix3d targetOrientPos = quat_des.normalized().toRotationMatrix();
+        //std::cout << "Rotation matrix: \n" << targetOrientPos << std::endl; // Print rot matrix
+
+        Eigen::Vector3d targetOrientVel = Eigen::Vector3d::Zero(); 
+        Eigen::Vector3d targetOrientAccel = Eigen::Vector3d::Zero(); 
+
+        targetOrientVel(0)   = mob_man_traj.vel.angular.x;
+        targetOrientVel(1)   = mob_man_traj.vel.angular.y;
+        targetOrientVel(2)   = mob_man_traj.vel.angular.z;
+        targetOrientAccel(0) = mob_man_traj.accel.angular.x;
+        targetOrientAccel(1) = mob_man_traj.accel.angular.y;
+        targetOrientAccel(2) = mob_man_traj.accel.angular.z;
 
         //--- Joint Conf Desired
         Eigen::VectorXd q_desired = Eigen::VectorXd::Zero(9);
         q_desired(0) = current_pos(0);
         q_desired(1) = current_pos(1);
         q_desired(2) = current_pos(2);
-        //q_desired = current_pos;
+        q_desired(3) = mob_man_traj.joints.joint1;
+        q_desired(4) = mob_man_traj.joints.joint2;
+        q_desired(5) = mob_man_traj.joints.joint3;
+        q_desired(6) = mob_man_traj.joints.joint4;
+        q_desired(7) = mob_man_traj.joints.joint5;
+        q_desired(8) = mob_man_traj.joints.joint6;
+        
+        // Variables to save minimum singular value
+        double min_sv_pos = 10.0e3, min_sv_ori = 10.0e3;
 
         /******************************/
         // Task Definition for effort
@@ -255,20 +301,20 @@ void OscHybridController::spin(){
         //std::cout << "Initial tau: \n" << tau_result << std::endl;
         //std::cout << "Initial Null space: \n" << Null_space << std::endl;
 
-        Eigen::Vector3d x_error =  targetPos - mEndEffector_->getWorldTransform().translation();
+        Eigen::Vector3d x_error =  targetCartPos - mEndEffector_->getWorldTransform().translation();
 
-        if(x_error.norm()>0.4){
+        if(x_error.norm()>0.2){
             //std::cout << "Goal too far away" << std::endl;
-            effortSolver_.AchieveCartesianMobilRob(targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-            effortSolver_.AchieveHeightConstVel(targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            effortSolver_.AchieveHeightConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         }
         else{
-            effortSolver_.AchieveCartesianConstVel(targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
             //std::cout << "Tau result after straight line: \n" << tau_result << std::endl;
             //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
         }
 
-        effortSolver_.AchieveOrientation(R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
+        effortSolver_.AchieveOrientationConstVel(targetOrientPos, &min_sv_ori, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
         //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
         //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
     
@@ -283,14 +329,17 @@ void OscHybridController::spin(){
             tau_result =  tau_result + C_k + g_k;
         }
 
+        /*
+        //--- Comparte to old controller
+
         Eigen::VectorXd tau_zero = Eigen::VectorXd::Zero(9);
         Eigen::VectorXd tau_result2 = Eigen::VectorXd::Zero(9);
 
         effortSolver_.OLD_AchieveJointConf(&tau_zero, &tau_result2, q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-        effortSolver_.OLD_AchieveOrientationQuat3(&tau_zero, &tau_result2, R_world_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ ); 
-        effortSolver_.OLD_MakeStraightLine(&tau_zero, &tau_result2, targetPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
+        effortSolver_.OLD_AchieveOrientationQuat3(&tau_zero, &tau_result2, targetOrientPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ ); 
+        effortSolver_.OLD_MakeStraightLine(&tau_zero, &tau_result2, targetCartPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
         
-        /*if( ((tau_result-tau_result2).cwiseAbs()).maxCoeff() > 0.1 ){
+        if( ((tau_result-tau_result2).cwiseAbs()).maxCoeff() > 0.1 ){
             std::cout << "NEW Tau result : \n" << tau_result << std::endl;
             std::cout << "Old Tau result : \n" << tau_result2 << std::endl;
             std::cout << "Difference Tau result : \n" << tau_result-tau_result2 << std::endl;
@@ -349,6 +398,78 @@ void OscHybridController::spin(){
         }
 
         //std::cout << "Limited Vel: \n" << q_dot_result << std::endl;
+
+        /******************************/
+        // Message data update
+
+        Eigen::Vector3d current_x =  mEndEffector_->getWorldTransform().translation();
+
+        mobile_manipulator_data.position.current_position.x = current_x(0);
+        mobile_manipulator_data.position.current_position.y = current_x(1);
+        mobile_manipulator_data.position.current_position.z = current_x(2);
+        mobile_manipulator_data.position.desired_position.x = targetCartPos(0);
+        mobile_manipulator_data.position.desired_position.y = targetCartPos(1);
+        mobile_manipulator_data.position.desired_position.z = targetCartPos(2);
+
+        Eigen::Matrix3d eigen_rot_mat = mEndEffector_->getWorldTransform().rotation(); 
+        Eigen::Quaterniond eigen_quat(eigen_rot_mat);
+
+        tf2::Quaternion tf2_quat;
+        tf2_quat.setX(eigen_quat.x());
+        tf2_quat.setY(eigen_quat.y());
+        tf2_quat.setZ(eigen_quat.z());
+        tf2_quat.setW(eigen_quat.w());
+
+        tf2::Matrix3x3 rot_mat;
+        rot_mat.setRotation(tf2_quat);
+
+        double roll, pitch, yaw;
+        rot_mat.getEulerZYX(yaw, pitch, roll);
+
+        mobile_manipulator_data.orientation.current_orient.roll = angles::to_degrees(roll) ;
+        mobile_manipulator_data.orientation.current_orient.pitch = angles::to_degrees(pitch);
+        mobile_manipulator_data.orientation.current_orient.yaw = angles::to_degrees(yaw);
+
+        tf2_quat.setX(mob_man_traj.pose.rotation.x);
+        tf2_quat.setY(mob_man_traj.pose.rotation.y);
+        tf2_quat.setZ(mob_man_traj.pose.rotation.z);
+        tf2_quat.setW(mob_man_traj.pose.rotation.w);
+        rot_mat.setRotation(tf2_quat);
+        rot_mat.getEulerZYX(yaw, pitch, roll);
+        
+
+        mobile_manipulator_data.orientation.desired_orient.roll = angles::to_degrees(roll);
+        mobile_manipulator_data.orientation.desired_orient.pitch = angles::to_degrees(pitch);
+        mobile_manipulator_data.orientation.desired_orient.yaw = angles::to_degrees(yaw);
+
+        mobile_manipulator_data.singular.min_pos_jacob = min_sv_pos;
+        mobile_manipulator_data.singular.min_ori_jacob = min_sv_ori;
+
+        mobile_manipulator_data.torques.torque1 = tau_result(0);
+        mobile_manipulator_data.torques.torque2 = tau_result(1);
+        mobile_manipulator_data.torques.torque3 = tau_result(2);
+        mobile_manipulator_data.torques.torque4 = tau_result(3);
+        mobile_manipulator_data.torques.torque5 = tau_result(4);
+        mobile_manipulator_data.torques.torque6 = tau_result(5);
+        mobile_manipulator_data.torques.torque7 = tau_result(6);
+        mobile_manipulator_data.torques.torque8 = tau_result(7);
+        mobile_manipulator_data.torques.torque9 = tau_result(8);
+
+        mobile_manipulator_data.joints.actual.joint1 = current_pos(3);
+        mobile_manipulator_data.joints.actual.joint2 = current_pos(4);
+        mobile_manipulator_data.joints.actual.joint3 = current_pos(5);
+        mobile_manipulator_data.joints.actual.joint4 = current_pos(6);
+        mobile_manipulator_data.joints.actual.joint5 = current_pos(7);
+        mobile_manipulator_data.joints.actual.joint6 = current_pos(8);
+        mobile_manipulator_data.joints.desired.joint1 = q_desired(3);
+        mobile_manipulator_data.joints.desired.joint2 = q_desired(4);
+        mobile_manipulator_data.joints.desired.joint3 = q_desired(5);
+        mobile_manipulator_data.joints.desired.joint4 = q_desired(6);
+        mobile_manipulator_data.joints.desired.joint5 = q_desired(7);
+        mobile_manipulator_data.joints.desired.joint6 = q_desired(8);
+
+
+        pub_mob_manipulator_data.publish(mobile_manipulator_data);
 
         /******************************/
         // Publish commands to mobile platform
@@ -523,7 +644,7 @@ void OscHybridController::loadDARTModel(){
     transformDesiredPos.child_frame_id = robot_name + "/" + "desired_pose";
 
     Eigen::Vector3d orig_pos =  mEndEffector_->getWorldTransform().translation() ;
-
+    
     transformDesiredPos.transform.translation.x = orig_pos(0);
     transformDesiredPos.transform.translation.y = orig_pos(1);
     transformDesiredPos.transform.translation.z = orig_pos(2);
@@ -535,6 +656,34 @@ void OscHybridController::loadDARTModel(){
     transformDesiredPos.transform.rotation.y = quat_orig.y();
     transformDesiredPos.transform.rotation.z = quat_orig.z();
     transformDesiredPos.transform.rotation.w = quat_orig.w();
+
+    mob_man_traj.pose.translation.x = orig_pos(0);
+    mob_man_traj.pose.translation.y = orig_pos(1);
+    mob_man_traj.pose.translation.z = orig_pos(2);
+    mob_man_traj.vel.linear.x       = 0.0;
+    mob_man_traj.vel.linear.y       = 0.0;
+    mob_man_traj.vel.linear.z       = 0.0;
+    mob_man_traj.accel.linear.x     = 0.0;
+    mob_man_traj.accel.linear.y     = 0.0;
+    mob_man_traj.accel.linear.z     = 0.0;
+
+    mob_man_traj.pose.rotation.x = quat_orig.x();
+    mob_man_traj.pose.rotation.y = quat_orig.y();
+    mob_man_traj.pose.rotation.z = quat_orig.z();
+    mob_man_traj.pose.rotation.w = quat_orig.w();
+    mob_man_traj.vel.angular.x   = 0.0;
+    mob_man_traj.vel.angular.y   = 0.0;
+    mob_man_traj.vel.angular.z   = 0.0;
+    mob_man_traj.accel.angular.x = 0.0;
+    mob_man_traj.accel.angular.y = 0.0;
+    mob_man_traj.accel.angular.z = 0.0;
+
+    mob_man_traj.joints.joint1 = 0.0;
+    mob_man_traj.joints.joint2 = 0.0;
+    mob_man_traj.joints.joint3 = 0.0;
+    mob_man_traj.joints.joint4 = 0.0;
+    mob_man_traj.joints.joint5 = 0.0;
+    mob_man_traj.joints.joint6 = 0.0;
 
     broadcaster_.sendTransform(transformDesiredPos);
 

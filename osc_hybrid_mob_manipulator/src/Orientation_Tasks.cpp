@@ -10,6 +10,9 @@ using namespace dart::math;
 // Function to calculate the efforts required to Hold/Achieve a cartesian orientation 
 
 void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired, 
+                                    Eigen::Vector3d mTargetVel,
+                                    Eigen::Vector3d mTargetAccel,
+                                    double *svd_orientation,
                                     Eigen::MatrixXd M,
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
@@ -38,7 +41,7 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
 
     Eigen::MatrixXd Alpha_t_inv = Jacob_t * M.inverse() * Jacob_t.transpose(); // Symmetric Inertia Matrix
     
-    Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv);
+    Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv, svd_orientation);
 
     // ------------------------------------------//
     // ------------------------------------------//
@@ -79,9 +82,9 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
     Eigen::Matrix3d kp = kp_cartesian_.bottomRightCorner(3, 3);
     Eigen::Matrix3d kd = kd_cartesian_.bottomRightCorner(3, 3);
 
-    Eigen::Vector3d x_star =   kd *(-angular_vel) + kp * error_ori ; 
+    Eigen::Vector3d x_star = mTargetAccel + kd *(mTargetVel-angular_vel) + kp * error_ori ; 
     if(compensate_topdown){
-        x_star = x_star + Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
@@ -137,6 +140,7 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
 // Function to calculate the efforts required to go to a orientation with a contant velocity
 
 void EffortTask::AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired, 
+                                            double *svd_orientation,
                                             Eigen::MatrixXd M,
                                             Eigen::VectorXd C_t,
                                             Eigen::VectorXd g_t,
@@ -165,7 +169,7 @@ void EffortTask::AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired,
 
     Eigen::MatrixXd Alpha_t_inv = Jacob_t * M.inverse() * Jacob_t.transpose(); // Symmetric Inertia Matrix
     
-    Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv);
+    Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv, svd_orientation);
 
     // ------------------------------------------//
     // ------------------------------------------//
@@ -214,7 +218,7 @@ void EffortTask::AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired,
     Eigen::Vector3d x_star =  (-1.0*kd) * (angular_vel - scale*x_dot_desired);
 
     if(compensate_topdown){
-        x_star = x_star + Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//

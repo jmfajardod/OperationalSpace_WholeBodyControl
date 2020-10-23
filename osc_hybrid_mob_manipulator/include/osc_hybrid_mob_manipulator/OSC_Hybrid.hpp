@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <ros/ros.h>
+#include <angles/angles.h>
 
 #include <std_msgs/String.h>
 #include <std_msgs/Float32.h>
@@ -22,6 +23,9 @@
 #include <geometry_msgs/Pose.h>
 
 #include <nav_msgs/Odometry.h>
+
+#include <mobile_manipulator_msgs/MobileManipulator.h>
+#include <mobile_manipulator_msgs/Trajectory.h>
 
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
@@ -63,7 +67,7 @@ private:
 	*/
 	ros::Subscriber subs_joint_state_;
 	ros::Subscriber subs_odometry_;
-	ros::Subscriber subs_desired_pose_;
+	ros::Subscriber subs_desired_traj_;
 	
 	/*
 	* Publisher 
@@ -76,6 +80,8 @@ private:
 	ros::Publisher pub_manipulator_dof_4;
 	ros::Publisher pub_manipulator_dof_5;
 	ros::Publisher pub_manipulator_dof_6;
+
+	ros::Publisher pub_mob_manipulator_data;
 
 	/*
 	* TF Broadcaster
@@ -101,6 +107,9 @@ private:
 	std_msgs::Float64 manipulator_cmd;
 
 	geometry_msgs::Twist mobile_pltfrm_cmd;
+
+	mobile_manipulator_msgs::MobileManipulator mobile_manipulator_data;
+	mobile_manipulator_msgs::Trajectory mob_man_traj;
 
     // Eigen variables
 	Eigen::MatrixXd M;
@@ -136,12 +145,6 @@ private:
 	*/
 
 	/*!
-	* Function to wrap angle to [-pi,pi]
-	* @param x the angle in radians
-	*/
-	float constrainAngle(float x);
-	
-	/*!
 	*  ROS topic callback
 	*  @param msg the joint states msg received
 	*/
@@ -153,7 +156,7 @@ private:
 	*/
 	void odometry_CB(const nav_msgs::Odometry msg);
 
-	void change_DesPose_CB(const geometry_msgs::Transform msg);
+	void change_DesPose_CB(const mobile_manipulator_msgs::Trajectory msg);
 
     /*!
 	* Function to read parameters from server

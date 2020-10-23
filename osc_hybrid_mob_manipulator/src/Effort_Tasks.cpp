@@ -15,12 +15,12 @@ EffortTask::EffortTask(){
 
     // Gain Matrices definition
     kp_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
-    kp_cartesian_.topLeftCorner(3, 3) = 225.0*Eigen::MatrixXd::Identity(3, 3); // Position gains
-    kp_cartesian_.bottomRightCorner(3, 3) = 400.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains
+    kp_cartesian_.topLeftCorner(3, 3) = 225.0*Eigen::MatrixXd::Identity(3, 3); // Position gains (225) (1200)
+    kp_cartesian_.bottomRightCorner(3, 3) = 300.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains (400) (60) (600) (300)
 
     kd_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
-    kd_cartesian_.topLeftCorner(3, 3) = 30.0*Eigen::MatrixXd::Identity(3, 3); // Position gains
-    kd_cartesian_.bottomRightCorner(3, 3) = 40.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains
+    kd_cartesian_.topLeftCorner(3, 3) = 30.0*Eigen::MatrixXd::Identity(3, 3); // Position gains (30) (62)
+    kd_cartesian_.bottomRightCorner(3, 3) = 34.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains (40) (14) (49) (34)
 
     kp_joints_ = Eigen::MatrixXd::Identity(9, 9);
     kp_joints_.topLeftCorner(3, 3) = 1.0*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
@@ -28,7 +28,7 @@ EffortTask::EffortTask(){
 
     kd_joints_ = Eigen::MatrixXd::Identity(9, 9);
     kd_joints_.topLeftCorner(3, 3) = 0.1*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
-    kd_joints_.bottomRightCorner(6, 6) = 5.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (35.0)
+    kd_joints_.bottomRightCorner(6, 6) = 35.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains 
 
     //--- Select orientation error
     // 1 - Angle-axis Osorio
@@ -337,7 +337,7 @@ void EffortTask::AvoidJointLimits(Eigen::MatrixXd M,
 ////////////////////////////////////////////////////////////////////////////////
 // Function to calculate non-singular operational kinetic energy matrix
 
-Eigen::MatrixXd EffortTask::calcInertiaMatrix(Eigen::MatrixXd Alpha_inv){
+Eigen::MatrixXd EffortTask::calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double* min_svd){
 
     //Eigen::JacobiSVD<Eigen::MatrixXd> svd(Alpha_inv, Eigen::ComputeThinU | Eigen::ComputeThinV); // Thin computation
     //Eigen::JacobiSVD<Eigen::MatrixXd> svd(Alpha_inv, Eigen::ComputeFullU | Eigen::ComputeFullV); // Full computation
@@ -357,6 +357,9 @@ Eigen::MatrixXd EffortTask::calcInertiaMatrix(Eigen::MatrixXd Alpha_inv){
     for (size_t ii = 0; ii < svd_values.size(); ii++){
         if(abs(svd_values(ii))<singularity_thres_high_){
             small_svd(ii) = 1;
+        }
+        if( abs(svd_values(ii)) < *min_svd ){
+            *min_svd = abs(svd_values(ii));
         }
     }
 

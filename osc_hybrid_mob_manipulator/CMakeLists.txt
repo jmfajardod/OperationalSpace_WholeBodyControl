@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   tf2
   tf2_ros
+  mobile_manipulator_msgs
 )
 find_package(Eigen3 REQUIRED)
 
@@ -42,6 +43,7 @@ catkin_package(
     std_msgs
     tf2
     tf2_ros
+    mobile_manipulator_msgs
   DEPENDS 
     Eigen3
 )
@@ -83,7 +85,6 @@ add_executable(osc_hybrid
   src/Effort_Tasks.cpp
   src/Position_Tasks.cpp
   src/Orientation_Tasks.cpp
-  src/Old_tasks.cpp
 )
 
 add_dependencies(osc_hybrid

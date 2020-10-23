@@ -1,0 +1,9 @@
+float32 torque1
+float32 torque2
+float32 torque3
+float32 torque4
+float32 torque5
+float32 torque6
+float32 torque7
+float32 torque8
+float32 torque9
