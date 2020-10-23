@@ -87,7 +87,7 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
 
     Eigen::Vector3d x_star = mTargetAccel + kd *(mTargetVel-angular_vel) + kp * error_ori ; 
     if(compensate_topdown){
-        x_star = x_star - Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
@@ -224,7 +224,7 @@ void EffortTask::AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired,
     Eigen::Vector3d x_star =  (-1.0*kd) * (angular_vel - scale*x_dot_desired);
 
     if(compensate_topdown){
-        x_star = x_star - Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//

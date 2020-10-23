@@ -305,6 +305,9 @@ void OscHybridController::spin(){
 
         if(x_error.norm()>0.2){
             //std::cout << "Goal too far away" << std::endl;
+            if(x_error.norm()<1.0){
+                q_desired = current_pos;
+            }
             effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
             effortSolver_.AchieveHeightConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         }
@@ -350,8 +353,8 @@ void OscHybridController::spin(){
         // send_vel -> q_dot_result
         
         Eigen::MatrixXd damp_des_     = Eigen::MatrixXd::Identity(3, 3) ;
-        damp_des_.topLeftCorner(2, 2) = 100.0*Eigen::MatrixXd::Identity(2, 2); // Liner vel damping
-        damp_des_(2,2) = 30.0 ; // Angular vel damping (10.0)
+        damp_des_.topLeftCorner(2, 2) = 60.0*Eigen::MatrixXd::Identity(2, 2); // Liner vel damping
+        damp_des_(2,2) = 20.0 ; // Angular vel damping (10.0)
 
         Eigen::MatrixXd inertia_des = 1.0*Eigen::MatrixXd::Identity(3, 3);
 
@@ -375,11 +378,14 @@ void OscHybridController::spin(){
         // Limit efforts
 
         for (size_t ii = 0; ii < 9; ii++){
-            if(ii<3){ // Mobile platform efforts
-                if( abs(tau_result(ii)) > 10.0)  tau_result(ii) = tau_result(ii) * (10.0/abs(tau_result(ii)));
+            if(ii==3 || ii ==6 || ii ==7){ 
+                if( abs(tau_result(ii)) > 10.6)  tau_result(ii) = tau_result(ii) * (10.6/abs(tau_result(ii)));
             }
-            else{    // Manipulator efforts
-                if( abs(tau_result(ii)) > 10.0)  tau_result(ii) = tau_result(ii) * (10.0/abs(tau_result(ii)));
+            else if(ii==4 || ii==5 ){    
+                if( abs(tau_result(ii)) > 21.2)  tau_result(ii) = tau_result(ii) * (21.2/abs(tau_result(ii)));
+            }
+            else if(ii==8){    
+                if( abs(tau_result(ii)) > 4.1)  tau_result(ii) = tau_result(ii) * (4.1/abs(tau_result(ii)));
             }
         }
 
@@ -390,10 +396,10 @@ void OscHybridController::spin(){
 
         for (size_t ii = 0; ii < 9; ii++){
             if(ii<2){ // Mobile platform efforts linear vel
-                if( abs(q_dot_result(ii)) > 0.7 )  q_dot_result(ii) = q_dot_result(ii) * (0.7/abs(q_dot_result(ii)));
+                if( abs(q_dot_result(ii)) > 0.5 )  q_dot_result(ii) = q_dot_result(ii) * (0.5/abs(q_dot_result(ii)));
             }
-            else if(ii<3){ // Mobile platform angular vel
-                if( abs(q_dot_result(ii)) > 1.75 )  q_dot_result(ii) = q_dot_result(ii) * (1.75/abs(q_dot_result(ii)));
+            else if(ii==3){ // Mobile platform angular vel
+                if( abs(q_dot_result(ii)) > M_PI_2 )  q_dot_result(ii) = q_dot_result(ii) * (1.75/abs(q_dot_result(ii)));
             }
         }
 
