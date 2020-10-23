@@ -23,14 +23,18 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
                                     Eigen::MatrixXd *Null_space_iter){
 
     // ------------------------------------------//
+    // ------------------------------------------//
     // Calculate operational space matrices 
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    LinearJacobian Jacob_t = mEndEffector->getLinearJacobian(); // Jacobian
+    LinearJacobian Normal_Jacob_t = mEndEffector->getLinearJacobian(); // Jacobian
+    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
     //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
 
-    LinearJacobian Jacob_dot = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
+    LinearJacobian Normal_Jacob_dot = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
+    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
+
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
     //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
@@ -140,12 +144,15 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    LinearJacobian Jacob_t = mEndEffector->getLinearJacobian(); // Jacobian
-    //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
+    LinearJacobian Normal_Jacob_t = mEndEffector->getLinearJacobian(); // Jacobian
+    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
+    //std::cout << "Projected Linear Jacob: \n" << Jacob_t << std::endl;
 
-    LinearJacobian Jacob_dot = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
+    LinearJacobian Normal_Jacob_dot = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
+    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
+
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
-    //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
+    //std::cout << "Projected Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
 
     // ------------------------------------------//
@@ -378,10 +385,13 @@ void EffortTask::AchieveHeightConstVel( Eigen::Vector3d mTarget,
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    Eigen::MatrixXd Jacob_t = (mEndEffector->getLinearJacobian()).bottomRightCorner(1,dofs); // Jacobian
+    Eigen::MatrixXd Normal_Jacob_t = (mEndEffector->getLinearJacobian()).bottomRightCorner(1,dofs); // Jacobian
+    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
     //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
 
-    Eigen::MatrixXd Jacob_dot = (mEndEffector->getLinearJacobianDeriv()).bottomRightCorner(1,dofs); // Derivative of jacobian
+    Eigen::MatrixXd Normal_Jacob_dot = (mEndEffector->getLinearJacobianDeriv()).bottomRightCorner(1,dofs); // Derivative of jacobian
+    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
+
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
     //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
