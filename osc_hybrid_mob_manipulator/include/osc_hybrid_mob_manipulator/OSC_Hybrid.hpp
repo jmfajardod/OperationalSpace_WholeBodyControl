@@ -119,11 +119,9 @@ private:
 	Eigen::VectorXd q_k;
     Eigen::VectorXd q_dot_k;
 
-	Eigen::VectorXd transition_q_dot;
-	Eigen::VectorXd transition_tau;
-
 	Eigen::VectorXd tau_zero;
 	Eigen::VectorXd tau_result;
+	Eigen::VectorXd tau_joints;
 
 	Eigen::VectorXd q_dot_zero;
 	Eigen::VectorXd q_dot_result;

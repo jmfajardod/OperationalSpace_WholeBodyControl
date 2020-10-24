@@ -95,6 +95,23 @@ public:
 
     /*!
      * Effort Task
+     * Cartesian Impedance for Position
+    */
+    void CartesianImpedance(  Eigen::Vector3d mTargetPos, 
+                              Eigen::Vector3d mTargetVel,
+                              Eigen::Vector3d mTargetAccel, 
+                              double *svd_position,
+                              Eigen::VectorXd tau_ext,
+                              Eigen::MatrixXd M, 
+                              Eigen::VectorXd C_t,
+                              Eigen::VectorXd g_t,
+                              dart::dynamics::SkeletonPtr mRobot,
+                              dart::dynamics::BodyNode* mEndEffector,
+                              Eigen::VectorXd *tau_total,
+                              Eigen::MatrixXd *Null_space_iter);
+
+    /*!
+     * Effort Task
      * Hold/ Achieve a Cartesian Position
     */
     void AchieveCartesian(  Eigen::Vector3d mTargetPos, 
@@ -153,6 +170,23 @@ public:
     /***********************************************************************************/
     /***********************************************************************************/
     // Orientation tasks
+
+    /*!
+     * Effort Task
+     * Orientation Impedance
+    */
+    void OrientationImpedance(Eigen::Matrix3d rot_mat_desired, 
+                              Eigen::Vector3d mTargetVel,
+                              Eigen::Vector3d mTargetAccel,
+                              double *svd_orientation,
+                              Eigen::VectorXd tau_ext,
+                              Eigen::MatrixXd M,
+                              Eigen::VectorXd C_t,
+                              Eigen::VectorXd g_t,
+                              dart::dynamics::SkeletonPtr mRobot,
+                              dart::dynamics::BodyNode* mEndEffector,
+                              Eigen::VectorXd *tau_total,
+                              Eigen::MatrixXd *Null_space_iter);
 
     /*!
      * Effort Task

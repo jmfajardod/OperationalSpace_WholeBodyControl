@@ -15,28 +15,34 @@ void OscHybridController::jointState_CB(const sensor_msgs::JointState msg){
     for (int ii = 0; ii < msg.position.size(); ii++){
         
         if(msg.name.at(ii)==manipulator_dofs.at(0)){
-            q_k(3) = msg.position.at(ii);
-            q_dot_k(3) = msg.velocity.at(ii);
+            q_k(3)        = msg.position.at(ii);
+            q_dot_k(3)    = msg.velocity.at(ii);
+            tau_joints(3) = msg.effort.at(ii);
         }
         if(msg.name.at(ii)==manipulator_dofs.at(1)){
-            q_k(4) = msg.position.at(ii);
-            q_dot_k(4) = msg.velocity.at(ii);
+            q_k(4)        = msg.position.at(ii);
+            q_dot_k(4)    = msg.velocity.at(ii);
+            tau_joints(4) = msg.effort.at(ii);
         }
         if(msg.name.at(ii)==manipulator_dofs.at(2)){
-            q_k(5) = msg.position.at(ii);
-            q_dot_k(5) = msg.velocity.at(ii);
+            q_k(5)        = msg.position.at(ii);
+            q_dot_k(5)    = msg.velocity.at(ii);
+            tau_joints(5) = msg.effort.at(ii);
         }
         if(msg.name.at(ii)==manipulator_dofs.at(3)){
-            q_k(6) = msg.position.at(ii);
-            q_dot_k(6) = msg.velocity.at(ii);
+            q_k(6)        = msg.position.at(ii);
+            q_dot_k(6)    = msg.velocity.at(ii);
+            tau_joints(6) = msg.effort.at(ii);
         }
         if(msg.name.at(ii)==manipulator_dofs.at(4)){
-            q_k(7) = msg.position.at(ii);
-            q_dot_k(7) = msg.velocity.at(ii);
+            q_k(7)        = msg.position.at(ii);
+            q_dot_k(7)    = msg.velocity.at(ii);
+            tau_joints(7) = msg.effort.at(ii);
         }
         if(msg.name.at(ii)==manipulator_dofs.at(5)){
-            q_k(8) = msg.position.at(ii);
-            q_dot_k(8) = msg.velocity.at(ii);
+            q_k(8)        = msg.position.at(ii);
+            q_dot_k(8)    = msg.velocity.at(ii);
+            tau_joints(8) = msg.effort.at(ii);
         }
 
     }    
@@ -131,6 +137,7 @@ OscHybridController::OscHybridController(ros::NodeHandle& nodeHandle) :
     q_dot_k(Eigen::VectorXd::Zero(9)),
     tau_zero(Eigen::VectorXd::Zero(9)),
     tau_result(Eigen::VectorXd::Zero(9)),
+    tau_joints(Eigen::VectorXd::Zero(9)),
     q_dot_result(Eigen::VectorXd::Zero(9)),
     q_dot_zero(Eigen::VectorXd::Zero(9))
 {   
@@ -289,7 +296,15 @@ void OscHybridController::spin(){
         q_desired(7) = mob_man_traj.joints.joint5;
         q_desired(8) = mob_man_traj.joints.joint6;
         
-        // Variables to save minimum singular value
+        //--- External torques
+        Eigen::VectorXd tau_ext = tau_result - tau_joints;
+        tau_ext(0) = 0.0;
+        tau_ext(1) = 0.0;
+        tau_ext(2) = 0.0;
+        tau_ext = Eigen::VectorXd::Zero(q_desired.size());
+        //std::cout << "Ext Torques: \n" << tau_ext << std::endl;
+
+        //--- Variables to save minimum singular value
         double min_sv_pos = 10.0e3, min_sv_ori = 10.0e3;
 
         /******************************/
@@ -313,11 +328,15 @@ void OscHybridController::spin(){
         }
         else{
             effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            //effortSolver_.CartesianImpedance(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, tau_ext, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            
             //std::cout << "Tau result after straight line: \n" << tau_result << std::endl;
             //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
         }
 
         effortSolver_.AchieveOrientationConstVel(targetOrientPos, &min_sv_ori, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
+        //effortSolver_.OrientationImpedance(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, tau_ext, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
+        
         //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
         //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
     
