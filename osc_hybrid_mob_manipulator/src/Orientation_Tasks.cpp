@@ -86,6 +86,7 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
     Eigen::Matrix3d kd = kd_cartesian_.bottomRightCorner(3, 3);
 
     Eigen::Vector3d x_star = mTargetAccel + kd *(mTargetVel-angular_vel) + kp * error_ori ; 
+    
     if(compensate_topdown){
         x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
     }

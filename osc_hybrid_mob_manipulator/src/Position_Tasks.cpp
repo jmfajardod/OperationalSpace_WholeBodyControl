@@ -191,7 +191,7 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
 
     Eigen::Vector3d x_star =  (-1.0*kd) * (mEndEffector->getLinearVelocity() - scale*x_dot_desired); // Command force vector
     if(compensate_topdown){
-        x_star = x_star - Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
@@ -200,7 +200,7 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
 
     Eigen::VectorXd f_t_star = Eigen::VectorXd::Zero(3);
     if(compensate_jtspace){
-        f_t_star =  Alpha_t * ( x_star - Alpha_t_inv * Jacob_dot * q_dot);
+        f_t_star =  Alpha_t * ( x_star - Jacob_dot * q_dot);
     }
     else{
         Eigen::VectorXd niu_t = Jacob_dash_t.transpose() * C_t  - Alpha_t * Jacob_dot * q_dot; // Operational Coriolis vector  
