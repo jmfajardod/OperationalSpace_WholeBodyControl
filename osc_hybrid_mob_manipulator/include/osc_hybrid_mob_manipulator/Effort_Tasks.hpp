@@ -206,6 +206,10 @@ public:
 
     Eigen::MatrixXd calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double* min_svd);
 
+    Eigen::MatrixXd calcDampingMatrix(Eigen::MatrixXd Alpha, 
+                                      Eigen::MatrixXd Stiffness, 
+                                      Eigen::MatrixXd DampingCoeff);
+
     bool compensate_topdown;
     bool compensate_jtspace;
 

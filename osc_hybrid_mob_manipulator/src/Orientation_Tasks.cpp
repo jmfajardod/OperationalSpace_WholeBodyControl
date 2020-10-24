@@ -82,8 +82,12 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
     Eigen::Vector3d angular_vel =  mEndEffector->getAngularJacobian() * mRobot->getVelocities();
     //std::cout << "Angular velocity vector: \n"  << angular_vel << std::endl;
 
-    Eigen::Matrix3d kp = kp_cartesian_.bottomRightCorner(3, 3);
-    Eigen::Matrix3d kd = kd_cartesian_.bottomRightCorner(3, 3);
+    // Obtain Orientation Gain matrices
+    Eigen::MatrixXd kp = kp_cartesian_.bottomRightCorner(3, 3);
+
+    Eigen::MatrixXd damp_coeff = kd_cartesian_.bottomRightCorner(3, 3);
+    Eigen::MatrixXd kd = calcDampingMatrix(Eigen::MatrixXd::Identity(3,3), kp, damp_coeff); 
+    //std::cout << "Damping Ori: \n" << kd << std::endl;
 
     Eigen::Vector3d x_star = mTargetAccel + kd *(mTargetVel-angular_vel) + kp * error_ori ; 
     
@@ -214,8 +218,12 @@ void EffortTask::AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired,
     Eigen::Vector3d angular_vel =  mEndEffector->getAngularJacobian() * mRobot->getVelocities();
     //std::cout << "Angular velocity vector: \n"  << angular_vel << std::endl;
 
-    Eigen::Matrix3d kp = kp_cartesian_.bottomRightCorner(3, 3);
-    Eigen::Matrix3d kd = kd_cartesian_.bottomRightCorner(3, 3);
+    // Obtain Orientation Gain matrices
+    Eigen::MatrixXd kp = kp_cartesian_.bottomRightCorner(3, 3);
+
+    Eigen::MatrixXd damp_coeff = kd_cartesian_.bottomRightCorner(3, 3);
+    Eigen::MatrixXd kd = calcDampingMatrix(Eigen::MatrixXd::Identity(3,3), kp, damp_coeff); 
+    //std::cout << "Damping Ori: \n" << kd << std::endl;
     
     Eigen::Vector3d x_dot_desired = kp*kd.inverse()*error_ori;
 

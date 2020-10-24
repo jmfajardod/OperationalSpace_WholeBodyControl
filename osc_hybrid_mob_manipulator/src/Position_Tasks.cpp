@@ -67,8 +67,10 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
     Eigen::Vector3d de = mTargetVel - mEndEffector->getLinearVelocity();  // Velocity error (Target velocity is zero)
 
     // Obtain Position Gain matrices
-    Eigen::Matrix3d kp = kp_cartesian_.topLeftCorner(3, 3);
-    Eigen::Matrix3d kd = kd_cartesian_.topLeftCorner(3, 3);
+    Eigen::MatrixXd kp = kp_cartesian_.topLeftCorner(3, 3);
+
+    Eigen::MatrixXd damp_coeff = kd_cartesian_.topLeftCorner(3, 3);
+    Eigen::MatrixXd kd = calcDampingMatrix(Eigen::MatrixXd::Identity(3,3), kp, damp_coeff); 
 
     Eigen::Vector3d x_star = mTargetAccel + kd*de + kp*e ; // Command force vector
     if(compensate_topdown){
@@ -181,8 +183,10 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
     //std::cout<< "Cartesian error: \n" << x_error << std::endl;
 
     // Obtain Position Gain matrices
-    Eigen::Matrix3d kp = kp_cartesian_.topLeftCorner(3, 3);
-    Eigen::Matrix3d kd = kd_cartesian_.topLeftCorner(3, 3);
+    Eigen::MatrixXd kp = kp_cartesian_.topLeftCorner(3, 3);
+
+    Eigen::MatrixXd damp_coeff = kd_cartesian_.topLeftCorner(3, 3);
+    Eigen::MatrixXd kd = calcDampingMatrix(Eigen::MatrixXd::Identity(3,3), kp, damp_coeff); 
 
     Eigen::Vector3d x_dot_desired = kp*kd.inverse()*x_error;
 
@@ -307,8 +311,8 @@ void EffortTask::AchieveCartesianMobilRob(  Eigen::Vector3d mTargetPos,
     //std::cout<< "Cartesian error: \n" << x_error << std::endl;
 
     // Obtain Position Gain matrices
-    Eigen::MatrixXd kp = 0.003*(kp_cartesian_.topLeftCorner(2, 2));
-    Eigen::MatrixXd kd = 0.005*(kd_cartesian_.topLeftCorner(2, 2));
+    Eigen::MatrixXd kp = 3.0*(Eigen::Matrix2d::Identity(2,2));
+    Eigen::MatrixXd kd = 0.3*(Eigen::Matrix2d::Identity(2,2));
 
     Eigen::VectorXd de = ( mTargetVel - mEndEffector->getLinearVelocity()).topRows(2);
     Eigen::VectorXd x_star = mTargetAccel.topRows(2) + kd*de + kp*x_error ; // Command force vector
@@ -425,7 +429,9 @@ void EffortTask::AchieveHeightConstVel( Eigen::Vector3d mTarget,
 
     // Obtain Position Gain matrices
     Eigen::MatrixXd kp = (kp_cartesian_.topLeftCorner(3,3)).bottomRightCorner(1,1);
-    Eigen::MatrixXd kd = (kd_cartesian_.topLeftCorner(3,3)).bottomRightCorner(1,1);
+
+    Eigen::MatrixXd damp_coeff = (kd_cartesian_.topLeftCorner(3,3)).bottomRightCorner(1,1);
+    Eigen::MatrixXd kd = calcDampingMatrix(Eigen::MatrixXd::Identity(1,1), kp, damp_coeff); 
 
     Eigen::VectorXd x_dot_desired = kp*kd.inverse()*x_error;
 

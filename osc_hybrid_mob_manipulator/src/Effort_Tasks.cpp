@@ -15,20 +15,20 @@ EffortTask::EffortTask(){
 
     // Gain Matrices definition
     kp_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
-    kp_cartesian_.topLeftCorner(3, 3) = 1200.0*Eigen::MatrixXd::Identity(3, 3); // Position gains (225) (1200)
+    kp_cartesian_.topLeftCorner(3, 3)     = 1200.0*Eigen::MatrixXd::Identity(3, 3); // Position gains (225) (1200)
     kp_cartesian_.bottomRightCorner(3, 3) = 60.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains (400) (60) (600) (300)
 
     kd_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
-    kd_cartesian_.topLeftCorner(3, 3) = 62.0*Eigen::MatrixXd::Identity(3, 3); // Position gains (30) (62)
-    kd_cartesian_.bottomRightCorner(3, 3) = 14.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains (40) (14) (49) (34)
+    kd_cartesian_.topLeftCorner(3, 3)     = 0.9*Eigen::MatrixXd::Identity(3, 3); // Position gains 
+    kd_cartesian_.bottomRightCorner(3, 3) = 0.9*Eigen::MatrixXd::Identity(3, 3); // Orientation gains 
 
     kp_joints_ = Eigen::MatrixXd::Identity(9, 9);
-    kp_joints_.topLeftCorner(3, 3) = 1.0*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
-    kp_joints_.bottomRightCorner(6, 6) = 40.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (40) (40)
+    kp_joints_.topLeftCorner(3, 3)     = 1.0*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
+    kp_joints_.bottomRightCorner(6, 6) = 40.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains
 
     kd_joints_ = Eigen::MatrixXd::Identity(9, 9);
-    kd_joints_.topLeftCorner(3, 3) = 0.1*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
-    kd_joints_.bottomRightCorner(6, 6) = 12.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (35) (12)
+    kd_joints_.topLeftCorner(3, 3)     = 0.1*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
+    kd_joints_.bottomRightCorner(6, 6) = 12.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains 
 
     //--- Select orientation error
     // 1 - Angle-axis Osorio
@@ -404,6 +404,25 @@ Eigen::MatrixXd EffortTask::calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double*
     return Alpha_ns;
 
 } 
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// Function to calculate non-singular operational kinetic energy matrix
+Eigen::MatrixXd EffortTask::calcDampingMatrix(Eigen::MatrixXd Alpha, 
+                                            Eigen::MatrixXd Stiffness, 
+                                            Eigen::MatrixXd DampingCoeff){
+
+    Eigen::MatrixXd Q = Alpha.llt().matrixL();
+
+    Eigen::MatrixXd K_d0 = Q.inverse() * Stiffness * (Q.transpose()).inverse();
+
+    Eigen::MatrixXd K_d0_sqrt = K_d0.llt().matrixL();
+
+    Eigen::MatrixXd Damping = 2 * Q * DampingCoeff * K_d0_sqrt * Q.transpose();
+
+    return Damping;
+
+}
 
 
 } /* namespace */
