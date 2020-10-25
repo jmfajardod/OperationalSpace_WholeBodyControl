@@ -317,9 +317,9 @@ void OscHybridController::spin(){
         //std::cout << "Initial Null space: \n" << Null_space << std::endl;
 
         Eigen::Vector3d x_error =  targetCartPos - mEndEffector_->getWorldTransform().translation();
-
+        /*
         if(x_error.norm()>0.2){
-            //std::cout << "Goal too far away" << std::endl;
+            
             if(x_error.norm()<1.0){
                 q_desired = current_pos;
             }
@@ -327,22 +327,33 @@ void OscHybridController::spin(){
             effortSolver_.AchieveHeightConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         }
         else{
-            effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            effortSolver_.AchieveCartesian(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            //effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
             //effortSolver_.CartesianImpedance(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, tau_ext, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
             
             //std::cout << "Tau result after straight line: \n" << tau_result << std::endl;
             //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
-        }
+        }*/
 
-        effortSolver_.AchieveOrientationConstVel(targetOrientPos, &min_sv_ori, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
-        //effortSolver_.OrientationImpedance(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, tau_ext, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
-        
-        //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
-        //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
-    
         //effortSolver_.AvoidJointLimits(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
         //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
+
+        effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //std::cout << "Tau result after XY Cart: \n" << tau_result << std::endl;
+        //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
+
+        //effortSolver_.AchieveHeight(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        effortSolver_.AchieveHeightConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //std::cout << "Tau result after Y Cart: \n" << tau_result << std::endl;
+        //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
+
+        //effortSolver_.AchieveOrientation(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        effortSolver_.AchieveOrientationConstVel(targetOrientPos, &min_sv_ori, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
+        //effortSolver_.OrientationImpedance(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, tau_ext, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
+        //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
+        //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
+    
 
         effortSolver_.AchieveJointConf(q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //std::cout << "Tau result after achieve joint: \n" << tau_result << "\n" << std::endl;
@@ -351,29 +362,15 @@ void OscHybridController::spin(){
             tau_result =  tau_result + C_k + g_k;
         }
 
-        /*
-        //--- Comparte to old controller
-
-        Eigen::VectorXd tau_zero = Eigen::VectorXd::Zero(9);
-        Eigen::VectorXd tau_result2 = Eigen::VectorXd::Zero(9);
-
-        effortSolver_.OLD_AchieveJointConf(&tau_zero, &tau_result2, q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-        effortSolver_.OLD_AchieveOrientationQuat3(&tau_zero, &tau_result2, targetOrientPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ ); 
-        effortSolver_.OLD_MakeStraightLine(&tau_zero, &tau_result2, targetCartPos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_ );
-        
-        if( ((tau_result-tau_result2).cwiseAbs()).maxCoeff() > 0.1 ){
-            std::cout << "NEW Tau result : \n" << tau_result << std::endl;
-            std::cout << "Old Tau result : \n" << tau_result2 << std::endl;
-            std::cout << "Difference Tau result : \n" << tau_result-tau_result2 << std::endl;
-        }*/
+        ///std::cout << "Tau Final: \n" << tau_result << "\n" << std::endl;
         
         /******************************/
         // Admittance controller
         // send_vel -> q_dot_result
         
         Eigen::MatrixXd damp_des_     = Eigen::MatrixXd::Identity(3, 3) ;
-        damp_des_.topLeftCorner(2, 2) = 60.0*Eigen::MatrixXd::Identity(2, 2); // Liner vel damping
-        damp_des_(2,2) = 20.0 ; // Angular vel damping (10.0)
+        damp_des_.topLeftCorner(2, 2) = 800.0*Eigen::MatrixXd::Identity(2, 2); // Liner vel damping (60)
+        damp_des_(2,2) = 200.0 ; // Angular vel damping (20.0)
 
         Eigen::MatrixXd inertia_des = 1.0*Eigen::MatrixXd::Identity(3, 3);
 
@@ -386,10 +383,17 @@ void OscHybridController::spin(){
         //std::cout << "Tau mobile base : \n" << mob_base_tor << std::endl;
 
         mob_base_vel = damp_des_*mob_base_tor - damp_des_*inertia_des*Eigen::VectorXd::Zero(3);
-
+        
         q_dot_result(0) = mob_base_vel(0);
         q_dot_result(1) = mob_base_vel(1);
         q_dot_result(2) = mob_base_vel(2);
+
+        
+        /*for (size_t jj = 0; jj < 3; jj++){
+            if(abs(q_dot_result(jj))<0.1){
+                q_dot_result(jj) = 0.0;
+            }
+        }*/
 
         //std::cout << "Vel Command: \n" << q_dot_result << std::endl;
 

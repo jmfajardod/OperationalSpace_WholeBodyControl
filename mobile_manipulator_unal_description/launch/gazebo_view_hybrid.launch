@@ -68,7 +68,7 @@
     <!-- Robot initial pose -->
     <arg name="x" default="0.0"/>
     <arg name="y" default="0.0"/>
-    <arg name="z" default="0.05"/>
+    <arg name="z" default="0.0"/>
     <arg name="roll" default="0.0"/>
     <arg name="pitch" default="0.0"/>
     <arg name="yaw" default="$(eval 0.0 * 3.141592 / 180.0)"/>

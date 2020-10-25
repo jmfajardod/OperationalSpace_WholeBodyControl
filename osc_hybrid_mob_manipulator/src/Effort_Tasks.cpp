@@ -15,20 +15,22 @@ EffortTask::EffortTask(){
 
     // Gain Matrices definition
     kp_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
-    kp_cartesian_.topLeftCorner(3, 3)     = 1200.0*Eigen::MatrixXd::Identity(3, 3); // Position gains (225) (1200)
-    kp_cartesian_.bottomRightCorner(3, 3) = 60.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains (400) (60) (600) (300)
+    kp_cartesian_.topLeftCorner(2, 2)     = 60.0*Eigen::MatrixXd::Identity(2, 2); // Position gains (225) (1200)
+    kp_cartesian_(2,2)                    = 1500.0;
+    kp_cartesian_.bottomRightCorner(3, 3) = 1200.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains (400) (60) (600) (300)
 
     kd_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
-    kd_cartesian_.topLeftCorner(3, 3)     = 0.9*Eigen::MatrixXd::Identity(3, 3); // Position gains 
+    kd_cartesian_.topLeftCorner(2, 2)     = 0.9*Eigen::MatrixXd::Identity(2, 2); // Position gains 
+    kd_cartesian_(2,2)                    = 0.9;
     kd_cartesian_.bottomRightCorner(3, 3) = 0.9*Eigen::MatrixXd::Identity(3, 3); // Orientation gains 
 
     kp_joints_ = Eigen::MatrixXd::Identity(9, 9);
     kp_joints_.topLeftCorner(3, 3)     = 1.0*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
-    kp_joints_.bottomRightCorner(6, 6) = 40.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains
+    kp_joints_.bottomRightCorner(6, 6) = 1000.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (40.0)
 
     kd_joints_ = Eigen::MatrixXd::Identity(9, 9);
     kd_joints_.topLeftCorner(3, 3)     = 0.1*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
-    kd_joints_.bottomRightCorner(6, 6) = 12.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains 
+    kd_joints_.bottomRightCorner(6, 6) = 57.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (12.0)
 
     //--- Select orientation error
     // 1 - Angle-axis Osorio
@@ -152,6 +154,7 @@ void EffortTask::AchieveJointConf(  Eigen::VectorXd q_desired,
     // Dont count torques for mobile base
     tau_projected(0) = 0.0; //0.1 * tau_projected(0);
     tau_projected(1) = 0.0; //0.1 * tau_projected(1);
+    tau_projected(2) = 0.0; //0.1 * tau_projected(1);
 
     //std::cout << "Projected Tau: \n" << tau_projected << std::endl;
 
@@ -239,7 +242,6 @@ void EffortTask::AvoidJointLimits(Eigen::MatrixXd M,
         if(close2limit)   q_close(ii) = 1.0;
     }
 
-    //std::cout << "F star: \n" << f_star << std::endl;
     
     // ------------------------------------------//
     // ------------------------------------------//
@@ -247,6 +249,8 @@ void EffortTask::AvoidJointLimits(Eigen::MatrixXd M,
     //create the jacobian and calculate the torques
     
     if(q_close.sum()>0.0){
+
+        std::cout << "Limits: \n" << q_close.transpose() << std::endl;
 
         Eigen::MatrixXd Jacob_t = Eigen::MatrixXd::Zero(int(q_close.sum()),dofs);
         Eigen::VectorXd gamma_vector = Eigen::MatrixXd::Zero(int(q_close.sum()),1);
@@ -279,7 +283,7 @@ void EffortTask::AvoidJointLimits(Eigen::MatrixXd M,
         // Calc Operational acceleration due to task
 
         if(compensate_topdown){
-            gamma_vector = gamma_vector + Jacob_dash_t.transpose() * *tau_total;
+            gamma_vector = gamma_vector - Jacob_dash_t.transpose() * *tau_total;
         }
 
         // ------------------------------------------//
@@ -352,9 +356,12 @@ Eigen::MatrixXd EffortTask::calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double*
     // ------------------------------------------//
     // Compare SVD to threshold
 
-    Eigen::VectorXd small_svd = Eigen::MatrixXd::Zero(3,1);
+    size_t dofs = svd_values.size();
+    //std::cout << "DOFs in SVD: " << dofs << std::endl;
 
-    for (size_t ii = 0; ii < svd_values.size(); ii++){
+    Eigen::VectorXd small_svd = Eigen::MatrixXd::Zero(dofs,1);
+
+    for (size_t ii = 0; ii < dofs; ii++){
         if(abs(svd_values(ii))<singularity_thres_high_){
             small_svd(ii) = 1;
         }
@@ -367,7 +374,7 @@ Eigen::MatrixXd EffortTask::calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double*
     // ------------------------------------------//
     // Non-singular Matrices
 
-    Eigen::MatrixXd Alpha_ns = Eigen::MatrixXd::Zero(3,3);
+    Eigen::MatrixXd Alpha_ns = Eigen::MatrixXd::Zero(dofs,dofs);
 
     if(small_svd.sum()>0){
 
@@ -376,17 +383,18 @@ Eigen::MatrixXd EffortTask::calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double*
         //std::cout << "Its left singular vectors are the columns of the thin U matrix:" << std::endl << Full_U << std::endl;
         //std::cout << "Its right singular vectors are the columns of the thin V matrix:" << std::endl << svd.matrixV() << std::endl;
 
-        Eigen::MatrixXd U_ns = Eigen::MatrixXd::Zero(3,3 - int(small_svd.sum()));
-        Eigen::MatrixXd svd_values_ns = Eigen::MatrixXd::Zero(3 - int(small_svd.sum()) , 3 - int(small_svd.sum()));
+        Eigen::MatrixXd U_ns = Eigen::MatrixXd::Zero(dofs,dofs - int(small_svd.sum()));
+        Eigen::MatrixXd svd_values_ns = Eigen::MatrixXd::Zero(dofs - int(small_svd.sum()) , dofs - int(small_svd.sum()));
 
         double aux_counter_ns = 0;
-        for (size_t ii = 0; ii < 3; ii++){
+        for (size_t ii = 0; ii < dofs; ii++){
 
             // Append components to non-singular matrices
             if(small_svd(ii) != 1){
-                U_ns(0,aux_counter_ns) = Full_U(0,ii);
-                U_ns(1,aux_counter_ns) = Full_U(1,ii);
-                U_ns(2,aux_counter_ns) = Full_U(2,ii);
+
+                for (size_t jj = 0; jj < dofs; jj++){
+                    U_ns(jj,aux_counter_ns) = Full_U(jj,ii);
+                }
 
                 svd_values_ns(aux_counter_ns,aux_counter_ns) = svd_values(ii);
                 aux_counter_ns++;

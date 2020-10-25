@@ -372,12 +372,13 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
 ////////////////////////////////////////////////////////////////////////////////
 // Function to calculate the efforts required to Hold/Achieve a cartesian position
 
-void EffortTask::AchieveCartesianMobilRob(  Eigen::Vector3d mTargetPos, 
+void EffortTask::AchieveCartesianMobilRob( Eigen::Vector3d mTargetPos, 
                                             Eigen::Vector3d mTargetVel,
-                                            Eigen::Vector3d mTargetAccel,
-                                            Eigen::MatrixXd Full_M, 
-                                            Eigen::VectorXd Full_C_t,
-                                            Eigen::VectorXd Full_g_t,
+                                            Eigen::Vector3d mTargetAccel, 
+                                            double *svd_position,
+                                            Eigen::MatrixXd M, 
+                                            Eigen::VectorXd C_t,
+                                            Eigen::VectorXd g_t,
                                             dart::dynamics::SkeletonPtr mRobot,
                                             dart::dynamics::BodyNode* mEndEffector,
                                             Eigen::VectorXd *tau_total,
@@ -389,11 +390,18 @@ void EffortTask::AchieveCartesianMobilRob(  Eigen::Vector3d mTargetPos,
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    Eigen::MatrixXd Jacob_t = (mEndEffector->getLinearJacobian()).topLeftCorner(2,2); // Jacobian
+    Eigen::MatrixXd Normal_Jacob_t = mEndEffector->getLinearJacobian().topRows(2); // Jacobian
+    Normal_Jacob_t.bottomRightCorner(2,7) = Eigen::MatrixXd::Zero(2,7);
+    //std::cout << "Jacobian: \n" << Normal_Jacob_t << std::endl;
+
+    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
     //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
 
-    Eigen::MatrixXd Jacob_dot = (mEndEffector->getLinearJacobianDeriv()).topLeftCorner(2,2);// Derivative of jacobian
-    Eigen::VectorXd q_dot = mRobot->getVelocities().topRows(2);            // Derivative of the joints
+    Eigen::MatrixXd Normal_Jacob_dot = mEndEffector->getLinearJacobianDeriv().topRows(2); // Derivative of jacobian
+    Normal_Jacob_dot.bottomRightCorner(2,7) = Eigen::MatrixXd::Zero(2,7);
+    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
+
+    Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
     //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
 
@@ -401,19 +409,14 @@ void EffortTask::AchieveCartesianMobilRob(  Eigen::Vector3d mTargetPos,
     // ------------------------------------------//
     // Calculate SVD for alpha
 
-    Eigen::MatrixXd M = Full_M.topLeftCorner(2,2);
-    Eigen::VectorXd C_t = Full_C_t.topRows(2);
-    Eigen::VectorXd g_t = Full_g_t.topRows(2);
-
-    //std::cout<< "Joint Inertia matrix: \n" << M << std::endl;
-
     Eigen::MatrixXd Alpha_t_inv = Jacob_t * M.inverse() * Jacob_t.transpose(); // Symmetric Inertia Matrix
 
-    //std::cout << "Inverse Inertia matrix: \n" << Alpha_t_inv << std::endl;
-
+    //std::cout << "Inverse Inertia Matrix: \n" << Alpha_t_inv << std::endl;
+    
     Eigen::MatrixXd Alpha_t = Alpha_t_inv.inverse();
+    //Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv, svd_position);
 
-    //std::cout << "Inertia matrix: \n" << Alpha_t << std::endl;
+    //std::cout << "Inertia Matrix: \n" << Alpha_t << std::endl;
 
     // ------------------------------------------//
     // ------------------------------------------//
@@ -429,17 +432,23 @@ void EffortTask::AchieveCartesianMobilRob(  Eigen::Vector3d mTargetPos,
     //std::cout<< "Cartesian Target: \n" << mTarget << std::endl;
     //std::cout<< "EE Pos: \n" << mEndEffector->getWorldTransform().translation() << std::endl;
 
-    Eigen::VectorXd x_error =  (mTargetPos - mEndEffector->getWorldTransform().translation()).topRows(2); // Position error
-    //std::cout<< "Cartesian error: \n" << x_error << std::endl;
+    Eigen::VectorXd e =  mTargetPos - mEndEffector->getWorldTransform().translation(); // Position error
+    //std::cout<< "Error : \n" << e << std::endl;
+
+    Eigen::VectorXd de = mTargetVel - mEndEffector->getLinearVelocity();  // Velocity error (Target velocity is zero)
 
     // Obtain Position Gain matrices
-    Eigen::MatrixXd kp = 3.0*(Eigen::Matrix2d::Identity(2,2));
-    Eigen::MatrixXd kd = 0.3*(Eigen::Matrix2d::Identity(2,2));
+    Eigen::MatrixXd kp = kp_cartesian_.topLeftCorner(2, 2);
 
-    Eigen::VectorXd de = ( mTargetVel - mEndEffector->getLinearVelocity()).topRows(2);
-    Eigen::VectorXd x_star = mTargetAccel.topRows(2) + kd*de + kp*x_error ; // Command force vector
-    
-    //std::cout << "Ref accel: \n" << x_star << std::endl; 
+    Eigen::MatrixXd damp_coeff = kd_cartesian_.topLeftCorner(2, 2);
+    Eigen::MatrixXd kd = calcDampingMatrix(Eigen::MatrixXd::Identity(2,2), kp, damp_coeff); 
+
+    Eigen::VectorXd x_star = mTargetAccel.topRows(2) + kd*de.topRows(2) + kp*e.topRows(2) ; // Command force vector
+    //std::cout << "Command Accel: \n" << x_star << std::endl;
+
+    if(compensate_topdown){
+        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
+    }
 
     // ------------------------------------------//
     // ------------------------------------------//
@@ -471,17 +480,147 @@ void EffortTask::AchieveCartesianMobilRob(  Eigen::Vector3d mTargetPos,
     // ------------------------------------------//
     // Project torque and add it to the total torque vector
 
-    (*tau_total)(0) = (*tau_total)(0) + tau_star(0);
-    (*tau_total)(1) = (*tau_total)(1) + tau_star(1);
+    Eigen::VectorXd tau_projected = *Null_space_iter *  tau_star;
+    //std::cout << "Tau projected: \n" << tau_projected << std::endl;
 
-    //std::cout << "Tau total: \n" << *tau_total << std::endl; 
+    *tau_total = *tau_total + tau_projected; 
 
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc TASK null space
 
-    Eigen::MatrixXd Null_space_task =  Eigen::MatrixXd::Identity(dofs, dofs); // Null space
-    Null_space_task.topLeftCorner(3,3) = Eigen::MatrixXd::Zero(3,3);
+    Eigen::MatrixXd Null_space_task =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_t * Jacob_t; // Null space
+    //std::cout << "N_t: \n" << Null_space_task << std::endl;
+
+    // ------------------------------------------//
+    // ------------------------------------------//
+    // Calc LEVEL null space
+
+    *Null_space_iter = *Null_space_iter * Null_space_task.transpose();
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Function to calculate the efforts required to Hold/Achieve a cartesian position
+
+void EffortTask::AchieveHeight( Eigen::Vector3d mTargetPos, 
+                                Eigen::Vector3d mTargetVel,
+                                Eigen::Vector3d mTargetAccel, 
+                                double *svd_position,
+                                Eigen::MatrixXd M, 
+                                Eigen::VectorXd C_t,
+                                Eigen::VectorXd g_t,
+                                dart::dynamics::SkeletonPtr mRobot,
+                                dart::dynamics::BodyNode* mEndEffector,
+                                Eigen::VectorXd *tau_total,
+                                Eigen::MatrixXd *Null_space_iter){
+
+    // ------------------------------------------//
+    // ------------------------------------------//
+    // Calculate operational space matrices 
+
+    std::size_t dofs = mEndEffector->getNumDependentGenCoords();
+
+    Eigen::MatrixXd Normal_Jacob_t = mEndEffector->getLinearJacobian().bottomRows(1); // Jacobian
+    //Normal_Jacob_t.topLeftCorner(1,3) = Eigen::MatrixXd::Zero(1,3);
+    //std::cout << "Jacobian: \n" << Normal_Jacob_t << std::endl;
+
+    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
+    //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
+
+    Eigen::MatrixXd Normal_Jacob_dot = mEndEffector->getLinearJacobianDeriv().bottomRows(1); // Derivative of jacobian
+    //Normal_Jacob_dot.topLeftCorner(1,3) = Eigen::MatrixXd::Zero(1,3);
+    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
+
+    Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
+    //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
+    //std::cout << "Q dot: \n" << q_dot << std::endl;
+
+    // ------------------------------------------//
+    // ------------------------------------------//
+    // Calculate SVD for alpha
+
+    Eigen::MatrixXd Alpha_t_inv = Jacob_t * M.inverse() * Jacob_t.transpose(); // Symmetric Inertia Matrix
+
+    //std::cout << "Inverse Inertia Matrix: \n" << Alpha_t_inv << std::endl;
+    
+    //Eigen::MatrixXd Alpha_t = Alpha_t_inv.inverse();
+    Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv, svd_position);
+
+    //std::cout << "Inertia Matrix: \n" << Alpha_t << std::endl;
+
+    // ------------------------------------------//
+    // ------------------------------------------//
+    // Dynamic consistent inverse Jacobian
+
+    Eigen::MatrixXd Jacob_dash_t = M.inverse() * Jacob_t.transpose() * Alpha_t; // Dynamically consistent inverse jacobian
+    //std::cout << "Inverse Jacobian: \n" << Jacob_dash_t << std::endl;
+
+    // ------------------------------------------//
+    // ------------------------------------------//
+    // Calc Operational acceleration due to task
+
+    //std::cout<< "Cartesian Target: \n" << mTarget << std::endl;
+    //std::cout<< "EE Pos: \n" << mEndEffector->getWorldTransform().translation() << std::endl;
+
+    Eigen::VectorXd e =  mTargetPos - mEndEffector->getWorldTransform().translation(); // Position error
+    //std::cout<< "Error : \n" << e << std::endl;
+
+    Eigen::VectorXd de = mTargetVel - mEndEffector->getLinearVelocity();  // Velocity error (Target velocity is zero)
+
+    // Obtain Position Gain matrices
+    Eigen::MatrixXd kp = (kp_cartesian_.topLeftCorner(3, 3)).bottomRightCorner(1,1);
+
+    Eigen::MatrixXd damp_coeff = (kd_cartesian_.topLeftCorner(3, 3)).bottomRightCorner(1,1);
+    Eigen::MatrixXd kd = calcDampingMatrix(Eigen::MatrixXd::Identity(1,1), kp, damp_coeff); 
+
+    Eigen::VectorXd x_star = mTargetAccel.bottomRows(1) + kd*de.bottomRows(1) + kp*e.bottomRows(1) ; // Command force vector
+    //std::cout << "Command Accel: \n" << x_star << std::endl;
+
+    if(compensate_topdown){
+        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
+    }
+
+    // ------------------------------------------//
+    // ------------------------------------------//
+    // Calc Operational force due to task
+
+    Eigen::VectorXd f_t_star = Eigen::VectorXd::Zero(2);
+    if(compensate_jtspace){
+        f_t_star =  Alpha_t * ( x_star - Jacob_dot * q_dot);
+    }
+    else{
+        Eigen::VectorXd niu_t = Jacob_dash_t.transpose() * C_t  - Alpha_t * Jacob_dot * q_dot; // Operational Coriolis vector  
+        //std::cout << "Niu t: \n" << niu_t << std::endl;
+
+        Eigen::VectorXd p_t = Jacob_dash_t.transpose() * g_t; // Operational Gravity vector
+        //std::cout << "P t: \n" << p_t << std::endl;
+
+        f_t_star =  Alpha_t * x_star + niu_t + p_t; // Command forces vector for task
+    }
+
+    //std::cout << "F star: \n" << f_t_star << std::endl;
+
+    // ------------------------------------------//
+    // ------------------------------------------//
+    // Calc Joint torque due to task
+
+    Eigen::VectorXd tau_star =  Jacob_t.transpose() * f_t_star;
+    //std::cout << "Tau star: \n" << tau_star << std::endl;
+
+    // ------------------------------------------//
+    // Project torque and add it to the total torque vector
+
+    Eigen::VectorXd tau_projected = *Null_space_iter *  tau_star;
+    //std::cout << "Tau projected: \n" << tau_projected << std::endl;
+
+    *tau_total = *tau_total + tau_projected; 
+
+    // ------------------------------------------//
+    // ------------------------------------------//
+    // Calc TASK null space
+
+    Eigen::MatrixXd Null_space_task =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_t * Jacob_t; // Null space
     //std::cout << "N_t: \n" << Null_space_task << std::endl;
 
     // ------------------------------------------//

@@ -145,16 +145,29 @@ public:
      * Tasks when goal is too far away
     */
 
-    void AchieveCartesianMobilRob(  Eigen::Vector3d mTargetPos, 
+    void AchieveCartesianMobilRob( Eigen::Vector3d mTargetPos, 
                                     Eigen::Vector3d mTargetVel,
-                                    Eigen::Vector3d mTargetAccel,
-                                    Eigen::MatrixXd Full_M, 
-                                    Eigen::VectorXd Full_C_t,
-                                    Eigen::VectorXd Full_g_t,
+                                    Eigen::Vector3d mTargetAccel, 
+                                    double *svd_position,
+                                    Eigen::MatrixXd M, 
+                                    Eigen::VectorXd C_t,
+                                    Eigen::VectorXd g_t,
                                     dart::dynamics::SkeletonPtr mRobot,
                                     dart::dynamics::BodyNode* mEndEffector,
                                     Eigen::VectorXd *tau_total,
                                     Eigen::MatrixXd *Null_space_iter);
+
+    void AchieveHeight( Eigen::Vector3d mTargetPos, 
+                        Eigen::Vector3d mTargetVel,
+                        Eigen::Vector3d mTargetAccel, 
+                        double *svd_position,
+                        Eigen::MatrixXd M, 
+                        Eigen::VectorXd C_t,
+                        Eigen::VectorXd g_t,
+                        dart::dynamics::SkeletonPtr mRobot,
+                        dart::dynamics::BodyNode* mEndEffector,
+                        Eigen::VectorXd *tau_total,
+                        Eigen::MatrixXd *Null_space_iter);
 
     void AchieveHeightConstVel( Eigen::Vector3d mTarget,
                                 double *svd_position, 

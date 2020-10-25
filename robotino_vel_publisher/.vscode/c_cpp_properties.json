@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/josefajardo/tesis_ros_ws/devel/include/**",
+                "/opt/ros/melodic/include/**",
+                "/home/josefajardo/tesis_ros_ws/src/tesis_2020/mobile_manipulator_msgs/include/**",
+                "/home/josefajardo/tesis_ros_ws/src/tesis_2020/mobile_robot_unal_description/include/**",
+                "/home/josefajardo/tesis_ros_ws/src/tesis_2020/osc_hybrid_mob_manipulator/include/**",
+                "/home/josefajardo/tesis_ros_ws/src/tesis_2020/robotino_effort_publisher/include/**",
+                "/home/josefajardo/tesis_ros_ws/src/tesis_2020/robotino_vel_publisher/include/**",
+                "/usr/include/**"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++14"
+        }
+    ],
+    "version": 4
+}

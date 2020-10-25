@@ -1,8 +1,6 @@
 {
     "python.autoComplete.extraPaths": [
-        "/opt/ros/melodic/lib/python2.7/dist-packages"
-    ],
-    "python.analysis.extraPaths": [
+        "/home/josefajardo/tesis_ros_ws/devel/lib/python2.7/dist-packages",
         "/opt/ros/melodic/lib/python2.7/dist-packages"
     ]
 }
