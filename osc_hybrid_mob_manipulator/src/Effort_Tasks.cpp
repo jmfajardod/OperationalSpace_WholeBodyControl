@@ -136,6 +136,10 @@ void EffortTask::AchieveJointConf(  Eigen::VectorXd q_desired,
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc Joint torque due to task
+
+    if(compensate_topdown){
+        q_star = q_star - M.inverse() * *tau_total;
+    }
     
     Eigen::VectorXd tau_star = Eigen::VectorXd::Zero(dofs);
     if(compensate_jtspace){
@@ -287,7 +291,7 @@ void EffortTask::AvoidJointLimits(Eigen::MatrixXd M,
         // Calc Operational acceleration due to task
 
         if(compensate_topdown){
-            gamma_vector = gamma_vector - Jacob_dash_t.transpose() * *tau_total;
+            gamma_vector = gamma_vector - Alpha_t.inverse() * Jacob_dash_t.transpose() * *tau_total;
         }
 
         // ------------------------------------------//

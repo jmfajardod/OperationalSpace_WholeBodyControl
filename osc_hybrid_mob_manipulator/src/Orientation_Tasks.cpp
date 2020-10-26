@@ -97,7 +97,7 @@ void EffortTask::OrientationImpedance(Eigen::Matrix3d rot_mat_desired,
     Eigen::Vector3d x_star = mTargetAccel + Inertia_Matrix_d.inverse() * (Damping_Matrix_d*(mTargetVel-angular_vel) + Stiff_Matrix_d*error_ori - (Jacob_dash_t.transpose() * tau_ext)); // Command force vector
     
     if(compensate_topdown){
-        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Alpha_t.inverse() * Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
@@ -239,7 +239,7 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
     Eigen::Vector3d x_star = mTargetAccel + kd *(mTargetVel-angular_vel) + kp * error_ori ; 
     
     if(compensate_topdown){
-        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Alpha_t.inverse() * Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
@@ -383,7 +383,7 @@ void EffortTask::AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired,
     Eigen::Vector3d x_star =  (-1.0*kd) * (angular_vel - scale*x_dot_desired);
 
     if(compensate_topdown){
-        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Alpha_t.inverse() * Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//

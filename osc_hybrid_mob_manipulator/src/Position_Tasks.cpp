@@ -77,7 +77,7 @@ void EffortTask::CartesianImpedance(  Eigen::Vector3d mTargetPos,
     Eigen::Vector3d x_star = mTargetAccel + Inertia_Matrix_d.inverse() * (Damping_Matrix_d*de + Stiff_Matrix_d*e - (Jacob_dash_t.transpose() * tau_ext)); // Command force vector
     
     if(compensate_topdown){
-        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Alpha_t.inverse() * Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
@@ -196,7 +196,7 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
 
     Eigen::Vector3d x_star = mTargetAccel + kd*de + kp*e ; // Command force vector
     if(compensate_topdown){
-        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Alpha_t.inverse() * Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
@@ -317,7 +317,7 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
 
     Eigen::Vector3d x_star =  (-1.0*kd) * (mEndEffector->getLinearVelocity() - scale*x_dot_desired); // Command force vector
     if(compensate_topdown){
-        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Alpha_t.inverse() * Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
@@ -445,7 +445,7 @@ void EffortTask::AchieveCartesianMobilRob( Eigen::Vector3d mTargetPos,
     //std::cout << "Command Accel: \n" << x_star << std::endl;
 
     if(compensate_topdown){
-        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Alpha_t.inverse() * Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
@@ -572,7 +572,7 @@ void EffortTask::AchieveCartesianMobilRobConstVel(  Eigen::Vector3d mTargetPos,
     //std::cout << "Command Accel: \n" << x_star << std::endl;
 
     if(compensate_topdown){
-        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Alpha_t.inverse() * Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
@@ -701,7 +701,7 @@ void EffortTask::AchieveHeight( Eigen::Vector3d mTargetPos,
     //std::cout << "Command Accel: \n" << x_star << std::endl;
 
     if(compensate_topdown){
-        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Alpha_t.inverse() * Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
@@ -829,7 +829,7 @@ void EffortTask::AchieveHeightConstVel( Eigen::Vector3d mTarget,
     //std::cout << "Ref Accel: \n" << x_star << std::endl;
     
     if(compensate_topdown){
-        x_star = x_star - Alpha_t_inv * Jacob_dash_t.transpose() * *tau_total;
+        x_star = x_star - Alpha_t.inverse() * Jacob_dash_t.transpose() * *tau_total;
     }
 
     // ------------------------------------------//
