@@ -1,5 +1,10 @@
+# Robot namespace
 robot_name: mobile_manipulator
+
+# Odometry topic to subscribe 
 odom_topic: odometry/filtered
+
+# Manipulator DOFs in order from waist to wrist
 manipulator_dof_names: 
   - waist_joint
   - shoulder_joint
@@ -7,6 +12,8 @@ manipulator_dof_names:
   - upper_forearm_joint
   - lower_forearm_joint
   - wrist_joint
+
+# Manipulator Controllers in order from waist to wrist
 manipulator_controllers: 
   - waist_controller
   - shoulder_controller
@@ -14,3 +21,8 @@ manipulator_controllers:
   - upper_forearm_controller
   - lower_forearm_controller
   - wrist_controller
+
+# Parameters of controller
+compensate_topdownEffects: False
+compensate_nonlinearInJointSpace: True
+use_augmented_projections: False

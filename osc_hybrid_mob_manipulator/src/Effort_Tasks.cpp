@@ -10,6 +10,8 @@ using namespace dart::math;
 // Constructor
 EffortTask::EffortTask(){
 
+    augmented_projections = false;
+
     compensate_topdown  = true;
     compensate_jtspace  = true;
 

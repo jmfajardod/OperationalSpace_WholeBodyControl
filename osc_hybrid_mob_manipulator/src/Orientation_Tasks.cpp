@@ -28,13 +28,16 @@ void EffortTask::OrientationImpedance(Eigen::Matrix3d rot_mat_desired,
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    AngularJacobian Normal_Jacob_t = mEndEffector->getAngularJacobian(); // Angular Jacobian
-    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
+    Eigen::MatrixXd Jacob_t = mEndEffector->getAngularJacobian(); // Angular Jacobian
+    if(augmented_projections){
+        Jacob_t = Jacob_t * (*Null_space_iter).transpose();
+    }
     //std::cout << "Angular Jacob: \n" << Jacob_t << std::endl;
 
-    AngularJacobian Normal_Jacob_dot = mEndEffector->getAngularJacobianDeriv(); // Derivative of jacobian
-    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
-
+    Eigen::MatrixXd Jacob_dot = mEndEffector->getAngularJacobianDeriv(); // Derivative of jacobian
+    if(augmented_projections){
+        Jacob_dot = Jacob_dot * (*Null_space_iter).transpose();
+    }
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
     //std::cout << "Angular Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
@@ -168,13 +171,16 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    AngularJacobian Normal_Jacob_t = mEndEffector->getAngularJacobian(); // Angular Jacobian
-    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
+    Eigen::MatrixXd Jacob_t = mEndEffector->getAngularJacobian(); // Angular Jacobian
+    if(augmented_projections){
+        Jacob_t = Jacob_t * (*Null_space_iter).transpose();
+    }
     //std::cout << "Angular Jacob: \n" << Jacob_t << std::endl;
 
-    AngularJacobian Normal_Jacob_dot = mEndEffector->getAngularJacobianDeriv(); // Derivative of jacobian
-    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
-
+    Eigen::MatrixXd Jacob_dot = mEndEffector->getAngularJacobianDeriv(); // Derivative of jacobian
+    if(augmented_projections){
+        Jacob_dot = Jacob_dot * (*Null_space_iter).transpose();
+    }
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
     //std::cout << "Angular Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
@@ -304,13 +310,16 @@ void EffortTask::AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired,
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    AngularJacobian Normal_Jacob_t = mEndEffector->getAngularJacobian(); // Angular Jacobian
-    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
+    Eigen::MatrixXd Jacob_t = mEndEffector->getAngularJacobian(); // Angular Jacobian
+    if(augmented_projections){
+        Jacob_t = Jacob_t * (*Null_space_iter).transpose();
+    }
     //std::cout << "Angular Jacob: \n" << Jacob_t << std::endl;
 
-    AngularJacobian Normal_Jacob_dot = mEndEffector->getAngularJacobianDeriv(); // Derivative of jacobian
-    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
-
+    Eigen::MatrixXd Jacob_dot = mEndEffector->getAngularJacobianDeriv(); // Derivative of jacobian
+    if(augmented_projections){
+        Jacob_dot = Jacob_dot * (*Null_space_iter).transpose();
+    }
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
     //std::cout << "Angular Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;

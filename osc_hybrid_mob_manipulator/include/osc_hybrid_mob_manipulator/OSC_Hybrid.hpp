@@ -104,6 +104,10 @@ private:
 
 	int frecuency_rate;
 
+	bool topdown_;
+    bool jtspace_;
+    bool augmented_;
+
 	std_msgs::Float64 manipulator_cmd;
 
 	geometry_msgs::Twist mobile_pltfrm_cmd;

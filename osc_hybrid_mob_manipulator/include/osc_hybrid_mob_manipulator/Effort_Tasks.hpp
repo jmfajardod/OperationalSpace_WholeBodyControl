@@ -269,6 +269,7 @@ public:
 
     bool compensate_topdown;
     bool compensate_jtspace;
+    bool augmented_projections;
 
 private:
 

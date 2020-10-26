@@ -29,13 +29,16 @@ void EffortTask::CartesianImpedance(  Eigen::Vector3d mTargetPos,
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    LinearJacobian Normal_Jacob_t = mEndEffector->getLinearJacobian(); // Jacobian
-    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
+    Eigen::MatrixXd Jacob_t = mEndEffector->getLinearJacobian(); // Jacobian
+    if(augmented_projections){
+        Jacob_t = Jacob_t * (*Null_space_iter).transpose();
+    }
     //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
 
-    LinearJacobian Normal_Jacob_dot = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
-    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
-
+    Eigen::MatrixXd Jacob_dot = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
+    if(augmented_projections){
+        Jacob_dot = Jacob_dot * (*Null_space_iter).transpose();
+    }
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
     //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
@@ -58,9 +61,6 @@ void EffortTask::CartesianImpedance(  Eigen::Vector3d mTargetPos,
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc Operational acceleration due to task
-
-    //std::cout<< "Cartesian Target: \n" << mTarget << std::endl;
-    //std::cout<< "EE Pos: \n" << mEndEffector->getWorldTransform().translation() << std::endl;
 
     Eigen::Vector3d e =  mTargetPos - mEndEffector->getWorldTransform().translation() ; // Position error
     //std::cout<< "Error : \n" << e << std::endl;
@@ -150,13 +150,16 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    LinearJacobian Normal_Jacob_t = mEndEffector->getLinearJacobian(); // Jacobian
-    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
+    Eigen::MatrixXd Jacob_t = mEndEffector->getLinearJacobian(); // Jacobian
+    if(augmented_projections){
+        Jacob_t = Jacob_t * (*Null_space_iter).transpose();
+    }
     //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
 
-    LinearJacobian Normal_Jacob_dot = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
-    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
-
+    Eigen::MatrixXd Jacob_dot = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
+    if(augmented_projections){
+        Jacob_dot = Jacob_dot * (*Null_space_iter).transpose();
+    }
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
     //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
@@ -179,9 +182,6 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc Operational acceleration due to task
-
-    //std::cout<< "Cartesian Target: \n" << mTarget << std::endl;
-    //std::cout<< "EE Pos: \n" << mEndEffector->getWorldTransform().translation() << std::endl;
 
     Eigen::Vector3d e =  mTargetPos - mEndEffector->getWorldTransform().translation() ; // Position error
     //std::cout<< "Error : \n" << e << std::endl;
@@ -268,13 +268,16 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    LinearJacobian Normal_Jacob_t = mEndEffector->getLinearJacobian(); // Jacobian
-    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
+    Eigen::MatrixXd Jacob_t = mEndEffector->getLinearJacobian(); // Jacobian
+    if(augmented_projections){
+        Jacob_t = Jacob_t * (*Null_space_iter).transpose();
+    }
     //std::cout << "Projected Linear Jacob: \n" << Jacob_t << std::endl;
 
-    LinearJacobian Normal_Jacob_dot = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
-    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
-
+    Eigen::MatrixXd Jacob_dot = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
+    if(augmented_projections){
+        Jacob_dot = Jacob_dot * (*Null_space_iter).transpose();
+    }
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
     //std::cout << "Projected Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
@@ -297,9 +300,6 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc Operational acceleration due to task
-
-    //std::cout<< "Cartesian Target: \n" << mTarget << std::endl;
-    //std::cout<< "EE Pos: \n" << mEndEffector->getWorldTransform().translation() << std::endl;
 
     Eigen::Vector3d x_error =  mTarget - mEndEffector->getWorldTransform().translation(); // Position error
     //std::cout<< "Cartesian error: \n" << x_error << std::endl;
@@ -390,17 +390,18 @@ void EffortTask::AchieveCartesianMobilRob( Eigen::Vector3d mTargetPos,
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    Eigen::MatrixXd Normal_Jacob_t = mEndEffector->getLinearJacobian().topRows(2); // Jacobian
-    Normal_Jacob_t.bottomRightCorner(2,7) = Eigen::MatrixXd::Zero(2,7);
-    //std::cout << "Jacobian: \n" << Normal_Jacob_t << std::endl;
-
-    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
+    Eigen::MatrixXd Jacob_t = mEndEffector->getLinearJacobian().topRows(2); // Jacobian
+    Jacob_t.bottomRightCorner(2,7) = Eigen::MatrixXd::Zero(2,7);
+    if(augmented_projections){ 
+        Jacob_t = Jacob_t * (*Null_space_iter).transpose();
+    }
     //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
 
-    Eigen::MatrixXd Normal_Jacob_dot = mEndEffector->getLinearJacobianDeriv().topRows(2); // Derivative of jacobian
-    Normal_Jacob_dot.bottomRightCorner(2,7) = Eigen::MatrixXd::Zero(2,7);
-    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
-
+    Eigen::MatrixXd Jacob_dot = mEndEffector->getLinearJacobianDeriv().topRows(2); // Derivative of jacobian
+    Jacob_dot.bottomRightCorner(2,7) = Eigen::MatrixXd::Zero(2,7);
+    if(augmented_projections){ 
+        Jacob_dot = Jacob_dot * (*Null_space_iter).transpose();
+    }
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
     //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
@@ -428,9 +429,6 @@ void EffortTask::AchieveCartesianMobilRob( Eigen::Vector3d mTargetPos,
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc Operational acceleration due to task
-
-    //std::cout<< "Cartesian Target: \n" << mTarget << std::endl;
-    //std::cout<< "EE Pos: \n" << mEndEffector->getWorldTransform().translation() << std::endl;
 
     Eigen::VectorXd e =  mTargetPos - mEndEffector->getWorldTransform().translation(); // Position error
     //std::cout<< "Error : \n" << e << std::endl;
@@ -519,15 +517,18 @@ void EffortTask::AchieveCartesianMobilRobConstVel(  Eigen::Vector3d mTargetPos,
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    Eigen::MatrixXd Normal_Jacob_t = mEndEffector->getLinearJacobian().topRows(2); // Jacobian
-    Normal_Jacob_t.bottomRightCorner(2,7) = Eigen::MatrixXd::Zero(2,7);
-    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
+    Eigen::MatrixXd Jacob_t = mEndEffector->getLinearJacobian().topRows(2); // Jacobian
+    Jacob_t.bottomRightCorner(2,7) = Eigen::MatrixXd::Zero(2,7);
+    if(augmented_projections){
+        Jacob_t = Jacob_t * (*Null_space_iter).transpose();
+    }
     //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
 
-    Eigen::MatrixXd Normal_Jacob_dot = mEndEffector->getLinearJacobianDeriv().topRows(2); // Derivative of jacobian
-    Normal_Jacob_dot.bottomRightCorner(2,7) = Eigen::MatrixXd::Zero(2,7);
-    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
-
+    Eigen::MatrixXd Jacob_dot = mEndEffector->getLinearJacobianDeriv().topRows(2); // Derivative of jacobian
+    Jacob_dot.bottomRightCorner(2,7) = Eigen::MatrixXd::Zero(2,7);
+    if(augmented_projections){
+        Jacob_dot = Jacob_dot * (*Null_space_iter).transpose();
+    }
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
     //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
@@ -645,15 +646,18 @@ void EffortTask::AchieveHeight( Eigen::Vector3d mTargetPos,
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    Eigen::MatrixXd Normal_Jacob_t = mEndEffector->getLinearJacobian().bottomRows(1); // Jacobian
-    //Normal_Jacob_t.topLeftCorner(1,3) = Eigen::MatrixXd::Zero(1,3);
-    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
+    Eigen::MatrixXd Jacob_t = mEndEffector->getLinearJacobian().bottomRows(1); // Jacobian
+    //Jacob_t.topLeftCorner(1,3) = Eigen::MatrixXd::Zero(1,3);
+    if(augmented_projections){
+        Jacob_t = Jacob_t * (*Null_space_iter).transpose();
+    }
     //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
 
-    Eigen::MatrixXd Normal_Jacob_dot = mEndEffector->getLinearJacobianDeriv().bottomRows(1); // Derivative of jacobian
-    //Normal_Jacob_dot.topLeftCorner(1,3) = Eigen::MatrixXd::Zero(1,3);
-    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
-
+    Eigen::MatrixXd Jacob_dot = mEndEffector->getLinearJacobianDeriv().bottomRows(1); // Derivative of jacobian
+    //Jacob_dot.topLeftCorner(1,3) = Eigen::MatrixXd::Zero(1,3);
+    if(augmented_projections){
+        Jacob_dot = Jacob_dot * (*Null_space_iter).transpose();
+    }
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
     //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
@@ -681,9 +685,6 @@ void EffortTask::AchieveHeight( Eigen::Vector3d mTargetPos,
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc Operational acceleration due to task
-
-    //std::cout<< "Cartesian Target: \n" << mTarget << std::endl;
-    //std::cout<< "EE Pos: \n" << mEndEffector->getWorldTransform().translation() << std::endl;
 
     Eigen::VectorXd e =  mTargetPos - mEndEffector->getWorldTransform().translation(); // Position error
     //std::cout<< "Error : \n" << e << std::endl;
@@ -772,15 +773,18 @@ void EffortTask::AchieveHeightConstVel( Eigen::Vector3d mTarget,
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    Eigen::MatrixXd Normal_Jacob_t = (mEndEffector->getLinearJacobian()).bottomRightCorner(1,dofs); // Jacobian
-    //Normal_Jacob_t.topLeftCorner(1,3) = Eigen::MatrixXd::Zero(1,3);
-    Eigen::MatrixXd Jacob_t = Normal_Jacob_t * (*Null_space_iter).transpose();
+    Eigen::MatrixXd Jacob_t = (mEndEffector->getLinearJacobian()).bottomRightCorner(1,dofs); // Jacobian
+    //Jacob_t.topLeftCorner(1,3) = Eigen::MatrixXd::Zero(1,3);
+    if(augmented_projections){
+        Jacob_t = Jacob_t * (*Null_space_iter).transpose();
+    }
     //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
 
-    Eigen::MatrixXd Normal_Jacob_dot = (mEndEffector->getLinearJacobianDeriv()).bottomRightCorner(1,dofs); // Derivative of jacobian
-    //Normal_Jacob_dot.topLeftCorner(1,3) = Eigen::MatrixXd::Zero(1,3);
-    Eigen::MatrixXd Jacob_dot = Normal_Jacob_dot * (*Null_space_iter).transpose();
-
+    Eigen::MatrixXd Jacob_dot = (mEndEffector->getLinearJacobianDeriv()).bottomRightCorner(1,dofs); // Derivative of jacobian
+    //Jacob_dot.topLeftCorner(1,3) = Eigen::MatrixXd::Zero(1,3);
+    if(augmented_projections){
+        Jacob_dot = Jacob_dot * (*Null_space_iter).transpose();
+    }
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
     //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
@@ -805,9 +809,6 @@ void EffortTask::AchieveHeightConstVel( Eigen::Vector3d mTarget,
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc Operational acceleration due to task
-
-    //std::cout<< "Cartesian Target: \n" << mTarget << std::endl;
-    //std::cout<< "EE Pos: \n" << mEndEffector->getWorldTransform().translation() << std::endl;
 
     Eigen::VectorXd x_error =  (mTarget - mEndEffector->getWorldTransform().translation()).bottomRows(1); // Position error
     //std::cout<< "Cartesian error: \n" << x_error << std::endl;

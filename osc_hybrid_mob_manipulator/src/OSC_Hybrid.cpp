@@ -210,12 +210,45 @@ bool OscHybridController::readParameters()
     if (!nodeHandle_.getParam("odom_topic", odometry_topic))        return false;
     if (!nodeHandle_.getParam("manipulator_dof_names", manipulator_dofs))        return false;
     if (!nodeHandle_.getParam("manipulator_controllers", manipulator_controllers))        return false;
+    if (!nodeHandle_.getParam("compensate_topdownEffects", topdown_))        return false;
+    if (!nodeHandle_.getParam("compensate_nonlinearInJointSpace", jtspace_))        return false;
+    if (!nodeHandle_.getParam("use_augmented_projections", augmented_))        return false;
 
     robot_frame = robot_name + "/mobile_base_link";
 
     ROS_INFO("Robot Frame: %s", robot_frame.c_str());
 
     ROS_INFO("Robot dof1: %s", manipulator_dofs.at(0).c_str());
+
+    //--- Top-down effects parameter
+    if(topdown_){
+        ROS_INFO("Compensating Top down effects");
+        effortSolver_.compensate_topdown = true;
+    }
+    else{
+        ROS_INFO("NOT Compensating Top down effects");
+        effortSolver_.compensate_topdown = false;
+    }
+
+    //--- Compensate non-linear effects in joint space parameter
+    if(jtspace_){
+        ROS_INFO("Compensating Nonlinear effects in joint space");
+        effortSolver_.compensate_jtspace = true;
+    }
+    else{
+        ROS_INFO("NOT Compensating Nonlinear effects in joint space");
+        effortSolver_.compensate_jtspace = false;
+    }
+
+    //--- Use succesive or augmented projections
+    if(augmented_){
+        ROS_INFO("Using augmented projections");
+        effortSolver_.augmented_projections = true;
+    }
+    else{
+        ROS_INFO("Using succesive projections");
+        effortSolver_.augmented_projections = false;
+    }
     
     return true;
 }
