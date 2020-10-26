@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     init_pos = np.array([0.53649, 0, 0.74675])
 
-    period = 15.0
+    period = 30.0
     frecuency = 2*np.math.pi / period
     offset_time = 0.0
 
@@ -43,11 +43,13 @@ if __name__ == '__main__':
     Quat0 =  np.array([0,0,0,1]) #np.array([-0.412, -0.192, -0.412, 0.790]) 
     Quat0 = (1.0/np.linalg.norm(Quat0))*Quat0
 
-    Quat1 = np.array([0.5, 0.5, -0.5, 0.5]) #np.array([0.191, 0.462, 0.191, 0.845]) #np.array([0,0.707,0,0.707])
+    Quat1 = np.array([0.177, -0.306, -0.177, 0.919]) #np.array([0.5, 0.5, -0.5, 0.5]) #np.array([0.191, 0.462, 0.191, 0.845]) #np.array([0,0.707,0,0.707])
     Quat1 = (1.0/np.linalg.norm(Quat1))*Quat1
 
     rate = rospy.Rate(200.0)
     init_time = None
+
+    rospy.sleep(3)
 
     while(rospy.is_shutdown() is not True):
         
@@ -55,6 +57,10 @@ if __name__ == '__main__':
             init_time = rospy.Time.now()
 
         current_time = (rospy.Time.now() - init_time).to_sec()
+        #print(current_time)
+        if(current_time>= 3.0*period):
+            break
+
         Msg.pose.translation.x = init_pos[0]  + 1.0*np.math.sin(frecuency*current_time + offset_time)
         Msg.pose.translation.y = init_pos[1]  + 1.0*np.math.sin(frecuency*current_time + offset_time)
         Msg.pose.translation.z = 0.5  + 0.1*np.math.sin(frecuency*current_time + offset_time)
@@ -69,18 +75,23 @@ if __name__ == '__main__':
         Msg.pose.rotation.z = Quat_int[2]
         Msg.pose.rotation.w = Quat_int[3]
 
+        Msg.joints.mobjoint3 = np.math.sin(frecuency*current_time + offset_time)
+
         pubTrajectory.publish(Msg)
         rate.sleep()
     
-    #Quat1 = np.array([0,0,0,1])
-    #Quat2 = tf_conversions.transformations.random_quaternion()
-    #Quat_int = tf_conversions.transformations.quaternion_slerp(Quat1, Quat2, 0.5)
-    #print( "Quat1: \n" , Quat1)
-    #print( "Quat2: \n" , Quat2)
-    #print( "Quat Int: \n" , Quat_int)
-    #tf_conversions.transformations.quaternion_slerp
 
+    Msg.pose.translation.x = init_pos[0]  
+    Msg.pose.translation.y = init_pos[1] 
+    Msg.pose.translation.z = 0.5  
+    Msg.pose.rotation.x = Quat0[0]
+    Msg.pose.rotation.y = Quat0[1]
+    Msg.pose.rotation.z = Quat0[2]
+    Msg.pose.rotation.w = Quat0[3]
+    Msg.joints.mobjoint3 = - 5.0
+    pubTrajectory.publish(Msg)
 
+    rospy.sleep(3)
 
     rospy.loginfo("Final Command published")
 

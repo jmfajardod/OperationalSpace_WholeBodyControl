@@ -119,12 +119,15 @@ void OscHybridController::change_DesPose_CB(const mobile_manipulator_msgs::Traje
     mob_man_traj.accel.angular.y = msg.accel.angular.y;
     mob_man_traj.accel.angular.z = msg.accel.angular.z;
 
-    mob_man_traj.joints.joint1 = msg.joints.joint1;
-    mob_man_traj.joints.joint2 = msg.joints.joint2;
-    mob_man_traj.joints.joint3 = msg.joints.joint3;
-    mob_man_traj.joints.joint4 = msg.joints.joint4;
-    mob_man_traj.joints.joint5 = msg.joints.joint5;
-    mob_man_traj.joints.joint6 = msg.joints.joint6;
+    mob_man_traj.joints.mobjoint1 = msg.joints.mobjoint1;
+    mob_man_traj.joints.mobjoint2 = msg.joints.mobjoint2;
+    mob_man_traj.joints.mobjoint3 = msg.joints.mobjoint3;
+    mob_man_traj.joints.joint1    = msg.joints.joint1;
+    mob_man_traj.joints.joint2    = msg.joints.joint2;
+    mob_man_traj.joints.joint3    = msg.joints.joint3;
+    mob_man_traj.joints.joint4    = msg.joints.joint4;
+    mob_man_traj.joints.joint5    = msg.joints.joint5;
+    mob_man_traj.joints.joint6    = msg.joints.joint6;
 
 }
 
@@ -288,7 +291,12 @@ void OscHybridController::spin(){
         Eigen::VectorXd q_desired = Eigen::VectorXd::Zero(9);
         q_desired(0) = current_pos(0);
         q_desired(1) = current_pos(1);
-        q_desired(2) = current_pos(2);
+        if(mob_man_traj.joints.mobjoint3 != -5.0){
+            q_desired(2) = mob_man_traj.joints.mobjoint3;
+        }
+        else{
+            q_desired(2) = current_pos(2);
+        }
         q_desired(3) = mob_man_traj.joints.joint1;
         q_desired(4) = mob_man_traj.joints.joint2;
         q_desired(5) = mob_man_traj.joints.joint3;
@@ -339,7 +347,8 @@ void OscHybridController::spin(){
         //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
         //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
 
-        effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        effortSolver_.AchieveCartesianMobilRobConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //std::cout << "Tau result after XY Cart: \n" << tau_result << std::endl;
         //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
 
@@ -356,7 +365,7 @@ void OscHybridController::spin(){
     
 
         effortSolver_.AchieveJointConf(q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-        //std::cout << "Tau result after achieve joint: \n" << tau_result << "\n" << std::endl;
+        //std::cout << "Tau result after achieve joint: \n" << tau_result.transpose() << "\n" << std::endl;
 
         if(effortSolver_.compensate_jtspace){
             tau_result =  tau_result + C_k + g_k;
@@ -370,7 +379,7 @@ void OscHybridController::spin(){
         
         Eigen::MatrixXd damp_des_     = Eigen::MatrixXd::Identity(3, 3) ;
         damp_des_.topLeftCorner(2, 2) = 800.0*Eigen::MatrixXd::Identity(2, 2); // Liner vel damping (60)
-        damp_des_(2,2) = 200.0 ; // Angular vel damping (20.0)
+        damp_des_(2,2) = 800.0 ; // Angular vel damping (20.0)
 
         Eigen::MatrixXd inertia_des = 1.0*Eigen::MatrixXd::Identity(3, 3);
 
@@ -484,18 +493,24 @@ void OscHybridController::spin(){
         mobile_manipulator_data.torques.torque8 = tau_result(7);
         mobile_manipulator_data.torques.torque9 = tau_result(8);
 
-        mobile_manipulator_data.joints.actual.joint1 = current_pos(3);
-        mobile_manipulator_data.joints.actual.joint2 = current_pos(4);
-        mobile_manipulator_data.joints.actual.joint3 = current_pos(5);
-        mobile_manipulator_data.joints.actual.joint4 = current_pos(6);
-        mobile_manipulator_data.joints.actual.joint5 = current_pos(7);
-        mobile_manipulator_data.joints.actual.joint6 = current_pos(8);
-        mobile_manipulator_data.joints.desired.joint1 = q_desired(3);
-        mobile_manipulator_data.joints.desired.joint2 = q_desired(4);
-        mobile_manipulator_data.joints.desired.joint3 = q_desired(5);
-        mobile_manipulator_data.joints.desired.joint4 = q_desired(6);
-        mobile_manipulator_data.joints.desired.joint5 = q_desired(7);
-        mobile_manipulator_data.joints.desired.joint6 = q_desired(8);
+        mobile_manipulator_data.joints.actual.mobjoint1  = current_pos(0);
+        mobile_manipulator_data.joints.actual.mobjoint2  = current_pos(1);
+        mobile_manipulator_data.joints.actual.mobjoint3  = current_pos(2);
+        mobile_manipulator_data.joints.actual.joint1     = current_pos(3);
+        mobile_manipulator_data.joints.actual.joint2     = current_pos(4);
+        mobile_manipulator_data.joints.actual.joint3     = current_pos(5);
+        mobile_manipulator_data.joints.actual.joint4     = current_pos(6);
+        mobile_manipulator_data.joints.actual.joint5     = current_pos(7);
+        mobile_manipulator_data.joints.actual.joint6     = current_pos(8);
+        mobile_manipulator_data.joints.desired.mobjoint1 = q_desired(0);
+        mobile_manipulator_data.joints.desired.mobjoint2 = q_desired(1);
+        mobile_manipulator_data.joints.desired.mobjoint3 = q_desired(2);
+        mobile_manipulator_data.joints.desired.joint1    = q_desired(3);
+        mobile_manipulator_data.joints.desired.joint2    = q_desired(4);
+        mobile_manipulator_data.joints.desired.joint3    = q_desired(5);
+        mobile_manipulator_data.joints.desired.joint4    = q_desired(6);
+        mobile_manipulator_data.joints.desired.joint5    = q_desired(7);
+        mobile_manipulator_data.joints.desired.joint6    = q_desired(8);
 
 
         pub_mob_manipulator_data.publish(mobile_manipulator_data);

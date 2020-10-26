@@ -56,7 +56,7 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: true
-    - Alpha: 0.5
+    - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: false
       Enabled: true
@@ -177,14 +177,14 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        desired_pose:
-          Value: true
         mobile_manipulator/base_footprint:
           Value: false
         mobile_manipulator/base_gripper_link:
           Value: false
         mobile_manipulator/base_link:
           Value: false
+        mobile_manipulator/desired_pose:
+          Value: true
         mobile_manipulator/end_effector_link:
           Value: false
         mobile_manipulator/gripper_bar_link:
@@ -230,8 +230,6 @@ Visualization Manager:
       Show Names: false
       Tree:
         odom:
-          desired_pose:
-            {}
           mobile_manipulator/base_footprint:
             mobile_manipulator/mobile_base_link:
               mobile_manipulator/imu_link:
@@ -261,6 +259,8 @@ Visualization Manager:
                 {}
               mobile_manipulator/wheel2_link:
                 {}
+          mobile_manipulator/desired_pose:
+            {}
       Update Interval: 0
       Value: true
   Enabled: true
@@ -291,25 +291,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 2.9650700092315674
+      Distance: 2.6092615127563477
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.5027526617050171
-        Y: -0.14921748638153076
-        Z: -7.301568984985352e-7
+        X: -0.45251232385635376
+        Y: -0.8947304487228394
+        Z: -1.2069940567016602e-6
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6953977346420288
+      Pitch: 0.5953977108001709
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 5.403573513031006
+      Yaw: 4.848567962646484
     Saved: ~
 Window Geometry:
   Displays:

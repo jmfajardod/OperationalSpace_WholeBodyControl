@@ -157,6 +157,16 @@ public:
                                     Eigen::VectorXd *tau_total,
                                     Eigen::MatrixXd *Null_space_iter);
 
+    void AchieveCartesianMobilRobConstVel(  Eigen::Vector3d mTargetPos,
+                                            double *svd_position,
+                                            Eigen::MatrixXd M, 
+                                            Eigen::VectorXd C_t,
+                                            Eigen::VectorXd g_t,
+                                            dart::dynamics::SkeletonPtr mRobot,
+                                            dart::dynamics::BodyNode* mEndEffector,
+                                            Eigen::VectorXd *tau_total,
+                                            Eigen::MatrixXd *Null_space_iter);
+
     void AchieveHeight( Eigen::Vector3d mTargetPos, 
                         Eigen::Vector3d mTargetVel,
                         Eigen::Vector3d mTargetAccel, 

@@ -10,26 +10,28 @@ using namespace dart::math;
 // Constructor
 EffortTask::EffortTask(){
 
-    compensate_topdown  = false;
+    compensate_topdown  = true;
     compensate_jtspace  = true;
 
     // Gain Matrices definition
     kp_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
-    kp_cartesian_.topLeftCorner(2, 2)     = 60.0*Eigen::MatrixXd::Identity(2, 2); // Position gains (225) (1200)
+    kp_cartesian_.topLeftCorner(2, 2)     = 100.0*Eigen::MatrixXd::Identity(2, 2); // Position gains (225) (1200)
     kp_cartesian_(2,2)                    = 1500.0;
     kp_cartesian_.bottomRightCorner(3, 3) = 1200.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains (400) (60) (600) (300)
 
     kd_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
-    kd_cartesian_.topLeftCorner(2, 2)     = 0.9*Eigen::MatrixXd::Identity(2, 2); // Position gains 
+    kd_cartesian_.topLeftCorner(2, 2)     = 1.0*Eigen::MatrixXd::Identity(2, 2); // Position gains 
     kd_cartesian_(2,2)                    = 0.9;
     kd_cartesian_.bottomRightCorner(3, 3) = 0.9*Eigen::MatrixXd::Identity(3, 3); // Orientation gains 
 
     kp_joints_ = Eigen::MatrixXd::Identity(9, 9);
-    kp_joints_.topLeftCorner(3, 3)     = 1.0*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
+    kp_joints_.topLeftCorner(2, 2)     = 50.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains
+    kp_joints_(2,2)                    = 100.0; // Mobile base gains
     kp_joints_.bottomRightCorner(6, 6) = 1000.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (40.0)
 
     kd_joints_ = Eigen::MatrixXd::Identity(9, 9);
-    kd_joints_.topLeftCorner(3, 3)     = 0.1*Eigen::MatrixXd::Identity(3, 3); // Mobile base gains
+    kd_joints_.topLeftCorner(2, 2)     = 5.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains
+    kd_joints_(2,2)                    = 10.0; // Mobile base gains
     kd_joints_.bottomRightCorner(6, 6) = 57.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (12.0)
 
     //--- Select orientation error
@@ -118,19 +120,16 @@ void EffortTask::AchieveJointConf(  Eigen::VectorXd q_desired,
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
     Eigen::VectorXd q_dot_desired = Eigen::VectorXd::Zero(dofs); 
-    //std::cout << "q desired: \n" << q_desired << std::endl;
-    //std::cout << "q dot desired: \n" << q_dot_desired << std::endl;
+    //std::cout << "q desired: \n" << q_desired.transpose() << std::endl;
 
     Eigen::VectorXd current_q = mRobot->getPositions(); // Position error
-    q_desired(0) = current_q(0);
-    q_desired(1) = current_q(1);
-    q_desired(2) = current_q(2);
 
     Eigen::VectorXd pos_er = q_desired - mRobot->getPositions(); // Position error
     Eigen::VectorXd vel_er = q_dot_desired - mRobot->getVelocities();  // Velocity error (Target velocity is zero)
+    //std::cout << "q error: \n" << pos_er.transpose() << std::endl;
 
     Eigen::VectorXd q_star = kd_joints_ * vel_er + kp_joints_ * pos_er; 
-    //std::cout << "q_star: \n" << q_star << std::endl;
+    //std::cout << "q_star: \n" << q_star.transpose() << std::endl;
 
     // ------------------------------------------//
     // ------------------------------------------//
@@ -144,17 +143,20 @@ void EffortTask::AchieveJointConf(  Eigen::VectorXd q_desired,
         tau_star = M * q_star + C_t + g_t;  // Command torques vector for task
     }
 
-    //std::cout << "Orig Tau: \n" << tau_star << std::endl;
+    //std::cout << "Orig Tau: \n" << tau_star.transpose() << std::endl;
 
     // ------------------------------------------//
     // Project torque and add it to the total torque vector
 
-    Eigen::VectorXd tau_projected = *Null_space_iter *  tau_star;   
+    Eigen::VectorXd tau_projected = (*Null_space_iter) *  tau_star;   
+    
+    //std::cout << "Null Space: \n" << *Null_space_iter << std::endl;
+    //std::cout << "Projected Tau: \n" << tau_projected.transpose() << std::endl;
     
     // Dont count torques for mobile base
-    tau_projected(0) = 0.0; //0.1 * tau_projected(0);
-    tau_projected(1) = 0.0; //0.1 * tau_projected(1);
-    tau_projected(2) = 0.0; //0.1 * tau_projected(1);
+    //tau_projected(0) = 0.0; //0.1 * tau_projected(0);
+    //tau_projected(1) = 0.0; //0.1 * tau_projected(1);
+    //tau_projected(2) = 0.0; //0.1 * tau_projected(2);
 
     //std::cout << "Projected Tau: \n" << tau_projected << std::endl;
 

@@ -1,3 +1,6 @@
+float32 mobjoint1
+float32 mobjoint2
+float32 mobjoint3
 float32 joint1
 float32 joint2
 float32 joint3
