@@ -100,7 +100,7 @@ if __name__ == '__main__':
     Msg.pose.rotation.y = Quat0[1]
     Msg.pose.rotation.z = Quat0[2]
     Msg.pose.rotation.w = Quat0[3]
-    Msg.joints.mobjoint3 = - 5.0
+    Msg.joints.mobjoint3 = -10.0
     pubTrajectory.publish(Msg)
 
     rospy.sleep(10)
