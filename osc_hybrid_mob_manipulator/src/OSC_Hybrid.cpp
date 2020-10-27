@@ -324,12 +324,7 @@ void OscHybridController::spin(){
         Eigen::VectorXd q_desired = Eigen::VectorXd::Zero(9);
         q_desired(0) = current_pos(0);
         q_desired(1) = current_pos(1);
-        if(mob_man_traj.joints.mobjoint3 != -5.0){
-            q_desired(2) = mob_man_traj.joints.mobjoint3;
-        }
-        else{
-            q_desired(2) = current_pos(2);
-        }
+        q_desired(2) = mob_man_traj.joints.mobjoint3;
         q_desired(3) = mob_man_traj.joints.joint1;
         q_desired(4) = mob_man_traj.joints.joint2;
         q_desired(5) = mob_man_traj.joints.joint3;
@@ -337,6 +332,12 @@ void OscHybridController::spin(){
         q_desired(7) = mob_man_traj.joints.joint5;
         q_desired(8) = mob_man_traj.joints.joint6;
         
+        for(size_t jj = 2; jj< 9; jj++){
+            if( q_desired(jj) == -10.0 ){
+                q_desired(jj) = current_pos(jj);
+            }
+        }
+
         //--- External torques
         Eigen::VectorXd tau_ext = tau_result - tau_joints;
         tau_ext(0) = 0.0;
@@ -382,6 +383,7 @@ void OscHybridController::spin(){
 
         //effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         effortSolver_.AchieveCartesianMobilRobConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //std::cout << "Tau result after XY Cart: \n" << tau_result << std::endl;
         //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
 
@@ -755,6 +757,7 @@ void OscHybridController::loadDARTModel(){
     mob_man_traj.accel.angular.y = 0.0;
     mob_man_traj.accel.angular.z = 0.0;
 
+    mob_man_traj.joints.mobjoint3 = -10.0;
     mob_man_traj.joints.joint1 = 0.0;
     mob_man_traj.joints.joint2 = 0.0;
     mob_man_traj.joints.joint3 = 0.0;
