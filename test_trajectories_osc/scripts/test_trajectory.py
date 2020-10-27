@@ -14,6 +14,8 @@ import tf_conversions
 import numpy as np
 import time
 
+from std_srvs.srv import Empty
+
 #-----------------------------------------------------------------------------------------#
 #-----------------------------------------------------------------------------------------#
 #-----------------------------------------------------------------------------------------#
@@ -23,11 +25,14 @@ if __name__ == '__main__':
     rospy.init_node('path_publisher', anonymous=True)
     rospy.loginfo("Node init")
 
+    rospy.wait_for_service('/gazebo/unpause_physics')
+    rospy.wait_for_service('/gazebo/pause_physics')
+
     pubTrajectory = rospy.Publisher('/mobile_manipulator/desired_traj', Trajectory, queue_size=1)
 
     init_pos = np.array([0.53649, 0, 0.74675])
 
-    period = 30.0
+    period = 20.0
     frecuency = 2*np.math.pi / period
     offset_time = 0.0
 
@@ -48,6 +53,13 @@ if __name__ == '__main__':
 
     rate = rospy.Rate(200.0)
     init_time = None
+
+    try:
+        unpause_gazebo = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
+        unpause_gazebo()
+        rospy.loginfo("Unpause gazebo")
+    except rospy.ServiceException as e:
+        print("Service call failed: %s"%e)
 
     rospy.sleep(3)
 
@@ -91,7 +103,14 @@ if __name__ == '__main__':
     Msg.joints.mobjoint3 = - 5.0
     pubTrajectory.publish(Msg)
 
-    rospy.sleep(3)
+    rospy.sleep(10)
+
+    try:
+        pause_gazebo = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
+        pause_gazebo()
+        rospy.loginfo("Pause gazebo")
+    except rospy.ServiceException as e:
+        print("Service call failed: %s"%e)
 
     rospy.loginfo("Final Command published")
 
