@@ -87,7 +87,7 @@ if __name__ == '__main__':
         Msg.pose.rotation.z = Quat_int[2]
         Msg.pose.rotation.w = Quat_int[3]
 
-        Msg.joints.mobjoint3 = np.math.sin(frecuency*current_time + offset_time)
+        Msg.joints.mobjoint3 = 0.349066*np.math.sin(frecuency*current_time + offset_time)
 
         pubTrajectory.publish(Msg)
         rate.sleep()

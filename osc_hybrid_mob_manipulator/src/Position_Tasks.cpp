@@ -269,6 +269,7 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
     Eigen::MatrixXd Jacob_t = mEndEffector->getLinearJacobian(); // Jacobian
+    //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
     if(augmented_projections){
         Jacob_t = Jacob_t * (*Null_space_iter).transpose();
     }
@@ -338,14 +339,14 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
         f_t_star =  Alpha_t * x_star + niu_t + p_t; // Command forces vector for task
     }
 
-    //std::cout << "F star: \n" << f_t_star << std::endl;
+    std::cout << "F star: \n" << f_t_star << std::endl;
 
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc Joint torque due to task
 
     Eigen::VectorXd tau_star =  Jacob_t.transpose() * f_t_star;
-    //std::cout << "Tau star: \n" << tau_star << std::endl;
+    std::cout << "Tau star: \n" << tau_star << std::endl;
 
     // ------------------------------------------//
     // Project torque and add it to the total torque vector
@@ -522,7 +523,7 @@ void EffortTask::AchieveCartesianMobilRobConstVel(  Eigen::Vector3d mTargetPos,
     if(augmented_projections){
         Jacob_t = Jacob_t * (*Null_space_iter).transpose();
     }
-    //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
+    //std::cout << "Projected Linear Jacob: \n" << Jacob_t << std::endl;
 
     Eigen::MatrixXd Jacob_dot = mEndEffector->getLinearJacobianDeriv().topRows(2); // Derivative of jacobian
     Jacob_dot.bottomRightCorner(2,7) = Eigen::MatrixXd::Zero(2,7);

@@ -2,7 +2,7 @@
 robot_name: mobile_manipulator
 
 # Odometry topic to subscribe 
-odom_topic: odometry/filtered
+#odom_topic: odometry/filtered
 
 # Manipulator DOFs in order from waist to wrist
 manipulator_dof_names: 
@@ -23,6 +23,6 @@ manipulator_controllers:
   - wrist_controller
 
 # Parameters of controller
-compensate_topdownEffects: False # True False
+compensate_topdownEffects: True # True False
 compensate_nonlinearInJointSpace: True
 use_augmented_projections: True

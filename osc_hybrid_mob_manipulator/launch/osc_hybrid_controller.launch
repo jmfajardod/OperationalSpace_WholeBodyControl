@@ -2,16 +2,20 @@
 <launch>
 
     <arg name="robot_name" default="mobile_manipulator"/>
+    <arg name="use_EKF" value="false"/>
     
     <!-- Mobile Platform vel publisher -->
     <include file="$(find robotino_vel_publisher)/launch/global_vel_publisher.launch">
         <arg name="robot_name" value="$(arg robot_name)"/>
+        <arg name="use_EKF"    value="$(arg use_EKF)"/>
     </include> 
     
     
     <!-- OSC Controller-->
     <node pkg="osc_hybrid_mob_manipulator" type="osc_hybrid" name="osc_controller" ns="$(arg robot_name)" output="screen">
         <rosparam file="$(find osc_hybrid_mob_manipulator)/config/config.yaml" command="load"/>
+        <param unless="$(arg use_EKF)" name="odom_topic" value="odom"/>
+        <param if="$(arg use_EKF)"     name="odom_topic" value="odometry/filtered"/>
     </node>
 
 </launch>

@@ -17,8 +17,8 @@ EffortTask::EffortTask(){
 
     // Gain Matrices definition
     kp_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
-    kp_cartesian_.topLeftCorner(2, 2)     = 100.0*Eigen::MatrixXd::Identity(2, 2); // Position gains (225) (1200)
-    kp_cartesian_(2,2)                    = 1500.0;
+    kp_cartesian_.topLeftCorner(2, 2)     = 100.0*Eigen::MatrixXd::Identity(2, 2); // Position gains (100)
+    kp_cartesian_(2,2)                    = 1500.0; //(1500)
     kp_cartesian_.bottomRightCorner(3, 3) = 1200.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains (400) (60) (600) (300)
 
     kd_cartesian_ = Eigen::MatrixXd::Identity(6, 6);

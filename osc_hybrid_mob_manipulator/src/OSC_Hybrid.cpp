@@ -305,6 +305,8 @@ void OscHybridController::spin(){
         targetCartAccel(1) = mob_man_traj.accel.linear.y;
         targetCartAccel(2) = mob_man_traj.accel.linear.z;
 
+        //std::cout << "Cart Desired: \n" << targetCartPos << std::endl;
+
         //--- Orientation target
         Eigen::Quaterniond quat_des(mob_man_traj.pose.rotation.w, mob_man_traj.pose.rotation.x, mob_man_traj.pose.rotation.y, mob_man_traj.pose.rotation.z);
         Eigen::Matrix3d targetOrientPos = quat_des.normalized().toRotationMatrix();
@@ -445,6 +447,11 @@ void OscHybridController::spin(){
         // Limit efforts
 
         for (size_t ii = 0; ii < 9; ii++){
+            
+            if(isnan(tau_result(ii))) {
+                tau_result(ii) = 0.0;
+            }
+
             if(ii==3 || ii ==6 || ii ==7){ 
                 if( abs(tau_result(ii)) > 10.6)  tau_result(ii) = tau_result(ii) * (10.6/abs(tau_result(ii)));
             }
@@ -462,6 +469,11 @@ void OscHybridController::spin(){
         // Limit Velocities
 
         for (size_t ii = 0; ii < 9; ii++){
+
+            if(isnan(q_dot_result(ii))) {
+                q_dot_result(ii) = 0.0;
+            }
+
             if(ii<2){ // Mobile platform efforts linear vel
                 if( abs(q_dot_result(ii)) > 0.5 )  q_dot_result(ii) = q_dot_result(ii) * (0.5/abs(q_dot_result(ii)));
             }

@@ -2,9 +2,12 @@
 <launch>
 
     <arg name="robot_name" default="Robotino"/>
+    <arg name="use_EKF" default="true"/>
 
     <node pkg="robotino_vel_publisher" type="global_vel_pub_node" name="global_vel_pub" ns="$(arg robot_name)" output="screen">
         <rosparam file="$(find robotino_vel_publisher)/config/config2.yaml" command="load" />
+        <param unless="$(arg use_EKF)" name="odometry_topic" value="odom"/>
+        <param if="$(arg use_EKF)"     name="odometry_topic" value="odometry/filtered"/>
     </node>
 
 </launch>

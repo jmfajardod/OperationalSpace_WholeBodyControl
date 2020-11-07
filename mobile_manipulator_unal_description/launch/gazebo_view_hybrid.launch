@@ -136,8 +136,9 @@
 
     <!-- ************************************************************ -->
     <!-- Launch Odometry node -->
-    <arg name="use_EKF" default="true"/>
-
+    <arg name="use_EKF" default="false"/>
+    
+    
     <node pkg="mobile_robot_unal_description" type="odometry_node" name="odom" ns="mobile_manipulator" output="log">
         <param name="input_frame" value="odom"/>
         <param name="output_frame" value="base_footprint"/>
@@ -150,7 +151,10 @@
         <param if="$(arg use_EKF)" name="broadcast_transform" value="false"/>
     </node>
 
-    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" output="log" clear_params="true" ns="mobile_manipulator">
+    <node 
+    if="$(arg use_EKF)" pkg="robot_localization" type="ekf_localization_node" 
+    name="ekf_se" output="log" clear_params="true" ns="mobile_manipulator">
+        
         <rosparam command="load" file="$(find mobile_manipulator_unal_description)/config/ekf_config.yaml" />
     
         <rosparam param="initial_state">   [0.0,  0.0,  0.0,
@@ -159,5 +163,6 @@
                                             0.0,  0.0,  0.0,
                                             0.0,  0.0,  0.0]</rosparam>
     </node>
+    
 
 </launch>

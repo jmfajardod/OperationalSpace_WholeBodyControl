@@ -84,10 +84,10 @@ if __name__ == '__main__':
         if(current_time>= period):
             break
 
-        offset_x = 0.1*np.math.cos(frecuency*current_time + offset_time)
-        offset_y = 0.1*np.math.sin(frecuency*current_time + offset_time)
+        offset_x = 0.2*np.math.cos(frecuency*current_time + offset_time)
+        offset_y = 0.2*np.math.sin(frecuency*current_time + offset_time)
 
-        Msg.pose.translation.x = init_pos[0] + 0.1 - offset_x
+        Msg.pose.translation.x = init_pos[0] + 0.2 - offset_x
         Msg.pose.translation.y = init_pos[1] + offset_y
         Msg.pose.translation.z = init_pos[2]  # + 0.1*np.math.sin(frecuency*current_time + offset_time)
 
@@ -95,14 +95,15 @@ if __name__ == '__main__':
 
         Quat_int = tf_conversions.transformations.quaternion_about_axis(angle, (0,0,1))
 
-        Msg.pose.rotation.x = Quat_int[0]
-        Msg.pose.rotation.y = Quat_int[1]
-        Msg.pose.rotation.z = Quat_int[2]
-        Msg.pose.rotation.w = Quat_int[3]
+        Msg.pose.rotation.x = 0#Quat_int[0]
+        Msg.pose.rotation.y = 0#Quat_int[1]
+        Msg.pose.rotation.z = 0#Quat_int[2]
+        Msg.pose.rotation.w = 1#Quat_int[3]
 
+        Msg.joints.mobjoint3 = 0.349066*np.math.sin(frecuency2*current_time + offset_time)
         # 0.349066 rad , 15 s period
-        if(angle<0):
-            Msg.joints.mobjoint3 = angle
+        #if(angle<0):
+        #    Msg.joints.mobjoint3 = angle
             
 
         pubTrajectory.publish(Msg)

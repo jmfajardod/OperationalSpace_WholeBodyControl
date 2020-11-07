@@ -1,5 +1,5 @@
 robot_name: Robotino
-odometry_topic: odometry/filtered
+#odometry_topic: odometry/filtered
 wheel_0_topic: wheel0_controller
 wheel_1_topic: wheel1_controller
 wheel_2_topic: wheel2_controller
