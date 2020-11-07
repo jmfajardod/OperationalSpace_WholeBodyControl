@@ -19,7 +19,7 @@ EffortTask::EffortTask(){
     kp_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
     kp_cartesian_.topLeftCorner(2, 2)     = 100.0*Eigen::MatrixXd::Identity(2, 2); // Position gains (100)
     kp_cartesian_(2,2)                    = 1500.0; //(1500)
-    kp_cartesian_.bottomRightCorner(3, 3) = 1200.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains (400) (60) (600) (300)
+    kp_cartesian_.bottomRightCorner(3, 3) = 1200.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains (1200)
 
     kd_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
     kd_cartesian_.topLeftCorner(2, 2)     = 1.0*Eigen::MatrixXd::Identity(2, 2); // Position gains 
@@ -27,14 +27,14 @@ EffortTask::EffortTask(){
     kd_cartesian_.bottomRightCorner(3, 3) = 0.9*Eigen::MatrixXd::Identity(3, 3); // Orientation gains 
 
     kp_joints_ = Eigen::MatrixXd::Identity(9, 9);
-    kp_joints_.topLeftCorner(2, 2)     = 50.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains
-    kp_joints_(2,2)                    = 100.0; // Mobile base gains
-    kp_joints_.bottomRightCorner(6, 6) = 1000.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (40.0)
+    kp_joints_.topLeftCorner(2, 2)     = 50.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains (50)
+    kp_joints_(2,2)                    = 100.0; // Mobile base gains (100)
+    kp_joints_.bottomRightCorner(6, 6) = 1000.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (1000.0)
 
     kd_joints_ = Eigen::MatrixXd::Identity(9, 9);
-    kd_joints_.topLeftCorner(2, 2)     = 5.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains
-    kd_joints_(2,2)                    = 10.0; // Mobile base gains
-    kd_joints_.bottomRightCorner(6, 6) = 57.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (12.0)
+    kd_joints_.topLeftCorner(2, 2)     = 5.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains (5.0)
+    kd_joints_(2,2)                    = 10.0; // Mobile base gains (10.0)
+    kd_joints_.bottomRightCorner(6, 6) = 57.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (57.0)
 
     //--- Select orientation error
     // 1 - Angle-axis Osorio
@@ -53,7 +53,7 @@ EffortTask::EffortTask(){
     eta_firas_    = 0.01;
 
     //--- Margin for singular value
-    singularity_thres_high_ = 0.1;
+    singularity_thres_high_ = 0.02;
 }
 ////////////////////////////////////////////////////////////////////////////////
 // Destructor
