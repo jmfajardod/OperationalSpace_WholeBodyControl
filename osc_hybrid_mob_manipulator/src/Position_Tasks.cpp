@@ -796,6 +796,8 @@ void EffortTask::AchieveHeightConstVel( Eigen::Vector3d mTarget,
 
     Eigen::MatrixXd Alpha_t_inv = Jacob_t * M.inverse() * Jacob_t.transpose(); // Symmetric Inertia Matrix
 
+    //std::cout << "Inverse Inertia matrix: \n" << Alpha_t_inv << std::endl;
+
     Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv, svd_position);
 
     //std::cout << "Inertia matrix: \n" << Alpha_t << std::endl;
