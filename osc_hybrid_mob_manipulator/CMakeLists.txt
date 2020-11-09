@@ -82,9 +82,13 @@ find_package(DART 6.6.0 REQUIRED COMPONENTS ${required_components_dart} CONFIG)
 add_executable(osc_hybrid
   src/osc_hybrid_node.cpp
   src/OSC_Hybrid.cpp
-  src/Effort_Tasks.cpp
-  src/Position_Tasks.cpp
-  src/Orientation_Tasks.cpp
+  src/Tasks/Effort_Tasks.cpp
+  src/Tasks/Position/Position_Manipulator.cpp
+  src/Tasks/Position/Position_Mobile_Robot.cpp
+  src/Tasks/Position/Position_Mob_Manipulator.cpp
+  src/Tasks/Orientation/Orientation_Manipulator.cpp
+  src/Tasks/Orientation/Orientation_Mob_Manipulator.cpp
+  src/Tasks/Orientation/Error_functions.cpp
 )
 
 add_dependencies(osc_hybrid

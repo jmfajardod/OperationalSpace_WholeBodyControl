@@ -93,6 +93,9 @@ public:
     /***********************************************************************************/
     // Position tasks
 
+    /*******************************************************/
+    // Mobile manipulator tasks
+
     /*!
      * Effort Task
      * Cartesian Impedance for Position
@@ -140,9 +143,12 @@ public:
                                     Eigen::VectorXd *tau_total,
                                     Eigen::MatrixXd *Null_space_iter);
 
+    /*******************************************************/
+    // Mobile robot tasks
+
     /*!
      * Effort Task
-     * Tasks when goal is too far away
+     * Tasks using only the DOF of the mobile robot
     */
 
     void AchieveCartesianMobilRob( Eigen::Vector3d mTargetPos, 
@@ -167,32 +173,65 @@ public:
                                             Eigen::VectorXd *tau_total,
                                             Eigen::MatrixXd *Null_space_iter);
 
-    void AchieveHeight( Eigen::Vector3d mTargetPos, 
-                        Eigen::Vector3d mTargetVel,
-                        Eigen::Vector3d mTargetAccel, 
-                        double *svd_position,
-                        Eigen::MatrixXd M, 
-                        Eigen::VectorXd C_t,
-                        Eigen::VectorXd g_t,
-                        dart::dynamics::SkeletonPtr mRobot,
-                        dart::dynamics::BodyNode* mEndEffector,
-                        Eigen::VectorXd *tau_total,
-                        Eigen::MatrixXd *Null_space_iter);
+    /*******************************************************/
+    // Manipulator tasks
 
-    void AchieveHeightConstVel( Eigen::Vector3d mTarget,
-                                double *svd_position, 
-                                Eigen::MatrixXd M, 
-                                Eigen::VectorXd C_t,
-                                Eigen::VectorXd g_t,
-                                dart::dynamics::SkeletonPtr mRobot,
-                                dart::dynamics::BodyNode* mEndEffector,
-                                Eigen::VectorXd *tau_total,
-                                Eigen::MatrixXd *Null_space_iter);
+    /*!
+     * Effort Task
+     * Tasks using only the DOF of the manipulator
+    */
+
+    void AchieveCartesianManipulator(Eigen::Vector3d mTargetPos, 
+                                    Eigen::Vector3d mTargetVel,
+                                    Eigen::Vector3d mTargetAccel, 
+                                    double *svd_position,
+                                    Eigen::MatrixXd M, 
+                                    Eigen::VectorXd C_t,
+                                    Eigen::VectorXd g_t,
+                                    dart::dynamics::SkeletonPtr mRobot,
+                                    dart::dynamics::BodyNode* mEndEffector,
+                                    Eigen::VectorXd *tau_total,
+                                    Eigen::MatrixXd *Null_space_iter);
+
+    void AchieveCartManipulatorConstVel(Eigen::Vector3d mTarget, 
+                                        double *svd_position,
+                                        Eigen::MatrixXd M, 
+                                        Eigen::VectorXd C_t,
+                                        Eigen::VectorXd g_t,
+                                        dart::dynamics::SkeletonPtr mRobot,
+                                        dart::dynamics::BodyNode* mEndEffector,
+                                        Eigen::VectorXd *tau_total,
+                                        Eigen::MatrixXd *Null_space_iter);
+
+    void AchievePosZ( Eigen::Vector3d mTargetPos, 
+                      Eigen::Vector3d mTargetVel,
+                      Eigen::Vector3d mTargetAccel, 
+                      double *svd_position,
+                      Eigen::MatrixXd M, 
+                      Eigen::VectorXd C_t,
+                      Eigen::VectorXd g_t,
+                      dart::dynamics::SkeletonPtr mRobot,
+                      dart::dynamics::BodyNode* mEndEffector,
+                      Eigen::VectorXd *tau_total,
+                      Eigen::MatrixXd *Null_space_iter);
+
+    void AchievePosZConstVel( Eigen::Vector3d mTarget,
+                              double *svd_position, 
+                              Eigen::MatrixXd M, 
+                              Eigen::VectorXd C_t,
+                              Eigen::VectorXd g_t,
+                              dart::dynamics::SkeletonPtr mRobot,
+                              dart::dynamics::BodyNode* mEndEffector,
+                              Eigen::VectorXd *tau_total,
+                              Eigen::MatrixXd *Null_space_iter);
 
 
     /***********************************************************************************/
     /***********************************************************************************/
     // Orientation tasks
+
+    /*******************************************************/
+    // Mobile manipulator tasks
 
     /*!
      * Effort Task
@@ -241,6 +280,35 @@ public:
                                     Eigen::VectorXd *tau_total,
                                     Eigen::MatrixXd *Null_space_iter);
 
+    /*******************************************************/
+    // Manipulator tasks
+
+    void AchieveOriManipulator( Eigen::Matrix3d rot_mat_desired, 
+                                Eigen::Vector3d mTargetVel,
+                                Eigen::Vector3d mTargetAccel,
+                                double *svd_orientation,
+                                Eigen::MatrixXd M,
+                                Eigen::VectorXd C_t,
+                                Eigen::VectorXd g_t,
+                                dart::dynamics::SkeletonPtr mRobot,
+                                dart::dynamics::BodyNode* mEndEffector,
+                                Eigen::VectorXd *tau_total,
+                                Eigen::MatrixXd *Null_space_iter);
+
+    void AchieveOriManipulatorConstVel( Eigen::Matrix3d rot_mat_desired, 
+                                        double *svd_orientation,
+                                        Eigen::MatrixXd M,
+                                        Eigen::VectorXd C_t,
+                                        Eigen::VectorXd g_t,
+                                        dart::dynamics::SkeletonPtr mRobot,
+                                        dart::dynamics::BodyNode* mEndEffector,
+                                        Eigen::VectorXd *tau_total,
+                                        Eigen::MatrixXd *Null_space_iter);
+
+
+    /*******************************************************/
+    // Error Functions
+
     Eigen::Vector3d ErrorAngleAxis1(Eigen::Matrix3d rot_mat_desired, 
                                     dart::dynamics::SkeletonPtr mRobot,
                                     dart::dynamics::BodyNode* mEndEffector);
@@ -261,11 +329,19 @@ public:
                                     dart::dynamics::SkeletonPtr mRobot,
                                     dart::dynamics::BodyNode* mEndEffector);
 
+    /***********************************************************************************/
+    /***********************************************************************************/
+    // Miscellaneous functions
+
     Eigen::MatrixXd calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double* min_svd);
 
     Eigen::MatrixXd calcDampingMatrix(Eigen::MatrixXd Alpha, 
                                       Eigen::MatrixXd Stiffness, 
                                       Eigen::MatrixXd DampingCoeff);
+
+    /***********************************************************************************/
+    /***********************************************************************************/
+    // Public variables
 
     bool compensate_topdown;
     bool compensate_jtspace;

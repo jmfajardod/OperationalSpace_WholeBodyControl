@@ -17,9 +17,9 @@ EffortTask::EffortTask(){
 
     // Gain Matrices definition
     kp_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
-    kp_cartesian_.topLeftCorner(2, 2)     = 100.0*Eigen::MatrixXd::Identity(2, 2); // Position gains (100)
-    kp_cartesian_(2,2)                    = 1500.0; //(1500)
-    kp_cartesian_.bottomRightCorner(3, 3) = 1200.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains (1200)
+    kp_cartesian_.topLeftCorner(2, 2)     = 400.0*Eigen::MatrixXd::Identity(2, 2); // Position gains (100)  // (400)
+    kp_cartesian_(2,2)                    = 400.0; //(1500) // (400)
+    kp_cartesian_.bottomRightCorner(3, 3) = 400.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains (1200) // (400)
 
     kd_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
     kd_cartesian_.topLeftCorner(2, 2)     = 1.0*Eigen::MatrixXd::Identity(2, 2); // Position gains 
@@ -27,14 +27,14 @@ EffortTask::EffortTask(){
     kd_cartesian_.bottomRightCorner(3, 3) = 0.9*Eigen::MatrixXd::Identity(3, 3); // Orientation gains 
 
     kp_joints_ = Eigen::MatrixXd::Identity(9, 9);
-    kp_joints_.topLeftCorner(2, 2)     = 50.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains (50)
-    kp_joints_(2,2)                    = 100.0; // Mobile base gains (100)
-    kp_joints_.bottomRightCorner(6, 6) = 10.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (1000.0) (10.0)
+    kp_joints_.topLeftCorner(2, 2)     = 0.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains (50)
+    kp_joints_(2,2)                    = 0.0; // Mobile base gains (100)
+    kp_joints_.bottomRightCorner(6, 6) = 0.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (1000.0) (10.0)
 
     kd_joints_ = Eigen::MatrixXd::Identity(9, 9);
     kd_joints_.topLeftCorner(2, 2)     = 5.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains (5.0)
     kd_joints_(2,2)                    = 10.0; // Mobile base gains (10.0)
-    kd_joints_.bottomRightCorner(6, 6) = 200.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (57.0) (200.0)
+    kd_joints_.bottomRightCorner(6, 6) = 57.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (57.0) (200.0)
 
     //--- Select orientation error
     // 1 - Angle-axis Osorio
@@ -291,7 +291,7 @@ void EffortTask::AvoidJointLimits(Eigen::MatrixXd M,
         // Calc Operational acceleration due to task
 
         if(compensate_topdown){
-            gamma_vector = gamma_vector - Alpha_t.inverse() * Jacob_dash_t.transpose() * *tau_total;
+            gamma_vector = gamma_vector - Jacob_dash_t.transpose() * *tau_total;
         }
 
         // ------------------------------------------//
@@ -388,8 +388,9 @@ Eigen::MatrixXd EffortTask::calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double*
 
         //std::cout << "Singular configuration" << std::endl;
         //std::cout << "Its singular values are:" << std::endl << svd_values << std::endl;
-        //std::cout << "Its left singular vectors are the columns of the thin U matrix:" << std::endl << Full_U << std::endl;
+        //std::cout << "Its left singular vectors are the columns of the Full U matrix:" << std::endl << Full_U << std::endl;
         //std::cout << "Its right singular vectors are the columns of the thin V matrix:" << std::endl << svd.matrixV() << std::endl;
+        //std::cout << "Inverse Inertia Matrix: \n" << Alpha_inv << std::endl;
 
         Eigen::MatrixXd U_ns = Eigen::MatrixXd::Zero(dofs,dofs - int(small_svd.sum()));
         Eigen::MatrixXd svd_values_ns = Eigen::MatrixXd::Zero(dofs - int(small_svd.sum()) , dofs - int(small_svd.sum()));
@@ -413,6 +414,9 @@ Eigen::MatrixXd EffortTask::calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double*
         //std::cout << "Non-singular U:" << std::endl << U_ns << std::endl;
 
         Alpha_ns = U_ns * svd_values_ns.inverse() * U_ns.transpose();
+
+        //std::cout << "Inertia Matrix Normal: \n" << Alpha_inv.inverse() << std::endl;
+        //std::cout << "Inertia Matrix: \n" << Alpha_ns << std::endl;
     }
     else{
         Alpha_ns = Alpha_inv.inverse();

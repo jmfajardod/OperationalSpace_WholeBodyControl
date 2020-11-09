@@ -351,7 +351,7 @@ void OscHybridController::spin(){
         //--- Variables to save minimum singular value
         double min_sv_pos = 10.0e3, min_sv_ori = 10.0e3;
 
-        /******************************/
+        /*********************************************************************************/
         // Task Definition for effort
 
         tau_result = Eigen::VectorXd::Zero(9);
@@ -361,6 +361,10 @@ void OscHybridController::spin(){
         //std::cout << "Initial Null space: \n" << Null_space << std::endl;
 
         Eigen::Vector3d x_error =  targetCartPos - mEndEffector_->getWorldTransform().translation();
+
+        /*****************************************************/
+        // Using different controllers based on position error
+
         /*
         if(x_error.norm()>0.2){
             
@@ -368,7 +372,7 @@ void OscHybridController::spin(){
                 q_desired = current_pos;
             }
             effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-            effortSolver_.AchieveHeightConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            effortSolver_.AchievePosZConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         }
         else{
             effortSolver_.AchieveCartesian(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
@@ -379,30 +383,74 @@ void OscHybridController::spin(){
             //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
         }*/
 
+        /*****************************************************/
+        // Avoid Joint Limits task
+
         //effortSolver_.AvoidJointLimits(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
         //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
 
-        //effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-        effortSolver_.AchieveCartesianMobilRobConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-        //effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        /*****************************************************/
+        // Controller using pos XY with mobile robot and Z with mobile manipulator
+
+        //---effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //effortSolver_.AchieveCartesianMobilRobConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //std::cout << "Tau result after XY Cart: \n" << tau_result << std::endl;
         //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
 
-        //effortSolver_.AchieveHeight(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-        effortSolver_.AchieveHeightConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-        //std::cout << "Tau result after Y Cart: \n" << tau_result << std::endl;
-        //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
+        //---effortSolver_.AchievePosZ(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //effortSolver_.AchievePosZConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //std::cout << "Tau result after Z Cart: \n" << tau_result << std::endl;
+        //std::cout << "Null space after Z Cart: \n" << Null_space << std::endl;
 
-        //effortSolver_.AchieveOrientation(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-        effortSolver_.AchieveOrientationConstVel(targetOrientPos, &min_sv_ori, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
-        //effortSolver_.OrientationImpedance(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, tau_ext, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
+        /*****************************************************/
+        // Controller using pos XYZ with manipulator
+
+        //effortSolver_.AchieveCartManipulatorConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //std::cout << "Tau result after Manipulator Cart: \n" << tau_result << std::endl;
+        //std::cout << "Null space after Manipulator Cart: \n" << Null_space << std::endl;
+
+        /*****************************************************/
+        // Controller using pos XYZ with mobile manipulator
+
+        //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //std::cout << "Tau result after Mob_mani Cart: \n" << tau_result << std::endl;
+        //std::cout << "Null space after Mob_mani Cart: \n" << Null_space << std::endl;
+
+        /*****************************************************/
+        // Orientation tasks with mobile manipulator
+
+        //---effortSolver_.AchieveOrientation(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //effortSolver_.AchieveOrientationConstVel(targetOrientPos, &min_sv_ori, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
+        //---effortSolver_.OrientationImpedance(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, tau_ext, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
         //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
         //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
+
+        /*****************************************************/
+        // Orientation tasks with manipulator
+
+        //---effortSolver_.AchieveOriManipulator(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        effortSolver_.AchieveOriManipulatorConstVel(targetOrientPos, &min_sv_ori, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space); 
+        //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
+        //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
+
+        /*****************************************************/
+        // Controller using pos XYZ with manipulator - To test singularities
+
+        //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        effortSolver_.AchieveCartManipulatorConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //std::cout << "Tau result after Manipulator Cart: \n" << tau_result << std::endl;
+        //std::cout << "Null space after Manipulator Cart: \n" << Null_space << std::endl;
     
+        /*****************************************************/
+        // Joint tasks
 
         effortSolver_.AchieveJointConf(q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //std::cout << "Tau result after achieve joint: \n" << tau_result.transpose() << "\n" << std::endl;
+
+        /*****************************************************/
+        // Compensation of non-linear effects in joint space
 
         if(effortSolver_.compensate_jtspace){
             tau_result =  tau_result + C_k + g_k;
@@ -450,16 +498,26 @@ void OscHybridController::spin(){
             
             if(isnan(tau_result(ii))) {
                 tau_result(ii) = 0.0;
+                std::cout << "Nan in efforts." << std::endl;
             }
 
             if(ii==3 || ii ==6 || ii ==7){ 
-                if( abs(tau_result(ii)) > 10.6)  tau_result(ii) = tau_result(ii) * (10.6/abs(tau_result(ii)));
+                if( abs(tau_result(ii)) > 10.6){
+                    //std::cout << "Limited effort of joint: "<< ii << std::endl;  
+                    tau_result(ii) = tau_result(ii) * (10.6/abs(tau_result(ii)));
+                }
             }
             else if(ii==4 || ii==5 ){    
-                if( abs(tau_result(ii)) > 21.2)  tau_result(ii) = tau_result(ii) * (21.2/abs(tau_result(ii)));
+                if( abs(tau_result(ii)) > 21.2){
+                    //std::cout << "Limited effort of joint: "<< ii << std::endl; 
+                    tau_result(ii) = tau_result(ii) * (21.2/abs(tau_result(ii)));
+                }
             }
             else if(ii==8){    
-                if( abs(tau_result(ii)) > 4.1)  tau_result(ii) = tau_result(ii) * (4.1/abs(tau_result(ii)));
+                if( abs(tau_result(ii)) > 4.1){
+                    //std::cout << "Limited effort of joint: "<< ii << std::endl; 
+                    tau_result(ii) = tau_result(ii) * (4.1/abs(tau_result(ii)));
+                }
             }
         }
 
@@ -472,6 +530,7 @@ void OscHybridController::spin(){
 
             if(isnan(q_dot_result(ii))) {
                 q_dot_result(ii) = 0.0;
+                std::cout << "Nan in Velocities." << std::endl;
             }
 
             if(ii<2){ // Mobile platform efforts linear vel
@@ -565,9 +624,9 @@ void OscHybridController::spin(){
         /******************************/
         // Publish commands to mobile platform
 
-        mobile_pltfrm_cmd.linear.x  = q_dot_result(0);
-        mobile_pltfrm_cmd.linear.y  = q_dot_result(1);
-        mobile_pltfrm_cmd.angular.z = q_dot_result(2);
+        mobile_pltfrm_cmd.linear.x  = 0.0;//q_dot_result(0); // 0.0
+        mobile_pltfrm_cmd.linear.y  = 0.0;//q_dot_result(1); // 0.0
+        mobile_pltfrm_cmd.angular.z = 0.0;//q_dot_result(2); // 0.0
 
         pub_mobile_platfrm.publish(mobile_pltfrm_cmd);
 
