@@ -53,7 +53,7 @@ EffortTask::EffortTask(){
     eta_firas_    = 0.01;
 
     //--- Margin for singular value
-    singularity_thres_high_ = 0.1;
+    singularity_thres_high_ = 0.02;
 }
 ////////////////////////////////////////////////////////////////////////////////
 // Destructor

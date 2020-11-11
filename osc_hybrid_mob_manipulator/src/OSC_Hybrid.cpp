@@ -406,13 +406,14 @@ void OscHybridController::spin(){
         /*****************************************************/
         // Controller using pos XYZ with manipulator
 
+        //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //effortSolver_.AchieveCartManipulatorConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //std::cout << "Tau result after Manipulator Cart: \n" << tau_result << std::endl;
         //std::cout << "Null space after Manipulator Cart: \n" << Null_space << std::endl;
 
         /*****************************************************/
         // Controller using pos XYZ with mobile manipulator
-
+        
         //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //std::cout << "Tau result after Mob_mani Cart: \n" << tau_result << std::endl;
@@ -586,8 +587,8 @@ void OscHybridController::spin(){
         mobile_manipulator_data.orientation.desired_orient.pitch = angles::to_degrees(pitch);
         mobile_manipulator_data.orientation.desired_orient.yaw = angles::to_degrees(yaw);
 
-        mobile_manipulator_data.singular.min_pos_jacob = min_sv_pos;
-        mobile_manipulator_data.singular.min_ori_jacob = min_sv_ori;
+        mobile_manipulator_data.singular.min_pos_sv = min_sv_pos;
+        mobile_manipulator_data.singular.min_ori_sv = min_sv_ori;
 
         mobile_manipulator_data.torques.torque1 = tau_result(0);
         mobile_manipulator_data.torques.torque2 = tau_result(1);

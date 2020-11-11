@@ -48,8 +48,8 @@ if __name__ == '__main__':
     Quat0 =  np.array([0,0,0,1]) #np.array([-0.412, -0.192, -0.412, 0.790]) 
     Quat0 = (1.0/np.linalg.norm(Quat0))*Quat0
 
-    angle = np.deg2rad( -10 )
-    Quat1 = tf_conversions.transformations.quaternion_about_axis(angle, (0, 1, 1))
+    angle = np.deg2rad( -85 )
+    Quat1 = tf_conversions.transformations.quaternion_about_axis(angle, (0, 0, 1))
 
     rate = rospy.Rate(200.0)
     init_time = None
@@ -80,13 +80,13 @@ if __name__ == '__main__':
         scale = np.abs(np.math.sin(frecuency*current_time))
         #print(scale)
 
-        angle = np.deg2rad( -np.abs( 0.0*np.math.sin(frecuency*current_time + offset_time)) )
-        Quat_int = tf_conversions.transformations.quaternion_about_axis(angle, (0, 1, 0))
+        angle = np.deg2rad( -np.abs( 110.0*np.math.sin(frecuency*current_time + offset_time)) )
+        Quat_int = tf_conversions.transformations.quaternion_about_axis(angle, (0, 0, 1))
 
-        Msg.pose.rotation.x = Quat1[0]
-        Msg.pose.rotation.y = Quat1[1]
-        Msg.pose.rotation.z = Quat1[2]
-        Msg.pose.rotation.w = Quat1[3]
+        Msg.pose.rotation.x = Quat_int[0]
+        Msg.pose.rotation.y = Quat_int[1]
+        Msg.pose.rotation.z = Quat_int[2]
+        Msg.pose.rotation.w = Quat_int[3]
 
         Msg.joints.mobjoint3 = -10
 
@@ -97,10 +97,10 @@ if __name__ == '__main__':
     Msg.pose.translation.x = init_pos[0]  
     Msg.pose.translation.y = init_pos[1] 
     Msg.pose.translation.z = 0.4
-    Msg.pose.rotation.x = Quat1[0]
-    Msg.pose.rotation.y = Quat1[1]
-    Msg.pose.rotation.z = Quat1[2]
-    Msg.pose.rotation.w = Quat1[3]
+    Msg.pose.rotation.x = Quat0[0]
+    Msg.pose.rotation.y = Quat0[1]
+    Msg.pose.rotation.z = Quat0[2]
+    Msg.pose.rotation.w = Quat0[3]
     Msg.joints.mobjoint3 = -10.0
     pubTrajectory.publish(Msg)
 
