@@ -22,7 +22,7 @@ EffortTask::EffortTask(){
     kp_cartesian_.bottomRightCorner(3, 3) = 400.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains (1200) // (400)
 
     kd_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
-    kd_cartesian_.topLeftCorner(2, 2)     = 1.0*Eigen::MatrixXd::Identity(2, 2); // Position gains 
+    kd_cartesian_.topLeftCorner(2, 2)     = 0.9*Eigen::MatrixXd::Identity(2, 2); // Position gains 
     kd_cartesian_(2,2)                    = 0.9;
     kd_cartesian_.bottomRightCorner(3, 3) = 0.9*Eigen::MatrixXd::Identity(3, 3); // Orientation gains 
 
@@ -53,7 +53,7 @@ EffortTask::EffortTask(){
     eta_firas_    = 0.01;
 
     //--- Margin for singular value
-    singularity_thres_high_ = 0.02;
+    singularity_thres_high_ = 0.1;
 }
 ////////////////////////////////////////////////////////////////////////////////
 // Destructor
