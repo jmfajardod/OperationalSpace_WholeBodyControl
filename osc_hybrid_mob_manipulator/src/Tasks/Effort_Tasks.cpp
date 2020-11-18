@@ -29,7 +29,7 @@ EffortTask::EffortTask(){
     kp_joints_ = Eigen::MatrixXd::Identity(9, 9);
     kp_joints_.topLeftCorner(2, 2)     = 0.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains (50)
     kp_joints_(2,2)                    = 0.0; // Mobile base gains (100)
-    kp_joints_.bottomRightCorner(6, 6) = 100.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (1000.0) (100.0)// (200.0)
+    kp_joints_.bottomRightCorner(6, 6) = 0.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (1000.0) (100.0)// (200.0)
 
     kd_joints_ = Eigen::MatrixXd::Identity(9, 9);
     kd_joints_.topLeftCorner(2, 2)     = 5.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains (5.0)
@@ -56,11 +56,11 @@ EffortTask::EffortTask(){
     singularity_thres_high_ = 10.0;
     singularity_thres_low_  = 1.0;
 
-    singularity_thres_high_ori_ = 10.0;
-    singularity_thres_low_ori_  = 1.0;
+    singularity_thres_high_ori_ = 10.0; // 10.0
+    singularity_thres_low_ori_  = 1.0;  //  1.0
 
-    singularity_thres_high_pos_ = 0.3;
-    singularity_thres_low_pos_  = 0.1;
+    singularity_thres_high_pos_ = 0.06; // 0.7 0.3 0.06
+    singularity_thres_low_pos_  = 0.02; // 0.5 0.1 0.02
 }
 ////////////////////////////////////////////////////////////////////////////////
 // Destructor
