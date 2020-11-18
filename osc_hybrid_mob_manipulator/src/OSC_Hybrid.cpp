@@ -407,7 +407,7 @@ void OscHybridController::spin(){
         // Controller using pos XYZ with manipulator - To test singularities
 
         //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-        //effortSolver_.AchieveCartManipulatorConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        effortSolver_.AchieveCartManipulatorConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //std::cout << "Tau result after Manipulator Cart: \n" << tau_result << std::endl;
         //std::cout << "Null space after Manipulator Cart: \n" << Null_space << std::endl;
 
@@ -440,7 +440,7 @@ void OscHybridController::spin(){
         // Controller using pos XYZ with manipulator - To test singularities
 
         //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-        effortSolver_.AchieveCartManipulatorConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+        //effortSolver_.AchieveCartManipulatorConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //std::cout << "Tau result after Manipulator Cart: \n" << tau_result << std::endl;
         //std::cout << "Null space after Manipulator Cart: \n" << Null_space << std::endl;
     

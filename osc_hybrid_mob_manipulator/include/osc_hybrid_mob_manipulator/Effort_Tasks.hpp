@@ -370,6 +370,12 @@ private:
     double singularity_thres_high_;
     double singularity_thres_low_;
 
+    double singularity_thres_high_pos_;
+    double singularity_thres_low_pos_;
+
+    double singularity_thres_high_ori_;
+    double singularity_thres_low_ori_;
+
     int ori_error_mode;
 
 };

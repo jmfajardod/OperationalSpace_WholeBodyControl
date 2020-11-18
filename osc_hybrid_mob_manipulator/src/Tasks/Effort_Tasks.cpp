@@ -53,8 +53,14 @@ EffortTask::EffortTask(){
     eta_firas_    = 0.01;
 
     //--- Margin for singular value
-    singularity_thres_high_ = 0.2;
-    singularity_thres_low_  = 0.1;
+    singularity_thres_high_ = 10.0;
+    singularity_thres_low_  = 1.0;
+
+    singularity_thres_high_ori_ = 10.0;
+    singularity_thres_low_ori_  = 1.0;
+
+    singularity_thres_high_pos_ = 0.3;
+    singularity_thres_low_pos_  = 0.1;
 }
 ////////////////////////////////////////////////////////////////////////////////
 // Destructor
@@ -547,6 +553,8 @@ void EffortTask::calcInertiaMatrixHandling( Eigen::MatrixXd Alpha_inv,
     else{
         *act_param =  0.5 + 0.5*sin(  (M_PI/(singularity_thres_high_-singularity_thres_low_))*( *min_svd - singularity_thres_low_ ) - M_PI_2  );
     }
+
+    //*act_param = 0.0;
     
     std::cout << "Min SV: " << *min_svd << std::endl;
     std::cout << "Activation parameter: " << *act_param << std::endl;

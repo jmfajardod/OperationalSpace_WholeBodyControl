@@ -167,6 +167,9 @@ void EffortTask::AchieveCartManipulatorConstVel(Eigen::Vector3d mTarget,
     // ------------------------------------------//
     // Calculate SVD for alpha
 
+    singularity_thres_high_ = singularity_thres_high_pos_;
+    singularity_thres_low_  = singularity_thres_low_pos_;
+
     Eigen::MatrixXd Alpha_t_inv = Jacob_t * M.inverse() * Jacob_t.transpose(); // Symmetric Inertia Matrix
 
     Eigen::MatrixXd Alpha_ns;
@@ -239,8 +242,8 @@ void EffortTask::AchieveCartManipulatorConstVel(Eigen::Vector3d mTarget,
 
     f_star_s = act_param * f_star_s; // Scale Singular task by activation parameter
 
-    std::cout << "F star Non-singular: \n" << f_star_ns << std::endl;
-    std::cout << "F star Singular: \n" << f_star_s << std::endl;
+    std::cout << "F star Pos Non-singular: \n" << f_star_ns << std::endl;
+    std::cout << "F star Pos Singular: \n" << f_star_s << std::endl;
 
     // ------------------------------------------//
     // ------------------------------------------//
