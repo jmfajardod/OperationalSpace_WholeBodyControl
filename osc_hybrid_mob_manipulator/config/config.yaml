@@ -23,6 +23,6 @@ manipulator_controllers:
   - wrist_controller
 
 # Parameters of controller
-compensate_topdownEffects: False # True False
+compensate_topdownEffects: True # True False
 compensate_nonlinearInJointSpace: True
 use_augmented_projections: True

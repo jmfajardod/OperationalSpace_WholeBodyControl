@@ -29,12 +29,12 @@ EffortTask::EffortTask(){
     kp_joints_ = Eigen::MatrixXd::Identity(9, 9);
     kp_joints_.topLeftCorner(2, 2)     = 0.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains (50)
     kp_joints_(2,2)                    = 0.0; // Mobile base gains (100)
-    kp_joints_.bottomRightCorner(6, 6) = 200.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (1000.0) (10.0)
+    kp_joints_.bottomRightCorner(6, 6) = 100.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (1000.0) (100.0)// (200.0)
 
     kd_joints_ = Eigen::MatrixXd::Identity(9, 9);
     kd_joints_.topLeftCorner(2, 2)     = 5.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains (5.0)
     kd_joints_(2,2)                    = 10.0; // Mobile base gains (10.0)
-    kd_joints_.bottomRightCorner(6, 6) = 57.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (57.0) (200.0)
+    kd_joints_.bottomRightCorner(6, 6) = 57.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (57.0) (200.0) // (57.0)
 
     //--- Select orientation error
     // 1 - Angle-axis Osorio
@@ -556,8 +556,8 @@ void EffortTask::calcInertiaMatrixHandling( Eigen::MatrixXd Alpha_inv,
 
     //*act_param = 0.0;
     
-    std::cout << "Min SV: " << *min_svd << std::endl;
-    std::cout << "Activation parameter: " << *act_param << std::endl;
+    //std::cout << "Min SV: " << *min_svd << std::endl;
+    //std::cout << "Activation parameter: " << *act_param << std::endl;
 
 }
 
