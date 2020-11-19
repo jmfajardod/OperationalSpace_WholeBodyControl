@@ -13,12 +13,14 @@ void EffortTask::AchieveCartesianManipulator(Eigen::Vector3d mTargetPos,
                                             Eigen::Vector3d mTargetVel,
                                             Eigen::Vector3d mTargetAccel, 
                                             double *svd_position,
+                                            int mode,
                                             Eigen::MatrixXd M, 
                                             Eigen::VectorXd C_t,
                                             Eigen::VectorXd g_t,
                                             dart::dynamics::SkeletonPtr mRobot,
                                             dart::dynamics::BodyNode* mEndEffector,
                                             Eigen::VectorXd *tau_total,
+                                            Eigen::VectorXd *tau_ns,
                                             Eigen::MatrixXd *Null_space_iter){
 
     // ------------------------------------------//
@@ -60,6 +62,11 @@ void EffortTask::AchieveCartesianManipulator(Eigen::Vector3d mTargetPos,
     calcInertiaMatrixHandling( Alpha_t_inv, svd_position, &act_param, &Alpha_ns, &Alpha_s, &Alpha_s_dummy);
     //std::cout << "Inertia Matrix: " << Alpha_t << std::endl;
 
+    Eigen::MatrixXd Alpha_task = Alpha_ns;
+    if(mode==2){
+        Alpha_task = Alpha_s;
+    }
+
     // ------------------------------------------//
     // ------------------------------------------//
     // Dynamic consistent inverse Jacobian
@@ -70,6 +77,10 @@ void EffortTask::AchieveCartesianManipulator(Eigen::Vector3d mTargetPos,
     Eigen::MatrixXd Jacob_dash_dummy = Base_Jacob_dash * Alpha_s_dummy; // Dynamically consistent inverse jacobian
     //std::cout << "Inverse Jacobian: \n" << Jacob_dash_t << std::endl;
 
+    Eigen::MatrixXd Jacob_dash_task = Jacob_dash_ns;
+    if(mode==2){
+        Jacob_dash_task = Jacob_dash_s;
+    }
 
     // ------------------------------------------//
     // ------------------------------------------//
@@ -95,34 +106,27 @@ void EffortTask::AchieveCartesianManipulator(Eigen::Vector3d mTargetPos,
     // ------------------------------------------//
     // Calc Operational force due to task
 
-    Eigen::VectorXd f_star_ns = Eigen::VectorXd::Zero(3);
-    Eigen::VectorXd f_star_s = Eigen::VectorXd::Zero(3);
+    Eigen::VectorXd f_star = Eigen::VectorXd::Zero(3);
 
     if(compensate_jtspace){
-        f_star_ns =  Alpha_ns * ( x_star - Jacob_dot * q_dot);
-        f_star_s  =  Alpha_s  * ( x_star - Jacob_dot * q_dot);
+        f_star =  Alpha_task * ( x_star - Jacob_dot * q_dot);
     }
     else{
-        Eigen::VectorXd niu_ns = Jacob_dash_ns.transpose() * C_t  - Alpha_ns * Jacob_dot * q_dot; // Operational Coriolis vector  
-        Eigen::VectorXd p_ns = Jacob_dash_ns.transpose() * g_t; // Operational Gravity vector
-        f_star_ns =  Alpha_ns * x_star + niu_ns + p_ns; // Command forces vector for task
-
-        Eigen::VectorXd niu_s = Jacob_dash_s.transpose() * C_t  - Alpha_s * Jacob_dot * q_dot; // Operational Coriolis vector  
-        Eigen::VectorXd p_s = Jacob_dash_s.transpose() * g_t; // Operational Gravity vector
-        f_star_s =  Alpha_s * x_star + niu_s + p_s; // Command forces vector for task
-
+        Eigen::VectorXd niu = Jacob_dash_task.transpose() * C_t  - Alpha_task * Jacob_dot * q_dot; // Operational Coriolis vector  
+        Eigen::VectorXd p   = Jacob_dash_task.transpose() * g_t; // Operational Gravity vector
+        f_star =  Alpha_task * x_star + niu + p; // Command forces vector for task
     }
 
-    f_star_s = act_param * f_star_s; // Scale Singular task by activation parameter
-
-    //std::cout << "F star Pos Non-singular: \n" << f_star_ns << std::endl;
-    //std::cout << "F star Pos Singular: \n" << f_star_s << std::endl;
+    if(mode==2){
+        f_star = act_param * f_star + (1-act_param) * Jacob_t * M.inverse() * *tau_ns; // Scale Singular task by activation parameter
+    }
+    //std::cout << "F star:  \n" << f_star << std::endl;
 
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc Joint torque due to task
 
-    Eigen::VectorXd tau_star =  Jacob_t.transpose() * (f_star_ns + f_star_s);
+    Eigen::VectorXd tau_star =  Jacob_t.transpose() * f_star;
     //std::cout << "Tau star: \n" << tau_star << std::endl;
 
     // ------------------------------------------//
@@ -150,12 +154,14 @@ void EffortTask::AchieveCartesianManipulator(Eigen::Vector3d mTargetPos,
 
 void EffortTask::AchieveCartManipulatorConstVel(Eigen::Vector3d mTarget, 
                                                 double *svd_position,
+                                                int mode,
                                                 Eigen::MatrixXd M, 
                                                 Eigen::VectorXd C_t,
                                                 Eigen::VectorXd g_t,
                                                 dart::dynamics::SkeletonPtr mRobot,
                                                 dart::dynamics::BodyNode* mEndEffector,
                                                 Eigen::VectorXd *tau_total,
+                                                Eigen::VectorXd *tau_ns,
                                                 Eigen::MatrixXd *Null_space_iter){
 
     // ------------------------------------------//
@@ -198,6 +204,11 @@ void EffortTask::AchieveCartManipulatorConstVel(Eigen::Vector3d mTarget,
     calcInertiaMatrixHandling( Alpha_t_inv, svd_position, &act_param, &Alpha_ns, &Alpha_s, &Alpha_s_dummy);
     //std::cout << "Inertia Matrix: " << Alpha_t << std::endl;
 
+    Eigen::MatrixXd Alpha_task = Alpha_ns;
+    if(mode==2){
+        Alpha_task = Alpha_s;
+    }
+
     // ------------------------------------------//
     // ------------------------------------------//
     // Dynamic consistent inverse Jacobian
@@ -207,6 +218,11 @@ void EffortTask::AchieveCartManipulatorConstVel(Eigen::Vector3d mTarget,
     Eigen::MatrixXd Jacob_dash_s = Base_Jacob_dash * Alpha_s; // Dynamically consistent inverse jacobian
     Eigen::MatrixXd Jacob_dash_dummy = Base_Jacob_dash * Alpha_s_dummy; // Dynamically consistent inverse jacobian
     //std::cout << "Inverse Jacobian: \n" << Jacob_dash_t << std::endl;
+
+    Eigen::MatrixXd Jacob_dash_task = Jacob_dash_ns;
+    if(mode==2){
+        Jacob_dash_task = Jacob_dash_s;
+    }
 
     // ------------------------------------------//
     // ------------------------------------------//
@@ -240,34 +256,27 @@ void EffortTask::AchieveCartManipulatorConstVel(Eigen::Vector3d mTarget,
     // ------------------------------------------//
     // Calc Operational force due to task
 
-    Eigen::VectorXd f_star_ns = Eigen::VectorXd::Zero(3);
-    Eigen::VectorXd f_star_s = Eigen::VectorXd::Zero(3);
+    Eigen::VectorXd f_star = Eigen::VectorXd::Zero(3);
 
     if(compensate_jtspace){
-        f_star_ns =  Alpha_ns * ( x_star - Jacob_dot * q_dot);
-        f_star_s  =  Alpha_s  * ( x_star - Jacob_dot * q_dot);
+        f_star =  Alpha_task * ( x_star - Jacob_dot * q_dot);
     }
     else{
-        Eigen::VectorXd niu_ns = Jacob_dash_ns.transpose() * C_t  - Alpha_ns * Jacob_dot * q_dot; // Operational Coriolis vector  
-        Eigen::VectorXd p_ns = Jacob_dash_ns.transpose() * g_t; // Operational Gravity vector
-        f_star_ns =  Alpha_ns * x_star + niu_ns + p_ns; // Command forces vector for task
-
-        Eigen::VectorXd niu_s = Jacob_dash_s.transpose() * C_t  - Alpha_s * Jacob_dot * q_dot; // Operational Coriolis vector  
-        Eigen::VectorXd p_s = Jacob_dash_s.transpose() * g_t; // Operational Gravity vector
-        f_star_s =  Alpha_s * x_star + niu_s + p_s; // Command forces vector for task
-
+        Eigen::VectorXd niu = Jacob_dash_task.transpose() * C_t  - Alpha_task * Jacob_dot * q_dot; // Operational Coriolis vector  
+        Eigen::VectorXd p   = Jacob_dash_task.transpose() * g_t; // Operational Gravity vector
+        f_star =  Alpha_task * x_star + niu + p; // Command forces vector for task
     }
 
-    f_star_s = act_param * f_star_s; // Scale Singular task by activation parameter
-
-    //std::cout << "F star Pos Non-singular: \n" << f_star_ns << std::endl;
-    //std::cout << "F star Pos Singular: \n" << f_star_s << std::endl;
+    if(mode==2){
+        f_star = act_param * f_star + (1-act_param) * Jacob_t * M.inverse() * *tau_ns; // Scale Singular task by activation parameter
+    }
+    //std::cout << "F star:  \n" << f_star << std::endl;
 
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc Joint torque due to task
 
-    Eigen::VectorXd tau_star =  Jacob_t.transpose() * (f_star_ns + f_star_s);
+    Eigen::VectorXd tau_star =  Jacob_t.transpose() * f_star;
     //std::cout << "Tau star: \n" << tau_star << std::endl;
 
     // ------------------------------------------//
@@ -297,12 +306,14 @@ void EffortTask::AchievePosZ( Eigen::Vector3d mTargetPos,
                                 Eigen::Vector3d mTargetVel,
                                 Eigen::Vector3d mTargetAccel, 
                                 double *svd_position,
+                                int mode,
                                 Eigen::MatrixXd M, 
                                 Eigen::VectorXd C_t,
                                 Eigen::VectorXd g_t,
                                 dart::dynamics::SkeletonPtr mRobot,
                                 dart::dynamics::BodyNode* mEndEffector,
                                 Eigen::VectorXd *tau_total,
+                                Eigen::VectorXd *tau_ns,
                                 Eigen::MatrixXd *Null_space_iter){
 
     // ------------------------------------------//
@@ -344,6 +355,11 @@ void EffortTask::AchievePosZ( Eigen::Vector3d mTargetPos,
     calcInertiaMatrixHandling( Alpha_t_inv, svd_position, &act_param, &Alpha_ns, &Alpha_s, &Alpha_s_dummy);
     //std::cout << "Inertia Matrix: " << Alpha_t << std::endl;
 
+    Eigen::MatrixXd Alpha_task = Alpha_ns;
+    if(mode==2){
+        Alpha_task = Alpha_s;
+    }
+
     // ------------------------------------------//
     // ------------------------------------------//
     // Dynamic consistent inverse Jacobian
@@ -353,6 +369,11 @@ void EffortTask::AchievePosZ( Eigen::Vector3d mTargetPos,
     Eigen::MatrixXd Jacob_dash_s = Base_Jacob_dash * Alpha_s; // Dynamically consistent inverse jacobian
     Eigen::MatrixXd Jacob_dash_dummy = Base_Jacob_dash * Alpha_s_dummy; // Dynamically consistent inverse jacobian
     //std::cout << "Inverse Jacobian: \n" << Jacob_dash_t << std::endl;
+
+    Eigen::MatrixXd Jacob_dash_task = Jacob_dash_ns;
+    if(mode==2){
+        Jacob_dash_task = Jacob_dash_s;
+    }
 
     // ------------------------------------------//
     // ------------------------------------------//
@@ -380,34 +401,27 @@ void EffortTask::AchievePosZ( Eigen::Vector3d mTargetPos,
     // ------------------------------------------//
     // Calc Operational force due to task
 
-    Eigen::VectorXd f_star_ns = Eigen::VectorXd::Zero(3);
-    Eigen::VectorXd f_star_s = Eigen::VectorXd::Zero(3);
+    Eigen::VectorXd f_star = Eigen::VectorXd::Zero(3);
 
     if(compensate_jtspace){
-        f_star_ns =  Alpha_ns * ( x_star - Jacob_dot * q_dot);
-        f_star_s  =  Alpha_s  * ( x_star - Jacob_dot * q_dot);
+        f_star =  Alpha_task * ( x_star - Jacob_dot * q_dot);
     }
     else{
-        Eigen::VectorXd niu_ns = Jacob_dash_ns.transpose() * C_t  - Alpha_ns * Jacob_dot * q_dot; // Operational Coriolis vector  
-        Eigen::VectorXd p_ns = Jacob_dash_ns.transpose() * g_t; // Operational Gravity vector
-        f_star_ns =  Alpha_ns * x_star + niu_ns + p_ns; // Command forces vector for task
-
-        Eigen::VectorXd niu_s = Jacob_dash_s.transpose() * C_t  - Alpha_s * Jacob_dot * q_dot; // Operational Coriolis vector  
-        Eigen::VectorXd p_s = Jacob_dash_s.transpose() * g_t; // Operational Gravity vector
-        f_star_s =  Alpha_s * x_star + niu_s + p_s; // Command forces vector for task
-
+        Eigen::VectorXd niu = Jacob_dash_task.transpose() * C_t  - Alpha_task * Jacob_dot * q_dot; // Operational Coriolis vector  
+        Eigen::VectorXd p   = Jacob_dash_task.transpose() * g_t; // Operational Gravity vector
+        f_star =  Alpha_task * x_star + niu + p; // Command forces vector for task
     }
 
-    f_star_s = act_param * f_star_s; // Scale Singular task by activation parameter
-
-    //std::cout << "F star Pos Non-singular: \n" << f_star_ns << std::endl;
-    //std::cout << "F star Pos Singular: \n" << f_star_s << std::endl;
+    if(mode==2){
+        f_star = act_param * f_star + (1-act_param) * Jacob_t * M.inverse() * *tau_ns; // Scale Singular task by activation parameter
+    }
+    //std::cout << "F star:  \n" << f_star << std::endl;
 
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc Joint torque due to task
 
-    Eigen::VectorXd tau_star =  Jacob_t.transpose() * (f_star_ns + f_star_s);
+    Eigen::VectorXd tau_star =  Jacob_t.transpose() * f_star;
     //std::cout << "Tau star: \n" << tau_star << std::endl;
 
     // ------------------------------------------//
@@ -435,12 +449,14 @@ void EffortTask::AchievePosZ( Eigen::Vector3d mTargetPos,
 
 void EffortTask::AchievePosZConstVel( Eigen::Vector3d mTarget, 
                                         double *svd_position,
+                                        int mode,
                                         Eigen::MatrixXd M, 
                                         Eigen::VectorXd C_t,
                                         Eigen::VectorXd g_t,
                                         dart::dynamics::SkeletonPtr mRobot,
                                         dart::dynamics::BodyNode* mEndEffector,
                                         Eigen::VectorXd *tau_total,
+                                        Eigen::VectorXd *tau_ns,
                                         Eigen::MatrixXd *Null_space_iter){
 
     // ------------------------------------------//
@@ -482,6 +498,11 @@ void EffortTask::AchievePosZConstVel( Eigen::Vector3d mTarget,
     calcInertiaMatrixHandling( Alpha_t_inv, svd_position, &act_param, &Alpha_ns, &Alpha_s, &Alpha_s_dummy);
     //std::cout << "Inertia Matrix: " << Alpha_t << std::endl;
 
+    Eigen::MatrixXd Alpha_task = Alpha_ns;
+    if(mode==2){
+        Alpha_task = Alpha_s;
+    }
+
     // ------------------------------------------//
     // ------------------------------------------//
     // Dynamic consistent inverse Jacobian
@@ -491,6 +512,11 @@ void EffortTask::AchievePosZConstVel( Eigen::Vector3d mTarget,
     Eigen::MatrixXd Jacob_dash_s = Base_Jacob_dash * Alpha_s; // Dynamically consistent inverse jacobian
     Eigen::MatrixXd Jacob_dash_dummy = Base_Jacob_dash * Alpha_s_dummy; // Dynamically consistent inverse jacobian
     //std::cout << "Inverse Jacobian: \n" << Jacob_dash_t << std::endl;
+
+    Eigen::MatrixXd Jacob_dash_task = Jacob_dash_ns;
+    if(mode==2){
+        Jacob_dash_task = Jacob_dash_s;
+    }
 
     // ------------------------------------------//
     // ------------------------------------------//
@@ -522,34 +548,27 @@ void EffortTask::AchievePosZConstVel( Eigen::Vector3d mTarget,
     // ------------------------------------------//
     // Calc Operational force due to task
 
-    Eigen::VectorXd f_star_ns = Eigen::VectorXd::Zero(3);
-    Eigen::VectorXd f_star_s = Eigen::VectorXd::Zero(3);
+    Eigen::VectorXd f_star = Eigen::VectorXd::Zero(3);
 
     if(compensate_jtspace){
-        f_star_ns =  Alpha_ns * ( x_star - Jacob_dot * q_dot);
-        f_star_s  =  Alpha_s  * ( x_star - Jacob_dot * q_dot);
+        f_star =  Alpha_task * ( x_star - Jacob_dot * q_dot);
     }
     else{
-        Eigen::VectorXd niu_ns = Jacob_dash_ns.transpose() * C_t  - Alpha_ns * Jacob_dot * q_dot; // Operational Coriolis vector  
-        Eigen::VectorXd p_ns = Jacob_dash_ns.transpose() * g_t; // Operational Gravity vector
-        f_star_ns =  Alpha_ns * x_star + niu_ns + p_ns; // Command forces vector for task
-
-        Eigen::VectorXd niu_s = Jacob_dash_s.transpose() * C_t  - Alpha_s * Jacob_dot * q_dot; // Operational Coriolis vector  
-        Eigen::VectorXd p_s = Jacob_dash_s.transpose() * g_t; // Operational Gravity vector
-        f_star_s =  Alpha_s * x_star + niu_s + p_s; // Command forces vector for task
-
+        Eigen::VectorXd niu = Jacob_dash_task.transpose() * C_t  - Alpha_task * Jacob_dot * q_dot; // Operational Coriolis vector  
+        Eigen::VectorXd p   = Jacob_dash_task.transpose() * g_t; // Operational Gravity vector
+        f_star =  Alpha_task * x_star + niu + p; // Command forces vector for task
     }
 
-    f_star_s = act_param * f_star_s; // Scale Singular task by activation parameter
-
-    //std::cout << "F star Pos Non-singular: \n" << f_star_ns << std::endl;
-    //std::cout << "F star Pos Singular: \n" << f_star_s << std::endl;
+    if(mode==2){
+        f_star = act_param * f_star + (1-act_param) * Jacob_t * M.inverse() * *tau_ns; // Scale Singular task by activation parameter
+    }
+    //std::cout << "F star:  \n" << f_star << std::endl;
 
     // ------------------------------------------//
     // ------------------------------------------//
     // Calc Joint torque due to task
 
-    Eigen::VectorXd tau_star =  Jacob_t.transpose() * (f_star_ns + f_star_s);
+    Eigen::VectorXd tau_star =  Jacob_t.transpose() * f_star;
     //std::cout << "Tau star: \n" << tau_star << std::endl;
 
     // ------------------------------------------//

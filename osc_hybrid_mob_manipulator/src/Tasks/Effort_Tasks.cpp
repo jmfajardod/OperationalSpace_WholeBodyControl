@@ -59,8 +59,8 @@ EffortTask::EffortTask(){
     singularity_thres_high_ori_ = 10.0; // 10.0
     singularity_thres_low_ori_  = 1.0;  //  1.0
 
-    singularity_thres_high_pos_ = 0.06; // 0.7 0.3 0.06
-    singularity_thres_low_pos_  = 0.02; // 0.5 0.1 0.02
+    singularity_thres_high_pos_ = 0.3; // 0.7 0.3 0.06
+    singularity_thres_low_pos_  = 0.1; // 0.5 0.1 0.02
 }
 ////////////////////////////////////////////////////////////////////////////////
 // Destructor

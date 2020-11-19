@@ -104,6 +104,7 @@ public:
                               Eigen::Vector3d mTargetVel,
                               Eigen::Vector3d mTargetAccel, 
                               double *svd_position,
+                              int mode,
                               Eigen::VectorXd tau_ext,
                               Eigen::MatrixXd M, 
                               Eigen::VectorXd C_t,
@@ -111,6 +112,7 @@ public:
                               dart::dynamics::SkeletonPtr mRobot,
                               dart::dynamics::BodyNode* mEndEffector,
                               Eigen::VectorXd *tau_total,
+                              Eigen::VectorXd *tau_ns,
                               Eigen::MatrixXd *Null_space_iter);
 
     /*!
@@ -121,12 +123,14 @@ public:
                             Eigen::Vector3d mTargetVel,
                             Eigen::Vector3d mTargetAccel, 
                             double *svd_position,
+                            int mode,
                             Eigen::MatrixXd M, 
                             Eigen::VectorXd C_t,
                             Eigen::VectorXd g_t,
                             dart::dynamics::SkeletonPtr mRobot,
                             dart::dynamics::BodyNode* mEndEffector,
                             Eigen::VectorXd *tau_total,
+                            Eigen::VectorXd *tau_ns,
                             Eigen::MatrixXd *Null_space_iter);
 
     /*!
@@ -135,12 +139,14 @@ public:
     */
     void AchieveCartesianConstVel(  Eigen::Vector3d mTarget, 
                                     double *svd_position,
+                                    int mode,
                                     Eigen::MatrixXd M,
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
                                     dart::dynamics::SkeletonPtr mRobot,
                                     dart::dynamics::BodyNode* mEndEffector,
                                     Eigen::VectorXd *tau_total,
+                                    Eigen::VectorXd *tau_ns,
                                     Eigen::MatrixXd *Null_space_iter);
 
     /*******************************************************/
@@ -185,44 +191,52 @@ public:
                                     Eigen::Vector3d mTargetVel,
                                     Eigen::Vector3d mTargetAccel, 
                                     double *svd_position,
+                                    int mode,
                                     Eigen::MatrixXd M, 
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
                                     dart::dynamics::SkeletonPtr mRobot,
                                     dart::dynamics::BodyNode* mEndEffector,
                                     Eigen::VectorXd *tau_total,
+                                    Eigen::VectorXd *tau_ns,
                                     Eigen::MatrixXd *Null_space_iter);
 
     void AchieveCartManipulatorConstVel(Eigen::Vector3d mTarget, 
                                         double *svd_position,
+                                        int mode,
                                         Eigen::MatrixXd M, 
                                         Eigen::VectorXd C_t,
                                         Eigen::VectorXd g_t,
                                         dart::dynamics::SkeletonPtr mRobot,
                                         dart::dynamics::BodyNode* mEndEffector,
                                         Eigen::VectorXd *tau_total,
+                                        Eigen::VectorXd *tau_ns,
                                         Eigen::MatrixXd *Null_space_iter);
 
     void AchievePosZ( Eigen::Vector3d mTargetPos, 
                       Eigen::Vector3d mTargetVel,
                       Eigen::Vector3d mTargetAccel, 
                       double *svd_position,
+                      int mode,
                       Eigen::MatrixXd M, 
                       Eigen::VectorXd C_t,
                       Eigen::VectorXd g_t,
                       dart::dynamics::SkeletonPtr mRobot,
                       dart::dynamics::BodyNode* mEndEffector,
                       Eigen::VectorXd *tau_total,
+                      Eigen::VectorXd *tau_ns,
                       Eigen::MatrixXd *Null_space_iter);
 
     void AchievePosZConstVel( Eigen::Vector3d mTarget,
                               double *svd_position, 
+                              int mode,
                               Eigen::MatrixXd M, 
                               Eigen::VectorXd C_t,
                               Eigen::VectorXd g_t,
                               dart::dynamics::SkeletonPtr mRobot,
                               dart::dynamics::BodyNode* mEndEffector,
                               Eigen::VectorXd *tau_total,
+                              Eigen::VectorXd *tau_ns,
                               Eigen::MatrixXd *Null_space_iter);
 
 
@@ -241,6 +255,7 @@ public:
                               Eigen::Vector3d mTargetVel,
                               Eigen::Vector3d mTargetAccel,
                               double *svd_orientation,
+                              int mode,
                               Eigen::VectorXd tau_ext,
                               Eigen::MatrixXd M,
                               Eigen::VectorXd C_t,
@@ -248,6 +263,7 @@ public:
                               dart::dynamics::SkeletonPtr mRobot,
                               dart::dynamics::BodyNode* mEndEffector,
                               Eigen::VectorXd *tau_total,
+                              Eigen::VectorXd *tau_ns,
                               Eigen::MatrixXd *Null_space_iter);
 
     /*!
@@ -258,12 +274,14 @@ public:
                             Eigen::Vector3d mTargetVel,
                             Eigen::Vector3d mTargetAccel,
                             double *svd_orientation,
+                            int mode,
                             Eigen::MatrixXd M,
                             Eigen::VectorXd C_t,
                             Eigen::VectorXd g_t,
                             dart::dynamics::SkeletonPtr mRobot,
                             dart::dynamics::BodyNode* mEndEffector,
                             Eigen::VectorXd *tau_total,
+                            Eigen::VectorXd *tau_ns,
                             Eigen::MatrixXd *Null_space_iter);
 
     /*!
@@ -272,12 +290,14 @@ public:
     */
     void AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired,
                                     double *svd_orientation,
+                                    int mode,
                                     Eigen::MatrixXd M,
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
                                     dart::dynamics::SkeletonPtr mRobot,
                                     dart::dynamics::BodyNode* mEndEffector,
                                     Eigen::VectorXd *tau_total,
+                                    Eigen::VectorXd *tau_ns,
                                     Eigen::MatrixXd *Null_space_iter);
 
     /*******************************************************/
@@ -287,22 +307,26 @@ public:
                                 Eigen::Vector3d mTargetVel,
                                 Eigen::Vector3d mTargetAccel,
                                 double *svd_orientation,
+                                int mode,
                                 Eigen::MatrixXd M,
                                 Eigen::VectorXd C_t,
                                 Eigen::VectorXd g_t,
                                 dart::dynamics::SkeletonPtr mRobot,
                                 dart::dynamics::BodyNode* mEndEffector,
                                 Eigen::VectorXd *tau_total,
+                                Eigen::VectorXd *tau_ns,
                                 Eigen::MatrixXd *Null_space_iter);
 
     void AchieveOriManipulatorConstVel( Eigen::Matrix3d rot_mat_desired, 
                                         double *svd_orientation,
+                                        int mode,
                                         Eigen::MatrixXd M,
                                         Eigen::VectorXd C_t,
                                         Eigen::VectorXd g_t,
                                         dart::dynamics::SkeletonPtr mRobot,
                                         dart::dynamics::BodyNode* mEndEffector,
                                         Eigen::VectorXd *tau_total,
+                                        Eigen::VectorXd *tau_ns,
                                         Eigen::MatrixXd *Null_space_iter);
 
 
