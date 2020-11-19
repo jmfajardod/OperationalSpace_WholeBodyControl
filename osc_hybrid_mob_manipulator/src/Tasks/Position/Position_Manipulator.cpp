@@ -118,7 +118,7 @@ void EffortTask::AchieveCartesianManipulator(Eigen::Vector3d mTargetPos,
     }
 
     if(mode==2){
-        f_star = act_param * f_star + (1-act_param) * Jacob_t * M.inverse() * *tau_ns; // Scale Singular task by activation parameter
+        f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
     //std::cout << "F star:  \n" << f_star << std::endl;
 
@@ -268,7 +268,7 @@ void EffortTask::AchieveCartManipulatorConstVel(Eigen::Vector3d mTarget,
     }
 
     if(mode==2){
-        f_star = act_param * f_star + (1-act_param) * Jacob_t * M.inverse() * *tau_ns; // Scale Singular task by activation parameter
+        f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
     //std::cout << "F star:  \n" << f_star << std::endl;
 
@@ -413,7 +413,7 @@ void EffortTask::AchievePosZ( Eigen::Vector3d mTargetPos,
     }
 
     if(mode==2){
-        f_star = act_param * f_star + (1-act_param) * Jacob_t * M.inverse() * *tau_ns; // Scale Singular task by activation parameter
+        f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
     //std::cout << "F star:  \n" << f_star << std::endl;
 
@@ -560,7 +560,7 @@ void EffortTask::AchievePosZConstVel( Eigen::Vector3d mTarget,
     }
 
     if(mode==2){
-        f_star = act_param * f_star + (1-act_param) * Jacob_t * M.inverse() * *tau_ns; // Scale Singular task by activation parameter
+        f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
     //std::cout << "F star:  \n" << f_star << std::endl;
 

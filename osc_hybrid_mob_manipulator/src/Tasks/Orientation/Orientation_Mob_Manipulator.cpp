@@ -140,7 +140,7 @@ void EffortTask::OrientationImpedance(Eigen::Matrix3d rot_mat_desired,
     }
 
     if(mode==2){
-        f_star = act_param * f_star + (1-act_param) * Jacob_t * M.inverse() * *tau_ns; // Scale Singular task by activation parameter
+        f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
     //std::cout << "F star:  \n" << f_star << std::endl;
 
@@ -304,7 +304,7 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
     }
 
     if(mode==2){
-        f_star = act_param * f_star + (1-act_param) * Jacob_t * M.inverse() * *tau_ns; // Scale Singular task by activation parameter
+        f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
     //std::cout << "F star:  \n" << f_star << std::endl;
 
@@ -470,7 +470,7 @@ void EffortTask::AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired,
     }
 
     if(mode==2){
-        f_star = act_param * f_star + (1-act_param) * Jacob_t * M.inverse() * *tau_ns; // Scale Singular task by activation parameter
+        f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
     //std::cout << "F star:  \n" << f_star << std::endl;
 
