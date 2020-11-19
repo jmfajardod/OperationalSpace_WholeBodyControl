@@ -404,7 +404,7 @@ void OscHybridController::spin(){
         //std::cout << "Null space after Z Cart: \n" << Null_space << std::endl;
 
         /*****************************************************/
-        // Controller using pos XYZ with manipulator
+        // Controller using pos XYZ with manipulator - To test singularities
 
         //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
         //effortSolver_.AchieveCartManipulatorConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
@@ -625,9 +625,9 @@ void OscHybridController::spin(){
         /******************************/
         // Publish commands to mobile platform
 
-        mobile_pltfrm_cmd.linear.x  = 0.0;//q_dot_result(0); // 0.0
-        mobile_pltfrm_cmd.linear.y  = 0.0;//q_dot_result(1); // 0.0
-        mobile_pltfrm_cmd.angular.z = 0.0;//q_dot_result(2); // 0.0
+        mobile_pltfrm_cmd.linear.x  = 0.0; //q_dot_result(0); // 0.0
+        mobile_pltfrm_cmd.linear.y  = 0.0; //q_dot_result(1); // 0.0
+        mobile_pltfrm_cmd.angular.z = 0.0; //q_dot_result(2); // 0.0
 
         pub_mobile_platfrm.publish(mobile_pltfrm_cmd);
 

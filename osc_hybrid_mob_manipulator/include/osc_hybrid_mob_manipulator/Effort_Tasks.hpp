@@ -335,6 +335,13 @@ public:
 
     Eigen::MatrixXd calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double* min_svd);
 
+    void calcInertiaMatrixHandling( Eigen::MatrixXd Alpha_inv,
+                                    double* min_svd,
+                                    double* act_param,
+                                    Eigen::MatrixXd *Alpha_ns,
+                                    Eigen::MatrixXd *Alpha_s,
+                                    Eigen::MatrixXd *Alpha_s_dummy);
+
     Eigen::MatrixXd calcDampingMatrix(Eigen::MatrixXd Alpha, 
                                       Eigen::MatrixXd Stiffness, 
                                       Eigen::MatrixXd DampingCoeff);
@@ -362,6 +369,12 @@ private:
 
     double singularity_thres_high_;
     double singularity_thres_low_;
+
+    double singularity_thres_high_pos_;
+    double singularity_thres_low_pos_;
+
+    double singularity_thres_high_ori_;
+    double singularity_thres_low_ori_;
 
     int ori_error_mode;
 

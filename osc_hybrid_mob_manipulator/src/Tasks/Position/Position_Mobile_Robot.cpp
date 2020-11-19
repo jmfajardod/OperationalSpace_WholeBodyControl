@@ -51,7 +51,7 @@ void EffortTask::AchieveCartesianMobilRob( Eigen::Vector3d mTargetPos,
 
     //std::cout << "Inverse Inertia Matrix: \n" << Alpha_t_inv << std::endl;
     
-    Eigen::MatrixXd Alpha_t = Alpha_t_inv.inverse();
+    Eigen::MatrixXd Alpha_t = Alpha_t_inv.inverse(); // Mobile base do not suffer from singularities in XY position task
     //Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv, svd_position);
 
     //std::cout << "Inertia Matrix: \n" << Alpha_t << std::endl;
@@ -177,7 +177,7 @@ void EffortTask::AchieveCartesianMobilRobConstVel(  Eigen::Vector3d mTargetPos,
     Eigen::MatrixXd Alpha_t_inv = Jacob_t * M.inverse() * Jacob_t.transpose(); // Symmetric Inertia Matrix
     //std::cout << "Inverse Inertia Matrix: \n" << Alpha_t_inv << std::endl;
     
-    Eigen::MatrixXd Alpha_t = Alpha_t_inv.inverse();
+    Eigen::MatrixXd Alpha_t = Alpha_t_inv.inverse(); // Mobile base do not suffer from singularities in XY position task
     //Eigen::MatrixXd Alpha_t = calcInertiaMatrix(Alpha_t_inv, svd_position);
 
     //std::cout << "Inertia Matrix: \n" << Alpha_t << std::endl;
