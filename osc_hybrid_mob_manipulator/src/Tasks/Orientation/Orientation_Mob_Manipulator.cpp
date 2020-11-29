@@ -13,7 +13,7 @@ void EffortTask::OrientationImpedance(Eigen::Matrix3d rot_mat_desired,
                                     Eigen::Vector3d mTargetVel,
                                     Eigen::Vector3d mTargetAccel,
                                     double *svd_orientation,
-                                    int mode,
+                                    int cycle,
                                     Eigen::VectorXd tau_ext,
                                     Eigen::MatrixXd M,
                                     Eigen::VectorXd C_t,
@@ -62,7 +62,7 @@ void EffortTask::OrientationImpedance(Eigen::Matrix3d rot_mat_desired,
     //std::cout << "Inertia Matrix: " << Alpha_t << std::endl;
 
     Eigen::MatrixXd Alpha_task = Alpha_ns;
-    if(mode==2){
+    if(cycle==2){
         Alpha_task = Alpha_s;
     }
 
@@ -77,7 +77,7 @@ void EffortTask::OrientationImpedance(Eigen::Matrix3d rot_mat_desired,
     //std::cout << "Inverse Jacobian: \n" << Jacob_dash_t << std::endl;
 
     Eigen::MatrixXd Jacob_dash_task = Jacob_dash_ns;
-    if(mode==2){
+    if(cycle==2){
         Jacob_dash_task = Jacob_dash_s;
     }
 
@@ -139,7 +139,7 @@ void EffortTask::OrientationImpedance(Eigen::Matrix3d rot_mat_desired,
         f_star =  Alpha_task * x_star + niu + p; // Command forces vector for task
     }
 
-    if(mode==2){
+    if(cycle==2){
         f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
     //std::cout << "F star:  \n" << f_star << std::endl;
@@ -166,9 +166,10 @@ void EffortTask::OrientationImpedance(Eigen::Matrix3d rot_mat_desired,
     Eigen::MatrixXd Null_space_ns =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_ns * Jacob_t; // Null space
     *Null_space_iter = *Null_space_iter * Null_space_ns.transpose();
 
-    Eigen::MatrixXd Null_space_s =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_dummy * Jacob_t; // Null space
-    *Null_space_iter = *Null_space_iter * Null_space_s.transpose();
-
+    if(singularity_handling_method != 0){
+        Eigen::MatrixXd Null_space_s =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_dummy * Jacob_t; // Null space
+        *Null_space_iter = *Null_space_iter * Null_space_s.transpose();
+    }
 }
 
 
@@ -179,7 +180,7 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
                                     Eigen::Vector3d mTargetVel,
                                     Eigen::Vector3d mTargetAccel,
                                     double *svd_orientation,
-                                    int mode,
+                                    int cycle,
                                     Eigen::MatrixXd M,
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
@@ -227,7 +228,7 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
     //std::cout << "Inertia Matrix: " << Alpha_t << std::endl;
 
     Eigen::MatrixXd Alpha_task = Alpha_ns;
-    if(mode==2){
+    if(cycle==2){
         Alpha_task = Alpha_s;
     }
 
@@ -242,7 +243,7 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
     //std::cout << "Inverse Jacobian: \n" << Jacob_dash_t << std::endl;
 
     Eigen::MatrixXd Jacob_dash_task = Jacob_dash_ns;
-    if(mode==2){
+    if(cycle==2){
         Jacob_dash_task = Jacob_dash_s;
     }
 
@@ -303,7 +304,7 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
         f_star =  Alpha_task * x_star + niu + p; // Command forces vector for task
     }
 
-    if(mode==2){
+    if(cycle==2){
         f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
     //std::cout << "F star:  \n" << f_star << std::endl;
@@ -330,9 +331,10 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
     Eigen::MatrixXd Null_space_ns =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_ns * Jacob_t; // Null space
     *Null_space_iter = *Null_space_iter * Null_space_ns.transpose();
 
-    Eigen::MatrixXd Null_space_s =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_dummy * Jacob_t; // Null space
-    *Null_space_iter = *Null_space_iter * Null_space_s.transpose();
-
+    if(singularity_handling_method != 0){
+        Eigen::MatrixXd Null_space_s =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_dummy * Jacob_t; // Null space
+        *Null_space_iter = *Null_space_iter * Null_space_s.transpose();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -340,7 +342,7 @@ void EffortTask::AchieveOrientation(Eigen::Matrix3d rot_mat_desired,
 
 void EffortTask::AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired, 
                                             double *svd_orientation,
-                                            int mode,
+                                            int cycle,
                                             Eigen::MatrixXd M,
                                             Eigen::VectorXd C_t,
                                             Eigen::VectorXd g_t,
@@ -388,7 +390,7 @@ void EffortTask::AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired,
     //std::cout << "Inertia Matrix: " << Alpha_t << std::endl;
 
     Eigen::MatrixXd Alpha_task = Alpha_ns;
-    if(mode==2){
+    if(cycle==2){
         Alpha_task = Alpha_s;
     }
 
@@ -403,7 +405,7 @@ void EffortTask::AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired,
     //std::cout << "Inverse Jacobian: \n" << Jacob_dash_t << std::endl;
 
     Eigen::MatrixXd Jacob_dash_task = Jacob_dash_ns;
-    if(mode==2){
+    if(cycle==2){
         Jacob_dash_task = Jacob_dash_s;
     }
 
@@ -469,7 +471,7 @@ void EffortTask::AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired,
         f_star =  Alpha_task * x_star + niu + p; // Command forces vector for task
     }
 
-    if(mode==2){
+    if(cycle==2){
         f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
     //std::cout << "F star:  \n" << f_star << std::endl;
@@ -496,9 +498,10 @@ void EffortTask::AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired,
     Eigen::MatrixXd Null_space_ns =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_ns * Jacob_t; // Null space
     *Null_space_iter = *Null_space_iter * Null_space_ns.transpose();
 
-    Eigen::MatrixXd Null_space_s =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_dummy * Jacob_t; // Null space
-    *Null_space_iter = *Null_space_iter * Null_space_s.transpose();
-
+    if(singularity_handling_method != 0){
+        Eigen::MatrixXd Null_space_s =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_dummy * Jacob_t; // Null space
+        *Null_space_iter = *Null_space_iter * Null_space_s.transpose();
+    }
 }
 
 } // end namespace

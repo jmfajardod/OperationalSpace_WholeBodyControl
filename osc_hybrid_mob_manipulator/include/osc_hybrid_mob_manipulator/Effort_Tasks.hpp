@@ -104,7 +104,7 @@ public:
                               Eigen::Vector3d mTargetVel,
                               Eigen::Vector3d mTargetAccel, 
                               double *svd_position,
-                              int mode,
+                              int cycle,
                               Eigen::VectorXd tau_ext,
                               Eigen::MatrixXd M, 
                               Eigen::VectorXd C_t,
@@ -123,7 +123,7 @@ public:
                             Eigen::Vector3d mTargetVel,
                             Eigen::Vector3d mTargetAccel, 
                             double *svd_position,
-                            int mode,
+                            int cycle,
                             Eigen::MatrixXd M, 
                             Eigen::VectorXd C_t,
                             Eigen::VectorXd g_t,
@@ -139,7 +139,7 @@ public:
     */
     void AchieveCartesianConstVel(  Eigen::Vector3d mTarget, 
                                     double *svd_position,
-                                    int mode,
+                                    int cycle,
                                     Eigen::MatrixXd M,
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
@@ -191,7 +191,7 @@ public:
                                     Eigen::Vector3d mTargetVel,
                                     Eigen::Vector3d mTargetAccel, 
                                     double *svd_position,
-                                    int mode,
+                                    int cycle,
                                     Eigen::MatrixXd M, 
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
@@ -203,7 +203,7 @@ public:
 
     void AchieveCartManipulatorConstVel(Eigen::Vector3d mTarget, 
                                         double *svd_position,
-                                        int mode,
+                                        int cycle,
                                         Eigen::MatrixXd M, 
                                         Eigen::VectorXd C_t,
                                         Eigen::VectorXd g_t,
@@ -217,7 +217,7 @@ public:
                       Eigen::Vector3d mTargetVel,
                       Eigen::Vector3d mTargetAccel, 
                       double *svd_position,
-                      int mode,
+                      int cycle,
                       Eigen::MatrixXd M, 
                       Eigen::VectorXd C_t,
                       Eigen::VectorXd g_t,
@@ -229,7 +229,7 @@ public:
 
     void AchievePosZConstVel( Eigen::Vector3d mTarget,
                               double *svd_position, 
-                              int mode,
+                              int cycle,
                               Eigen::MatrixXd M, 
                               Eigen::VectorXd C_t,
                               Eigen::VectorXd g_t,
@@ -255,7 +255,7 @@ public:
                               Eigen::Vector3d mTargetVel,
                               Eigen::Vector3d mTargetAccel,
                               double *svd_orientation,
-                              int mode,
+                              int cycle,
                               Eigen::VectorXd tau_ext,
                               Eigen::MatrixXd M,
                               Eigen::VectorXd C_t,
@@ -274,7 +274,7 @@ public:
                             Eigen::Vector3d mTargetVel,
                             Eigen::Vector3d mTargetAccel,
                             double *svd_orientation,
-                            int mode,
+                            int cycle,
                             Eigen::MatrixXd M,
                             Eigen::VectorXd C_t,
                             Eigen::VectorXd g_t,
@@ -290,7 +290,7 @@ public:
     */
     void AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired,
                                     double *svd_orientation,
-                                    int mode,
+                                    int cycle,
                                     Eigen::MatrixXd M,
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
@@ -307,7 +307,7 @@ public:
                                 Eigen::Vector3d mTargetVel,
                                 Eigen::Vector3d mTargetAccel,
                                 double *svd_orientation,
-                                int mode,
+                                int cycle,
                                 Eigen::MatrixXd M,
                                 Eigen::VectorXd C_t,
                                 Eigen::VectorXd g_t,
@@ -319,7 +319,7 @@ public:
 
     void AchieveOriManipulatorConstVel( Eigen::Matrix3d rot_mat_desired, 
                                         double *svd_orientation,
-                                        int mode,
+                                        int cycle,
                                         Eigen::MatrixXd M,
                                         Eigen::VectorXd C_t,
                                         Eigen::VectorXd g_t,
@@ -377,6 +377,8 @@ public:
     bool compensate_topdown;
     bool compensate_jtspace;
     bool augmented_projections;
+
+    int singularity_handling_method;
 
 private:
 

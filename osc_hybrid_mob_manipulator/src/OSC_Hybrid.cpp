@@ -213,6 +213,7 @@ bool OscHybridController::readParameters()
     if (!nodeHandle_.getParam("compensate_topdownEffects", topdown_))        return false;
     if (!nodeHandle_.getParam("compensate_nonlinearInJointSpace", jtspace_))        return false;
     if (!nodeHandle_.getParam("use_augmented_projections", augmented_))        return false;
+    if (!nodeHandle_.getParam("singularity_handling", method_sing_handling))        return false;
 
     robot_frame = robot_name + "/mobile_base_link";
 
@@ -248,6 +249,28 @@ bool OscHybridController::readParameters()
     else{
         ROS_INFO("Using succesive projections");
         effortSolver_.augmented_projections = false;
+    }
+
+    //--- Method for singularity handling
+    switch (method_sing_handling)
+    {
+        case 0:
+            ROS_INFO("Using singularity handling proposed by Khatib");
+            effortSolver_.singularity_handling_method = 0;
+            break;
+
+        case 1:
+            ROS_INFO("Using singularity handling without torque projections");
+            effortSolver_.singularity_handling_method = 1;
+            break;
+
+        case 2:
+            ROS_INFO("Using singularity handling with non-singular torque projections");
+            effortSolver_.singularity_handling_method = 2;
+            break;
+        
+        default:
+            break;
     }
     
     return true;
@@ -363,6 +386,7 @@ void OscHybridController::spin(){
         Eigen::Vector3d x_error =  targetCartPos - mEndEffector_->getWorldTransform().translation();
 
         /*****************************************************/
+        /*****************************************************/
         // Using different controllers based on position error
 
         /*
@@ -383,9 +407,16 @@ void OscHybridController::spin(){
             //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
         }*/
 
-        // Two passes one for non-singular directions and one for singular ones
+        /*****************************************************/
+        /*****************************************************/
         Eigen::VectorXd tau_ns = Eigen::VectorXd::Zero(9);
-        for (size_t ii = 1; ii < 3; ii++){
+        
+        int cycles_algorithm = 2;
+        if(effortSolver_.singularity_handling_method){
+            cycles_algorithm = 3;
+        }
+
+        for (size_t ii = 1; ii < cycles_algorithm; ii++){
 
             Null_space = Eigen::MatrixXd::Identity(9,9);
         
@@ -459,6 +490,7 @@ void OscHybridController::spin(){
 
             tau_ns = tau_result;
         }
+
         /*****************************************************/
         // Compensation of non-linear effects in joint space
 

@@ -108,6 +108,8 @@ private:
     bool jtspace_;
     bool augmented_;
 
+	int method_sing_handling;
+
 	std_msgs::Float64 manipulator_cmd;
 
 	geometry_msgs::Twist mobile_pltfrm_cmd;

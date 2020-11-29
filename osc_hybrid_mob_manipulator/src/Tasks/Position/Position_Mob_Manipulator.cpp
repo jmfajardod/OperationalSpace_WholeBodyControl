@@ -14,7 +14,7 @@ void EffortTask::CartesianImpedance(  Eigen::Vector3d mTargetPos,
                                     Eigen::Vector3d mTargetVel,
                                     Eigen::Vector3d mTargetAccel, 
                                     double *svd_position,
-                                    int mode,
+                                    int cycle,
                                     Eigen::VectorXd tau_ext,
                                     Eigen::MatrixXd M, 
                                     Eigen::VectorXd C_t,
@@ -63,7 +63,7 @@ void EffortTask::CartesianImpedance(  Eigen::Vector3d mTargetPos,
     //std::cout << "Inertia Matrix: " << Alpha_t << std::endl;
 
     Eigen::MatrixXd Alpha_task = Alpha_ns;
-    if(mode==2){
+    if(cycle==2){
         Alpha_task = Alpha_s;
     }
 
@@ -78,7 +78,7 @@ void EffortTask::CartesianImpedance(  Eigen::Vector3d mTargetPos,
     //std::cout << "Inverse Jacobian: \n" << Jacob_dash_t << std::endl;
 
     Eigen::MatrixXd Jacob_dash_task = Jacob_dash_ns;
-    if(mode==2){
+    if(cycle==2){
         Jacob_dash_task = Jacob_dash_s;
     }
 
@@ -119,7 +119,7 @@ void EffortTask::CartesianImpedance(  Eigen::Vector3d mTargetPos,
         f_star =  Alpha_task * x_star + niu + p; // Command forces vector for task
     }
 
-    if(mode==2){
+    if(cycle==2){
         f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
     //std::cout << "F star:  \n" << f_star << std::endl;
@@ -146,9 +146,10 @@ void EffortTask::CartesianImpedance(  Eigen::Vector3d mTargetPos,
     Eigen::MatrixXd Null_space_ns =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_ns * Jacob_t; // Null space
     *Null_space_iter = *Null_space_iter * Null_space_ns.transpose();
 
-    Eigen::MatrixXd Null_space_s =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_dummy * Jacob_t; // Null space
-    *Null_space_iter = *Null_space_iter * Null_space_s.transpose();
-
+    if(singularity_handling_method != 0){
+        Eigen::MatrixXd Null_space_s =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_dummy * Jacob_t; // Null space
+        *Null_space_iter = *Null_space_iter * Null_space_s.transpose();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +159,7 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
                                     Eigen::Vector3d mTargetVel,
                                     Eigen::Vector3d mTargetAccel, 
                                     double *svd_position,
-                                    int mode,
+                                    int cycle,
                                     Eigen::MatrixXd M, 
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
@@ -206,7 +207,7 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
     //std::cout << "Inertia Matrix: " << Alpha_t << std::endl;
 
     Eigen::MatrixXd Alpha_task = Alpha_ns;
-    if(mode==2){
+    if(cycle==2){
         Alpha_task = Alpha_s;
     }
 
@@ -221,7 +222,7 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
     //std::cout << "Inverse Jacobian: \n" << Jacob_dash_t << std::endl;
 
     Eigen::MatrixXd Jacob_dash_task = Jacob_dash_ns;
-    if(mode==2){
+    if(cycle==2){
         Jacob_dash_task = Jacob_dash_s;
     }
 
@@ -260,7 +261,7 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
         f_star =  Alpha_task * x_star + niu + p; // Command forces vector for task
     }
 
-    if(mode==2){
+    if(cycle==2){
         f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
     //std::cout << "F star:  \n" << f_star << std::endl;
@@ -287,10 +288,10 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
     Eigen::MatrixXd Null_space_ns =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_ns * Jacob_t; // Null space
     *Null_space_iter = *Null_space_iter * Null_space_ns.transpose();
 
-    Eigen::MatrixXd Null_space_s =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_dummy * Jacob_t; // Null space
-    *Null_space_iter = *Null_space_iter * Null_space_s.transpose();
-
-
+    if(singularity_handling_method != 0){
+        Eigen::MatrixXd Null_space_s =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_dummy * Jacob_t; // Null space
+        *Null_space_iter = *Null_space_iter * Null_space_s.transpose();
+    }
 }
 
 
@@ -299,7 +300,7 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
 
 void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget, 
                                             double *svd_position,
-                                            int mode,
+                                            int cycle,
                                             Eigen::MatrixXd M, 
                                             Eigen::VectorXd C_t,
                                             Eigen::VectorXd g_t,
@@ -348,7 +349,7 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
     //std::cout << "Inertia Matrix: " << Alpha_t << std::endl;
 
     Eigen::MatrixXd Alpha_task = Alpha_ns;
-    if(mode==2){
+    if(cycle==2){
         Alpha_task = Alpha_s;
     }
 
@@ -363,7 +364,7 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
     //std::cout << "Inverse Jacobian: \n" << Jacob_dash_t << std::endl;
 
     Eigen::MatrixXd Jacob_dash_task = Jacob_dash_ns;
-    if(mode==2){
+    if(cycle==2){
         Jacob_dash_task = Jacob_dash_s;
     }
 
@@ -405,7 +406,7 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
         f_star =  Alpha_task * x_star + niu + p; // Command forces vector for task
     }
 
-    if(mode==2){
+    if(cycle==2){
         f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
     //std::cout << "F star:  \n" << f_star << std::endl;
@@ -432,10 +433,10 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
     Eigen::MatrixXd Null_space_ns =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_ns * Jacob_t; // Null space
     *Null_space_iter = *Null_space_iter * Null_space_ns.transpose();
 
-    Eigen::MatrixXd Null_space_s =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_dummy * Jacob_t; // Null space
-    *Null_space_iter = *Null_space_iter * Null_space_s.transpose();
-
-
+    if(singularity_handling_method != 0){
+        Eigen::MatrixXd Null_space_s =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_dummy * Jacob_t; // Null space
+        *Null_space_iter = *Null_space_iter * Null_space_s.transpose();
+    }
 }
 
 

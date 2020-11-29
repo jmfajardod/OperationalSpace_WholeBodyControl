@@ -10,10 +10,16 @@ using namespace dart::math;
 // Constructor
 EffortTask::EffortTask(){
 
-    augmented_projections = false;
-
-    compensate_topdown  = true;
+    /* Variables for task hierarchy */
+    augmented_projections = true;
+    compensate_topdown  = false;
     compensate_jtspace  = true;
+
+    /* Variable for selecting the singularity handling method */
+    // 0 -> Algorithm proposed by Khatib et al.
+    // 1 -> Algorithm without torque projection
+    // 2 -> Algorithm with non singular torque projection
+    singularity_handling_method = 2;
 
     // Gain Matrices definition
     kp_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
