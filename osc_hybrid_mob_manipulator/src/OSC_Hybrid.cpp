@@ -411,12 +411,12 @@ void OscHybridController::spin(){
         /*****************************************************/
         Eigen::VectorXd tau_ns = Eigen::VectorXd::Zero(9);
         
-        int cycles_algorithm = 2;
-        if(effortSolver_.singularity_handling_method){
-            cycles_algorithm = 3;
+        int cycles_algorithm = 1;
+        if(effortSolver_.singularity_handling_method == 2){
+            cycles_algorithm = 2;
         }
 
-        for (size_t cycle = 1; cycle < cycles_algorithm; cycle++){
+        for (size_t cycle = 1; cycle <= cycles_algorithm; cycle++){
 
             Null_space = Eigen::MatrixXd::Identity(9,9);
         
