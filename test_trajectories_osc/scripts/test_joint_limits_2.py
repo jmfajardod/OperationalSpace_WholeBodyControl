@@ -32,13 +32,16 @@ if __name__ == '__main__':
     pubTrajectory = rospy.Publisher('/mobile_manipulator/desired_traj', Trajectory, queue_size=1)
 
     init_pos = np.array([0.53649, 0, 0.74675])
-    init_pos[0] = 0.3
-    init_pos[2] = 0.95
+    init_pos[0] = 0.25
+    init_pos[2] = 0.4
 
-    Quat0 =  np.array([0,0,0,1]) #np.array([-0.412, -0.192, -0.412, 0.790]) 
-    Quat0 = (1.0/np.linalg.norm(Quat0))*Quat0
+    #Quat0 =  np.array([0,0,0,1]) #np.array([-0.412, -0.192, -0.412, 0.790]) 
+    #Quat0 = (1.0/np.linalg.norm(Quat0))*Quat0
 
-    period = 40.0
+    angle = np.deg2rad( 90.0 )
+    Quat0 = tf_conversions.transformations.quaternion_about_axis(angle, (0, 1, 0))
+
+    period = 2.5
     frecuency = 2*np.math.pi / period
     offset_time = 0.0
 
@@ -74,7 +77,7 @@ if __name__ == '__main__':
     Msg.joints.mobjoint3 = -10.0
     pubTrajectory.publish(Msg)
 
-    rospy.sleep(10) # Time for the robot to go to the inital position
+    rospy.sleep(3) # Time for the robot to go to the inital position
 
     try:
         pause_gazebo = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
@@ -102,12 +105,12 @@ if __name__ == '__main__':
 
         current_time = (rospy.Time.now() - init_time).to_sec()
         #print(current_time)
-        if(current_time>= 1.0*period):
+        if(current_time>= 5.0*period):
             break
 
-        Msg.pose.translation.x = init_pos[0] - np.abs( 0.4*np.math.sin(frecuency*current_time + offset_time) )
-        Msg.pose.translation.y = init_pos[1] # + np.abs(0.1*np.math.sin(frecuency*current_time + offset_time))
-        Msg.pose.translation.z = init_pos[2] - np.abs( 0.5*np.math.sin(frecuency*current_time + offset_time) )
+        Msg.pose.translation.x = init_pos[0] + 0.15 - 0.15*np.math.cos(frecuency*current_time + offset_time)
+        Msg.pose.translation.y = init_pos[1] + 0.15*np.math.sin(frecuency*current_time + offset_time)
+        Msg.pose.translation.z = init_pos[2] #- np.abs( 0.5*np.math.sin(frecuency*current_time + offset_time) )
 
         scale = np.abs(np.math.sin(frecuency*current_time))
         #print(scale)
@@ -115,10 +118,10 @@ if __name__ == '__main__':
         angle = np.deg2rad( -np.abs( 150.0*np.math.sin(frecuency*current_time + offset_time)) )
         Quat_int = tf_conversions.transformations.quaternion_about_axis(angle, (0, 1, 0))
 
-        Msg.pose.rotation.x = Quat_int[0]
-        Msg.pose.rotation.y = Quat_int[1]
-        Msg.pose.rotation.z = Quat_int[2]
-        Msg.pose.rotation.w = Quat_int[3]
+        Msg.pose.rotation.x = Quat0[0]
+        Msg.pose.rotation.y = Quat0[1]
+        Msg.pose.rotation.z = Quat0[2]
+        Msg.pose.rotation.w = Quat0[3]
 
         Msg.joints.mobjoint3 = -10
 
