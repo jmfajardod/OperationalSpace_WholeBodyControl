@@ -129,19 +129,40 @@ void EffortTask::AchieveOriManipulator( Eigen::Matrix3d rot_mat_desired,
     // Calc Operational force due to task
 
     Eigen::VectorXd f_star = Eigen::VectorXd::Zero(3);
+    Eigen::VectorXd f_star_s = Eigen::VectorXd::Zero(3);
 
     if(compensate_jtspace){
         f_star =  Alpha_task * ( x_star - Jacob_dot * q_dot);
+
+        // If the method is without the torque projections
+        if(singularity_handling_method==1){
+            f_star_s  =  Alpha_s  * ( x_star - Jacob_dot * q_dot);
+        }
     }
     else{
         Eigen::VectorXd niu = Jacob_dash_task.transpose() * C_t  - Alpha_task * Jacob_dot * q_dot; // Operational Coriolis vector  
         Eigen::VectorXd p   = Jacob_dash_task.transpose() * g_t; // Operational Gravity vector
         f_star =  Alpha_task * x_star + niu + p; // Command forces vector for task
-    }
 
+        // If the method is without the torque projections
+        if(singularity_handling_method==1){
+            Eigen::VectorXd niu_s = Jacob_dash_s.transpose() * C_t  - Alpha_s * Jacob_dot * q_dot; // Operational Coriolis vector  
+            Eigen::VectorXd p_s = Jacob_dash_s.transpose() * g_t; // Operational Gravity vector
+            f_star_s =  Alpha_s * x_star + niu_s + p_s; // Command forces vector for task
+        }
+    }
+    
+    // If the method is with the projections of non-singular tasks
     if(cycle==2){
         f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
+
+    // If the method is without the torque projections
+    if(singularity_handling_method==1){
+        f_star_s = act_param * f_star_s; // Scale Singular task by activation parameter
+        f_star = f_star + f_star_s; // Add non-singular and singular components
+    }
+
     //std::cout << "F star:  \n" << f_star << std::endl;
 
     // ------------------------------------------//
@@ -298,19 +319,40 @@ void EffortTask::AchieveOriManipulatorConstVel( Eigen::Matrix3d rot_mat_desired,
     // Calc Operational force due to task
 
     Eigen::VectorXd f_star = Eigen::VectorXd::Zero(3);
+    Eigen::VectorXd f_star_s = Eigen::VectorXd::Zero(3);
 
     if(compensate_jtspace){
         f_star =  Alpha_task * ( x_star - Jacob_dot * q_dot);
+
+        // If the method is without the torque projections
+        if(singularity_handling_method==1){
+            f_star_s  =  Alpha_s  * ( x_star - Jacob_dot * q_dot);
+        }
     }
     else{
         Eigen::VectorXd niu = Jacob_dash_task.transpose() * C_t  - Alpha_task * Jacob_dot * q_dot; // Operational Coriolis vector  
         Eigen::VectorXd p   = Jacob_dash_task.transpose() * g_t; // Operational Gravity vector
         f_star =  Alpha_task * x_star + niu + p; // Command forces vector for task
-    }
 
+        // If the method is without the torque projections
+        if(singularity_handling_method==1){
+            Eigen::VectorXd niu_s = Jacob_dash_s.transpose() * C_t  - Alpha_s * Jacob_dot * q_dot; // Operational Coriolis vector  
+            Eigen::VectorXd p_s = Jacob_dash_s.transpose() * g_t; // Operational Gravity vector
+            f_star_s =  Alpha_s * x_star + niu_s + p_s; // Command forces vector for task
+        }
+    }
+    
+    // If the method is with the projections of non-singular tasks
     if(cycle==2){
         f_star = act_param * f_star + (1-act_param) * (Jacob_dash_task.transpose() * *tau_ns); // Scale Singular task by activation parameter
     }
+
+    // If the method is without the torque projections
+    if(singularity_handling_method==1){
+        f_star_s = act_param * f_star_s; // Scale Singular task by activation parameter
+        f_star = f_star + f_star_s; // Add non-singular and singular components
+    }
+
     //std::cout << "F star:  \n" << f_star << std::endl;
 
     // ------------------------------------------//
