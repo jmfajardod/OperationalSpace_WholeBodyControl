@@ -31,4 +31,4 @@ use_augmented_projections: True
 # 0 -> Algorithm proposed by Khatib et al.
 # 1 -> Algorithm without torque projection
 # 2 -> Algorithm with non singular torque projection
-singularity_handling: 2
+singularity_handling: 1

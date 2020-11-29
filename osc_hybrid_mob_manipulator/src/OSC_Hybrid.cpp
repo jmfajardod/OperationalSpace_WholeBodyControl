@@ -430,8 +430,8 @@ void OscHybridController::spin(){
             /*****************************************************/
             // Controller using pos XY with mobile robot and Z with mobile manipulator
 
-            //---effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-            //effortSolver_.AchieveCartesianMobilRobConstVel(targetCartPos, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
+            //---effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            //effortSolver_.AchieveCartesianMobilRobConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
             //std::cout << "Tau result after XY Cart: \n" << tau_result << std::endl;
             //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
 
