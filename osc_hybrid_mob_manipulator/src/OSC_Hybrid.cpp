@@ -214,6 +214,7 @@ bool OscHybridController::readParameters()
     if (!nodeHandle_.getParam("compensate_nonlinearInJointSpace", jtspace_))        return false;
     if (!nodeHandle_.getParam("use_augmented_projections", augmented_))        return false;
     if (!nodeHandle_.getParam("singularity_handling", method_sing_handling))        return false;
+    if (!nodeHandle_.getParam("joint_limit_avoidance", method_joint_limit_avoidance))        return false;
 
     robot_frame = robot_name + "/mobile_base_link";
 
@@ -270,7 +271,27 @@ bool OscHybridController::readParameters()
             break;
         
         default:
+            ROS_INFO("Using singularity handling without torque projections");
+            method_sing_handling = 1;
+            effortSolver_.singularity_handling_method = 1;
             break;
+    }
+
+    //--- Method for joint limit avoidance
+    switch (method_joint_limit_avoidance)
+    {
+    case 0:
+        ROS_INFO("Using repulsive potentials for joint limit avoidance");
+        break;
+
+    case 1:
+        ROS_INFO("Using intermediate value for joint limit avoidance");
+        break;
+    
+    default:
+        method_joint_limit_avoidance = 0;
+        ROS_INFO("Using repulsive potentials for joint limit avoidance");
+        break;
     }
     
     return true;
@@ -423,13 +444,18 @@ void OscHybridController::spin(){
             /*****************************************************/
             // Avoid Joint Limits task
 
-            effortSolver_.AvoidJointLimitsPotentials(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-            //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
-            //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
-
-            //effortSolver_.AvoidJointLimitsIntermValue(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-            //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
-            //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
+            if(cycle==1){
+                if(method_joint_limit_avoidance==0){
+                    effortSolver_.AvoidJointLimitsPotentials(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+                    //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
+                    //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
+                }
+                if(method_joint_limit_avoidance==1){
+                    effortSolver_.AvoidJointLimitsIntermValue(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+                    //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
+                    //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
+                }
+            }
 
             /*****************************************************/
             // Controller using pos XY with mobile robot and Z with mobile manipulator

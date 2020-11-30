@@ -109,6 +109,7 @@ private:
     bool augmented_;
 
 	int method_sing_handling;
+	int method_joint_limit_avoidance;
 
 	std_msgs::Float64 manipulator_cmd;
 

@@ -32,3 +32,8 @@ use_augmented_projections: True
 # 1 -> Algorithm without torque projection
 # 2 -> Algorithm with non singular torque projection
 singularity_handling: 1
+
+# Parameter for joint limit avoidance
+# 0 -> Repulsive artificial potentials
+# 1 -> Intermediate value
+joint_limit_avoidance: 1
