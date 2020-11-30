@@ -10,17 +10,20 @@ using namespace dart::math;
 // Constructor
 EffortTask::EffortTask(){
 
+    //----------------------------------------------------------------------//
     /* Variables for task hierarchy */
     augmented_projections = true;
     compensate_topdown  = false;
     compensate_jtspace  = true;
 
+    //----------------------------------------------------------------------//
     /* Variable for selecting the singularity handling method */
     // 0 -> Algorithm proposed by Khatib et al.
     // 1 -> Algorithm without torque projection
     // 2 -> Algorithm with non singular torque projection
     singularity_handling_method = 2;
 
+    //----------------------------------------------------------------------//
     // Gain Matrices definition
     kp_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
     kp_cartesian_.topLeftCorner(2, 2)     = 400.0*Eigen::MatrixXd::Identity(2, 2); // Position gains (100)  // (400)
@@ -42,7 +45,8 @@ EffortTask::EffortTask(){
     kd_joints_(2,2)                    = 10.0; // Mobile base gains (10.0)
     kd_joints_.bottomRightCorner(6, 6) = 57.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (57.0) (200.0) // (57.0)
 
-    //--- Select orientation error
+    //----------------------------------------------------------------------//
+    //--- Select orientation error function
     // 1 - Angle-axis Osorio
     // 2 - Angle-axis Caccavale
     // 3 - Quaternion Yuan
@@ -50,11 +54,13 @@ EffortTask::EffortTask(){
     // 5 - Quaternion Caccavale 2
     ori_error_mode = 5;
 
-    //--- Max vel for straight line task
+    //----------------------------------------------------------------------//
+    //--- Max vel for straight line tasks
     max_lineal_vel_  = 0.3;  // 1.0     0.3  // m/s
     max_angular_vel_ = M_PI; // 5*M_PI  M_PI // rad/s
 
-    //--- Margin for singular value
+    //----------------------------------------------------------------------//
+    //--- Margins for singular value analysis
     singularity_thres_high_ = 10.0;
     singularity_thres_low_  = 1.0;
 
@@ -64,6 +70,7 @@ EffortTask::EffortTask(){
     singularity_thres_high_pos_ = 0.3; // 0.7 0.3 0.06
     singularity_thres_low_pos_  = 0.1; // 0.5 0.1 0.02
 
+    //----------------------------------------------------------------------//
     //--- Parameters for avoid joint limits task
     Lower_limits = Eigen::VectorXd::Zero(9);
     Upper_limits = Eigen::VectorXd::Zero(9);
@@ -89,8 +96,14 @@ EffortTask::EffortTask(){
 
     joint_margin_ = 0.349; // 0.175->10 deg  0.262->15 deg 0.349->20 deg
     
-    // Parameters for FIRAS function
-    eta_firas_    = 1.0; // 1e-9;
+    // Parameters for repulsive artificial potentials algorithm
+    eta_firas_  = 1.0; 
+
+    // Parameters for intermediate value algorithm
+    joint_limit_buffer = 0.175; // 0.175->10 deg  0.262->15 deg 0.349->20 deg
+    gain_limit_avoidance = 100.0;
+    scale_null_space = 0.5;
+    interm_alg_update_null = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

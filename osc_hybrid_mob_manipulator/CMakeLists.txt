@@ -90,6 +90,7 @@ add_executable(osc_hybrid
   src/Tasks/Orientation/Orientation_Mob_Manipulator.cpp
   src/Tasks/Orientation/Error_functions.cpp
   src/Tasks/Joint_limits/Repulsive_potencials.cpp
+  src/Tasks/Joint_limits/Intermediate_value.cpp
 )
 
 add_dependencies(osc_hybrid

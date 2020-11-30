@@ -427,6 +427,10 @@ void OscHybridController::spin(){
             //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
             //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
 
+            //effortSolver_.AvoidJointLimitsIntermValue(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
+            //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
+
             /*****************************************************/
             // Controller using pos XY with mobile robot and Z with mobile manipulator
 
@@ -764,16 +768,16 @@ void OscHybridController::loadDARTModel(){
 
     planarJoint.setXYPlane();
 
-    std::cout << "Planar 1 T: \n" << planarJoint.mTransAxis1 << std::endl;
-    std::cout << "Planar 2 T: \n" << planarJoint.mTransAxis2 << std::endl;
-    std::cout << "Planar 1 R: \n" << planarJoint.mRotAxis << std::endl;
+    //std::cout << "Planar 1 T: \n" << planarJoint.mTransAxis1 << std::endl;
+    //std::cout << "Planar 2 T: \n" << planarJoint.mTransAxis2 << std::endl;
+    //std::cout << "Planar 1 R: \n" << planarJoint.mRotAxis << std::endl;
 
     auto dofNames = planarJoint.mDofNames;
     dofNames.at(0) = "test_1";
     dofNames.at(1) = "test_2";
     dofNames.at(2) = "test_3";
 
-    std::cout << "Name Planar 1 T:" << dofNames.at(0) << std::endl;
+    //std::cout << "Name Planar 1 T:" << dofNames.at(0) << std::endl;
 
     planarJoint.mT_ParentBodyToJoint = auxBaseJoint.mT_ParentBodyToJoint;
     planarJoint.mT_ChildBodyToJoint = auxBaseJoint.mT_ChildBodyToJoint;
@@ -783,8 +787,8 @@ void OscHybridController::loadDARTModel(){
     Joint* base_planarJoint = dart_robotSkeleton->getJoint("base_planar_joint");
     base_planarJoint->setActuatorType(Joint::FORCE);
 
-    std::cout << "Type of Joint: " << dart_robotSkeleton->getJoint("base_planar_joint")->getType() << std::endl;
-    std::cout << "Actuator Type : " << dart_robotSkeleton->getJoint("base_planar_joint")->getActuatorType() << std::endl;
+    //std::cout << "Type of Joint: " << dart_robotSkeleton->getJoint("base_planar_joint")->getType() << std::endl;
+    //std::cout << "Actuator Type : " << dart_robotSkeleton->getJoint("base_planar_joint")->getActuatorType() << std::endl;
 
     dart_robotSkeleton->getDof(0)->setName("mobile_base_trans_x");
     dart_robotSkeleton->getDof(1)->setName("mobile_base_trans_y");
@@ -879,6 +883,9 @@ void OscHybridController::loadDARTModel(){
     mob_man_traj.joints.joint6 = 0.0;
 
     broadcaster_.sendTransform(transformDesiredPos);
+
+    // Print Message in log
+    ROS_INFO("Done loading model");
 
 }
 

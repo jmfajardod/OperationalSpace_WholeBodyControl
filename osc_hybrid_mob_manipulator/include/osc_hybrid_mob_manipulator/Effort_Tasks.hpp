@@ -93,6 +93,14 @@ public:
                                     Eigen::VectorXd *tau_total,
                                     Eigen::MatrixXd *Null_space_iter);
 
+    void AvoidJointLimitsIntermValue(Eigen::MatrixXd M, 
+                                    Eigen::VectorXd C_t,
+                                    Eigen::VectorXd g_t,
+                                    dart::dynamics::SkeletonPtr mRobot,
+                                    dart::dynamics::BodyNode* mEndEffector,
+                                    Eigen::VectorXd *tau_total,
+                                    Eigen::MatrixXd *Null_space_iter);
+
     /***********************************************************************************/
     /***********************************************************************************/
     // Position tasks
@@ -378,30 +386,19 @@ public:
     /***********************************************************************************/
     // Public variables
 
+    // Variables for hierarchy control (WBC and OSC)
     bool compensate_topdown;
     bool compensate_jtspace;
     bool augmented_projections;
 
-    int singularity_handling_method;
-
-    Eigen::VectorXd Lower_limits;
-    Eigen::VectorXd Upper_limits;
-
-private:
-
-    Eigen::MatrixXd kp_cartesian_;
-    Eigen::MatrixXd kd_cartesian_;
-    Eigen::MatrixXd kp_joints_;
-    Eigen::MatrixXd kd_joints_;
-
+    // Variables for tasks
     double max_lineal_vel_;
     double max_angular_vel_;
+    
+    int ori_error_mode;
 
-    double joint_margin_;
-    double eta_firas_;
-
-    double singularity_thres_high_;
-    double singularity_thres_low_;
+    // Variables for singularity handling method
+    int singularity_handling_method;
 
     double singularity_thres_high_pos_;
     double singularity_thres_low_pos_;
@@ -409,7 +406,30 @@ private:
     double singularity_thres_high_ori_;
     double singularity_thres_low_ori_;
 
-    int ori_error_mode;
+    // Variables for joint limit avoidance methods
+    Eigen::VectorXd Lower_limits;
+    Eigen::VectorXd Upper_limits;
+
+    double joint_margin_;
+    double eta_firas_;
+
+    bool   interm_alg_update_null;
+    double joint_limit_buffer;
+    double gain_limit_avoidance;
+    double scale_null_space;
+
+
+private:
+
+    // Gain matrices for tasks in operational and joint spaces
+    Eigen::MatrixXd kp_cartesian_;
+    Eigen::MatrixXd kd_cartesian_;
+    Eigen::MatrixXd kp_joints_;
+    Eigen::MatrixXd kd_joints_;
+
+    // Variables for singularity handling method
+    double singularity_thres_high_;
+    double singularity_thres_low_;
 
 };
 
