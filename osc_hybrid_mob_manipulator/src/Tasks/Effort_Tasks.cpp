@@ -51,8 +51,8 @@ EffortTask::EffortTask(){
     ori_error_mode = 5;
 
     //--- Max vel for straight line task
-    max_lineal_vel_  = 0.3; // m/s
-    max_angular_vel_ = M_PI; // rad/s
+    max_lineal_vel_  = 1.0;//0.3 // m/s
+    max_angular_vel_ = 5*M_PI;//M_PI; // rad/s
 
     //--- Parameters for avoid joint limits task
     joint_margin_ = 0.175; // 0.175->10 deg

@@ -41,7 +41,7 @@ if __name__ == '__main__':
     angle = np.deg2rad( 90.0 )
     Quat0 = tf_conversions.transformations.quaternion_about_axis(angle, (0, 1, 0))
 
-    period = 2.5
+    period = 1.0
     frecuency = 2*np.math.pi / period
     offset_time = 0.0
 
@@ -105,7 +105,7 @@ if __name__ == '__main__':
 
         current_time = (rospy.Time.now() - init_time).to_sec()
         #print(current_time)
-        if(current_time>= 5.0*period):
+        if(current_time>= 10.0*period):
             break
 
         Msg.pose.translation.x = init_pos[0] + 0.15 - 0.15*np.math.cos(frecuency*current_time + offset_time)
