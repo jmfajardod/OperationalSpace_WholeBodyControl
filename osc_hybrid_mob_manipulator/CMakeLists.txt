@@ -89,6 +89,7 @@ add_executable(osc_hybrid
   src/Tasks/Orientation/Orientation_Manipulator.cpp
   src/Tasks/Orientation/Orientation_Mob_Manipulator.cpp
   src/Tasks/Orientation/Error_functions.cpp
+  src/Tasks/Joint_limits/Repulsive_potencials.cpp
 )
 
 add_dependencies(osc_hybrid

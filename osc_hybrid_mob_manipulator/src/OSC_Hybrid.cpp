@@ -423,7 +423,7 @@ void OscHybridController::spin(){
             /*****************************************************/
             // Avoid Joint Limits task
 
-            //effortSolver_.AvoidJointLimits(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+            effortSolver_.AvoidJointLimitsPotentials(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
             //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
             //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
 

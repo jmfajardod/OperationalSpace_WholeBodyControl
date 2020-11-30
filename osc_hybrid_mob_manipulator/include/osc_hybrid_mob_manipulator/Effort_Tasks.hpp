@@ -77,17 +77,21 @@ public:
                             Eigen::VectorXd *tau_total,
                             Eigen::MatrixXd *Null_space_iter);
 
+    /***********************************************************************************/
+    /***********************************************************************************/
+    // Joint limit avoidance tasks
+
     /*!
      * Effort Task
      * Avoid Joint Limits
     */
-    void AvoidJointLimits(Eigen::MatrixXd M, 
-                        Eigen::VectorXd C_t,
-                        Eigen::VectorXd g_t,
-                        dart::dynamics::SkeletonPtr mRobot,
-                        dart::dynamics::BodyNode* mEndEffector,
-                        Eigen::VectorXd *tau_total,
-                        Eigen::MatrixXd *Null_space_iter);
+    void AvoidJointLimitsPotentials(Eigen::MatrixXd M, 
+                                    Eigen::VectorXd C_t,
+                                    Eigen::VectorXd g_t,
+                                    dart::dynamics::SkeletonPtr mRobot,
+                                    dart::dynamics::BodyNode* mEndEffector,
+                                    Eigen::VectorXd *tau_total,
+                                    Eigen::MatrixXd *Null_space_iter);
 
     /***********************************************************************************/
     /***********************************************************************************/
@@ -379,6 +383,9 @@ public:
     bool augmented_projections;
 
     int singularity_handling_method;
+
+    Eigen::VectorXd Lower_limits;
+    Eigen::VectorXd Upper_limits;
 
 private:
 
