@@ -86,10 +86,11 @@ EffortTask::EffortTask(){
     // Limit for joint 9
     Lower_limits(8) = - M_PI;
     Upper_limits(8) =   M_PI;
+
+    joint_margin_ = 0.349; // 0.175->10 deg  0.262->15 deg 0.349->20 deg
     
     // Parameters for FIRAS function
-    joint_margin_ = 0.175; // 0.175->10 deg
-    eta_firas_    = 1e-9;
+    eta_firas_    = 1.0; // 1e-9;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -138,9 +138,10 @@ void EffortTask::AvoidJointLimitsPotentials(Eigen::MatrixXd M,
         // ------------------------------------------//
         // Project torque and add it to the total torque vector
 
-        Eigen::VectorXd tau_projected = *Null_space_iter *  tau_star;
+        //Eigen::VectorXd tau_projected = *Null_space_iter *  tau_star;
+        //*tau_total = *tau_total + tau_projected; 
 
-        *tau_total = *tau_total + tau_projected; 
+        *tau_total = *tau_total + tau_star;
 
         // ------------------------------------------//
         // ------------------------------------------//
@@ -149,7 +150,7 @@ void EffortTask::AvoidJointLimitsPotentials(Eigen::MatrixXd M,
         Eigen::MatrixXd Null_space_task =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_t * Jacob_t; // Null space
         //std::cout << "N_t: \n" << Null_space_task << std::endl;
 
-        *Null_space_iter = *Null_space_iter * Null_space_task.transpose();
+        // *Null_space_iter = *Null_space_iter * Null_space_task.transpose();
 
     }
 
