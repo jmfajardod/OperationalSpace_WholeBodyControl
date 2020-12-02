@@ -38,11 +38,11 @@ void EffortTask::AvoidJointLimitsIntermValue(Eigen::MatrixXd M,
     // Check all joints except the first three (Only manipulator)
     for (size_t ii = 3; ii < dofs; ii++)
     {
-        double margin_up  = Upper_limits(ii) - joint_margin_;
-        double margin_low = Lower_limits(ii) + joint_margin_;
+        double margin_up  = Upper_limits(ii) - joint_margin_(ii);
+        double margin_low = Lower_limits(ii) + joint_margin_(ii);
         
-        double thres_up  = margin_up  - joint_limit_buffer;
-        double thres_low = margin_low + joint_limit_buffer;
+        double thres_up  = margin_up  - joint_limit_buffer(ii);
+        double thres_low = margin_low + joint_limit_buffer(ii);
 
         bool close2limit = false;
 
@@ -53,7 +53,7 @@ void EffortTask::AvoidJointLimitsIntermValue(Eigen::MatrixXd M,
             //std::cout << "Joint " << ii << " too HIGH" << std::endl;
         }
         else if (  q_current(ii) > thres_up ){
-            act_param_aux(ii) = 0.5 + 0.5*sin( (M_PI/joint_limit_buffer)*( q_current(ii) - thres_up ) - M_PI_2 );
+            act_param_aux(ii) = 0.5 + 0.5*sin( (M_PI/joint_limit_buffer(ii))*( q_current(ii) - thres_up ) - M_PI_2 );
             joint_force(ii) = gain_limit_avoidance*(thres_up - q_current(ii));
             close2limit = true;
             //std::cout << "Joint " << ii << " in HIGH buffer region" << std::endl;
@@ -66,7 +66,7 @@ void EffortTask::AvoidJointLimitsIntermValue(Eigen::MatrixXd M,
             //std::cout << "Joint " << ii << " too LOW" << std::endl;
         } 
         else if(q_current(ii) < thres_low){
-            act_param_aux(ii) = 0.5 + 0.5*sin( (M_PI/joint_limit_buffer)*( q_current(ii) - thres_low ) + M_PI_2 );
+            act_param_aux(ii) = 0.5 + 0.5*sin( (M_PI/joint_limit_buffer(ii))*( q_current(ii) - thres_low ) + M_PI_2 );
             joint_force(ii) = gain_limit_avoidance*(thres_low - q_current(ii));
             close2limit = true;
             //std::cout << "Joint " << ii << " in LOW buffer region" << std::endl;

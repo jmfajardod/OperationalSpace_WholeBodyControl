@@ -94,13 +94,27 @@ EffortTask::EffortTask(){
     Lower_limits(8) = - M_PI;
     Upper_limits(8) =   M_PI;
 
-    joint_margin_ = 0.349; // 0.175->10 deg  0.262->15 deg 0.349->20 deg
+    // Margins to avoid joint limits
+    joint_margin_ = Eigen::VectorXd::Zero(9); // 0.175->10 deg  0.262->15 deg 0.349->20 deg
+    joint_margin_(3) = 0.05*(Upper_limits(3) - Lower_limits(3));
+    joint_margin_(4) = 0.05*(Upper_limits(4) - Lower_limits(4));
+    joint_margin_(5) = 0.05*(Upper_limits(5) - Lower_limits(5));
+    joint_margin_(6) = 0.05*(Upper_limits(6) - Lower_limits(6));
+    joint_margin_(7) = 0.05*(Upper_limits(7) - Lower_limits(7));
+    joint_margin_(8) = 0.05*(Upper_limits(8) - Lower_limits(8));
     
     // Parameters for repulsive artificial potentials algorithm
     eta_firas_  = 1.0; 
 
     // Parameters for intermediate value algorithm
-    joint_limit_buffer = 0.175; // 0.175->10 deg  0.262->15 deg 0.349->20 deg
+    joint_limit_buffer = Eigen::VectorXd::Zero(9); // 0.175->10 deg  0.262->15 deg 0.349->20 deg
+    joint_limit_buffer(3) = 0.175;
+    joint_limit_buffer(4) = 0.175;
+    joint_limit_buffer(5) = 0.175;
+    joint_limit_buffer(6) = 0.175;
+    joint_limit_buffer(7) = 0.175;
+    joint_limit_buffer(8) = 0.175;
+
     gain_limit_avoidance = 100.0;
     scale_null_space = 0.5;
     interm_alg_update_null = true;
@@ -131,9 +145,9 @@ void EffortTask::changeMaxVel(double new_max_vel){
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function to change the joint margin for avoding joint limits
-void EffortTask::changeJointMargin(double new_margin){
-    joint_margin_ = new_margin;
-}
+//void EffortTask::changeJointMargin(double new_margin){
+//    joint_margin_ = new_margin;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function to change the eta in FIRAS function for avoding joint limits

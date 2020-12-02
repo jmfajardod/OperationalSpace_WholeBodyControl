@@ -410,11 +410,12 @@ public:
     Eigen::VectorXd Lower_limits;
     Eigen::VectorXd Upper_limits;
 
-    double joint_margin_;
+    Eigen::VectorXd joint_margin_;
+
     double eta_firas_;
 
     bool   interm_alg_update_null;
-    double joint_limit_buffer;
+    Eigen::VectorXd joint_limit_buffer;
     double gain_limit_avoidance;
     double scale_null_space;
 
