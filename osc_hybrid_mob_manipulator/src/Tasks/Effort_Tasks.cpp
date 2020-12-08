@@ -118,6 +118,19 @@ EffortTask::EffortTask(){
     gain_limit_avoidance = 100.0;
     scale_null_space = 0.5;
     interm_alg_update_null = true;
+
+    // Variables for SJS
+    Max_constraint_accel = Eigen::VectorXd::Zero(9);
+    Min_constraint_accel = Eigen::VectorXd::Zero(9);
+
+    Max_joint_accel = Eigen::VectorXd::Zero(9);
+    Min_joint_accel = Eigen::VectorXd::Zero(9);
+
+    Max_joint_vel = Eigen::VectorXd::Zero(9);
+    Min_joint_vel = Eigen::VectorXd::Zero(9);
+
+    Max_joint_pos = Eigen::VectorXd::Zero(9);
+    Min_joint_pos = Eigen::VectorXd::Zero(9);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

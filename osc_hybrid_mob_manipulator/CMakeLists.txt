@@ -91,6 +91,7 @@ add_executable(osc_hybrid
   src/Tasks/Orientation/Error_functions.cpp
   src/Tasks/Joint_limits/Repulsive_potencials.cpp
   src/Tasks/Joint_limits/Intermediate_value.cpp
+  src/Tasks/Joint_limits/Saturation_joint_space.cpp
 )
 
 add_dependencies(osc_hybrid

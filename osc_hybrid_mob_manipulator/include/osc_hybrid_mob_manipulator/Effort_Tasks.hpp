@@ -101,6 +101,27 @@ public:
                                     Eigen::VectorXd *tau_total,
                                     Eigen::MatrixXd *Null_space_iter);
 
+    void updateSJSConstraints(dart::dynamics::SkeletonPtr mRobot, double sampling_time);
+
+    void checkSJSConstraints(Eigen::VectorXd Joint_Acceleration,
+                            dart::dynamics::BodyNode* mEndEffector,
+                            bool* flag_sjs);
+
+    void updateSJSConstraintTask(Eigen::VectorXd Current_joint_accel,
+                                bool* flag_sjs,
+                                Eigen::MatrixXd *Jacobian_constr,
+                                Eigen::VectorXd *Constr_Task_Acceleration);
+
+    void SaturationJointSpace(Eigen::MatrixXd Jacobian,
+                              Eigen::VectorXd desired_accel,
+                              Eigen::MatrixXd M, 
+                              Eigen::VectorXd C_t,
+                              Eigen::VectorXd g_t,
+                              dart::dynamics::SkeletonPtr mRobot,
+                              dart::dynamics::BodyNode* mEndEffector,
+                              Eigen::VectorXd *tau_total,
+                              Eigen::MatrixXd *Null_space_iter);
+
     /***********************************************************************************/
     /***********************************************************************************/
     // Position tasks
@@ -414,10 +435,24 @@ public:
 
     double eta_firas_;
 
+    // Variables for intermediate value
     bool   interm_alg_update_null;
     Eigen::VectorXd joint_limit_buffer;
     double gain_limit_avoidance;
     double scale_null_space;
+
+    // Variables for SJS
+    Eigen::VectorXd Max_constraint_accel;
+    Eigen::VectorXd Min_constraint_accel;
+
+    Eigen::VectorXd Max_joint_accel;
+    Eigen::VectorXd Min_joint_accel;
+
+    Eigen::VectorXd Max_joint_vel;
+    Eigen::VectorXd Min_joint_vel;
+
+    Eigen::VectorXd Max_joint_pos;
+    Eigen::VectorXd Min_joint_pos;
 
 
 private:

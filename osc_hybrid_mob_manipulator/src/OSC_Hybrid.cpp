@@ -136,6 +136,8 @@ void OscHybridController::change_DesPose_CB(const mobile_manipulator_msgs::Traje
 OscHybridController::OscHybridController(ros::NodeHandle& nodeHandle) :
     nodeHandle_(nodeHandle),
     frecuency_rate(1000),
+    time_previous_sjs(0),
+    time_actual_sjs(0.001),
     q_k(Eigen::VectorXd::Zero(9)),
     q_dot_k(Eigen::VectorXd::Zero(9)),
     tau_zero(Eigen::VectorXd::Zero(9)),
@@ -193,6 +195,10 @@ OscHybridController::OscHybridController(ros::NodeHandle& nodeHandle) :
 
     /******************************/
     // Call the spin function
+
+    time_previous_sjs = ros::Time::now().toSec();
+    time_actual_sjs = ros::Time::now().toSec();
+
     spin();
 }
 
@@ -286,6 +292,10 @@ bool OscHybridController::readParameters()
 
     case 1:
         ROS_INFO("Using intermediate value for joint limit avoidance");
+        break;
+
+    case 3:
+        ROS_INFO("Using SJS (Saturation in joint space)");
         break;
     
     default:
@@ -398,138 +408,182 @@ void OscHybridController::spin(){
         /*********************************************************************************/
         // Task Definition for effort
 
-        tau_result = Eigen::VectorXd::Zero(9);
-        Eigen::MatrixXd Null_space = Eigen::MatrixXd::Identity(9,9);
-
-        //std::cout << "Initial tau: \n" << tau_result << std::endl;
-        //std::cout << "Initial Null space: \n" << Null_space << std::endl;
-
-        Eigen::Vector3d x_error =  targetCartPos - mEndEffector_->getWorldTransform().translation();
+        Eigen::MatrixXd Null_space;
 
         /*****************************************************/
         /*****************************************************/
-        // Using different controllers based on position error
-
-        /*
-        if(x_error.norm()>0.2){
-            
-            if(x_error.norm()<1.0){
-                q_desired = current_pos;
-            }
-            effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-            effortSolver_.AchievePosZConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-        }
-        else{
-            effortSolver_.AchieveCartesian(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-            //effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-            //effortSolver_.CartesianImpedance(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, tau_ext, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-            
-            //std::cout << "Tau result after straight line: \n" << tau_result << std::endl;
-            //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
-        }*/
-
-        /*****************************************************/
-        /*****************************************************/
-        Eigen::VectorXd tau_ns = Eigen::VectorXd::Zero(9);
+        Eigen::VectorXd tau_ns;
         
         int cycles_algorithm = 1;
         if(effortSolver_.singularity_handling_method == 2){
             cycles_algorithm = 2;
         }
-
-        for (size_t cycle = 1; cycle <= cycles_algorithm; cycle++){
-
-            Null_space = Eigen::MatrixXd::Identity(9,9);
         
-            /*****************************************************/
-            // Avoid Joint Limits task
-
-            if(cycle==1){
-                if(method_joint_limit_avoidance==0){
-                    effortSolver_.AvoidJointLimitsPotentials(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-                    //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
-                    //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
-                }
-                if(method_joint_limit_avoidance==1){
-                    effortSolver_.AvoidJointLimitsIntermValue(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-                    //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
-                    //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
-                }
+        // Compute the constraints of the saturation
+        if(method_joint_limit_avoidance==3){
+            time_actual_sjs = ros::Time::now().toSec();
+            double current_sampling_time = time_actual_sjs-time_previous_sjs;
+            if(current_sampling_time<=10e-6){
+                current_sampling_time = 1.0/500.0;
             }
 
-            /*****************************************************/
-            // Controller using pos XY with mobile robot and Z with mobile manipulator
+            effortSolver_.updateSJSConstraints(dart_robotSkeleton, current_sampling_time);
 
-            //---effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-            //effortSolver_.AchieveCartesianMobilRobConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-            //std::cout << "Tau result after XY Cart: \n" << tau_result << std::endl;
-            //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
+            time_previous_sjs = ros::Time::now().toSec();
+            //std::cout << "Sampling time: " << current_sampling_time << std::endl;
+            //std::cout << "Max accel limits\n" << effortSolver_.Max_constraint_accel.transpose() << std::endl;
+        }
 
-            //---effortSolver_.AchievePosZ(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-            //effortSolver_.AchievePosZConstVel(targetCartPos, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-            //std::cout << "Tau result after Z Cart: \n" << tau_result << std::endl;
-            //std::cout << "Null space after Z Cart: \n" << Null_space << std::endl;
+        // SJS variables
+        bool flag_sjs = true;
+        Eigen::MatrixXd Jacobian_constraints = Eigen::MatrixXd::Zero(1,9);
+        Eigen::VectorXd Desired_accel_constraints = Eigen::VectorXd::Zero(1);
+        bool task_limited = false;
 
-            /*****************************************************/
-            // Controller using pos XYZ with manipulator - To test singularities
-
-            //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-            //effortSolver_.AchieveCartManipulatorConstVel(targetCartPos, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-            //std::cout << "Tau result after Manipulator Cart: \n" << tau_result << std::endl;
-            //std::cout << "Null space after Manipulator Cart: \n" << Null_space << std::endl;
-
-            /*****************************************************/
-            // Controller using pos XYZ with mobile manipulator
+        //--- SJS main cycle
+        while(flag_sjs){
             
-            //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-            //effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-            //std::cout << "Tau result after Mob_mani Cart: \n" << tau_result << std::endl;
-            //std::cout << "Null space after Mob_mani Cart: \n" << Null_space << std::endl;
+            tau_ns = Eigen::VectorXd::Zero(9);
 
-            /*****************************************************/
-            // Orientation tasks with mobile manipulator
+            //-- Loop for third singularity handling method
+            for (size_t cycle = 1; cycle <= cycles_algorithm; cycle++){
 
-            //---effortSolver_.AchieveOrientation(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-            //effortSolver_.AchieveOrientationConstVel(targetOrientPos, &min_sv_ori, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space); 
-            //---effortSolver_.OrientationImpedance(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, cycle, tau_ext, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space); 
-            //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
-            //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
+                Null_space = Eigen::MatrixXd::Identity(9,9);
+                tau_result = Eigen::VectorXd::Zero(9);
+            
+                /*****************************************************/
+                // Avoid Joint Limits task
 
-            /*****************************************************/
-            // Orientation tasks with manipulator
+                if(cycle==1){
+                    if(method_joint_limit_avoidance==0){
+                        effortSolver_.AvoidJointLimitsPotentials(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+                        //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
+                        //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
+                    }
+                    if(method_joint_limit_avoidance==1){
+                        effortSolver_.AvoidJointLimitsIntermValue(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+                        //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
+                        //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
+                    }
+                    if(method_joint_limit_avoidance==3 && task_limited){
+                        effortSolver_.SaturationJointSpace( Jacobian_constraints, Desired_accel_constraints, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+                        //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
+                        //std::cout << "Null space after avoid joint limits: \n" << Null_space.transpose() << std::endl;
+                    }
+                }
 
-            //---effortSolver_.AchieveOriManipulator(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-            effortSolver_.AchieveOriManipulatorConstVel(targetOrientPos, &min_sv_ori, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space); 
-            //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
-            //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
+                /*****************************************************/
+                // Controller using pos XY with mobile robot and Z with mobile manipulator
 
-            /*****************************************************/
-            // Controller using pos XYZ with manipulator - To test singularities
+                //---effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+                //effortSolver_.AchieveCartesianMobilRobConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+                //std::cout << "Tau result after XY Cart: \n" << tau_result << std::endl;
+                //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
 
-            //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-            effortSolver_.AchieveCartManipulatorConstVel(targetCartPos, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-            //std::cout << "Tau result after Manipulator Cart: \n" << tau_result << std::endl;
-            //std::cout << "Null space after Manipulator Cart: \n" << Null_space << std::endl;
-        
-            /*****************************************************/
-            // Joint tasks
-            if(cycle==1){
-                effortSolver_.AchieveJointConf(q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-                //std::cout << "Tau result after achieve joint: \n" << tau_result.transpose() << "\n" << std::endl;
+                //---effortSolver_.AchievePosZ(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
+                //effortSolver_.AchievePosZConstVel(targetCartPos, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
+                //std::cout << "Tau result after Z Cart: \n" << tau_result << std::endl;
+                //std::cout << "Null space after Z Cart: \n" << Null_space << std::endl;
+
+                /*****************************************************/
+                // Controller using pos XYZ with manipulator - To test singularities
+
+                //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
+                //effortSolver_.AchieveCartManipulatorConstVel(targetCartPos, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
+                //std::cout << "Tau result after Manipulator Cart: \n" << tau_result << std::endl;
+                //std::cout << "Null space after Manipulator Cart: \n" << Null_space << std::endl;
+
+                /*****************************************************/
+                // Controller using pos XYZ with mobile manipulator
+                
+                //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
+                //effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
+                //std::cout << "Tau result after Mob_mani Cart: \n" << tau_result << std::endl;
+                //std::cout << "Null space after Mob_mani Cart: \n" << Null_space << std::endl;
+
+                /*****************************************************/
+                // Orientation tasks with mobile manipulator
+
+                //---effortSolver_.AchieveOrientation(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
+                //effortSolver_.AchieveOrientationConstVel(targetOrientPos, &min_sv_ori, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space); 
+                //---effortSolver_.OrientationImpedance(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, cycle, tau_ext, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space); 
+                //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
+                //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
+
+                /*****************************************************/
+                // Orientation tasks with manipulator
+
+                //---effortSolver_.AchieveOriManipulator(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
+                effortSolver_.AchieveOriManipulatorConstVel(targetOrientPos, &min_sv_ori, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space); 
+                //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
+                //std::cout << "Null space after achieve orient: \n" << Null_space.transpose() << std::endl;
+
+                /*****************************************************/
+                // Controller using pos XYZ with manipulator - To test singularities
+
+                //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
+                effortSolver_.AchieveCartManipulatorConstVel(targetCartPos, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
+                //std::cout << "Tau result after Manipulator Cart: \n" << tau_result << std::endl;
+                //std::cout << "Null space after Manipulator Cart: \n" << Null_space << std::endl;
+            
+                /*****************************************************/
+                // Joint tasks
+                if(cycle==1){
+                    effortSolver_.AchieveJointConf(q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
+                    //std::cout << "Tau result after achieve joint: \n" << tau_result.transpose() << "\n" << std::endl;
+                }
+
+                tau_ns = tau_result;
             }
 
-            tau_ns = tau_result;
-        }
+            /*****************************************************/
+            // Compensation of non-linear effects in joint space
 
-        /*****************************************************/
-        // Compensation of non-linear effects in joint space
+            if(effortSolver_.compensate_jtspace){
+                tau_result =  tau_result + C_k + g_k;
+            }
 
-        if(effortSolver_.compensate_jtspace){
-            tau_result =  tau_result + C_k + g_k;
-        }
+            //std::cout << "Tau Final: \n" << tau_result << "\n" << std::endl;
 
-        ///std::cout << "Tau Final: \n" << tau_result << "\n" << std::endl;
+            flag_sjs = false; // Clean SJS flag
+
+            /*****************************************************/
+            // IF SJS is selected check the constraints
+            if(method_joint_limit_avoidance==3){
+
+                Eigen::VectorXd current_joint_accel = M.inverse() * (tau_result - C_k - g_k);
+                //std::cout << "Current joint accel\n" << current_joint_accel.transpose() << std::endl;
+
+                // Check constraints
+                int critical_joint = -1;
+                effortSolver_.checkSJSConstraints(current_joint_accel, mEndEffector_, &flag_sjs);
+
+                // If constraints are exceeded
+                if(flag_sjs){
+                    
+                    //std::cout << "Tau Final: \n" << tau_result.transpose() << "\n" << std::endl;
+                    //std::cout << "Current joint accel\n" << current_joint_accel.transpose() << std::endl;
+                    //std::cout << "Limits exceeded" << std::endl;
+                    
+                    task_limited = true;
+                    Eigen::MatrixXd prev_jacob = Jacobian_constraints;
+
+                    // Update Jacobian and task vector
+                    effortSolver_.updateSJSConstraintTask(current_joint_accel, &flag_sjs, &Jacobian_constraints, &Desired_accel_constraints);
+                    //std::cout << "Jacobian_constraints in main\n" << Jacobian_constraints <<std::endl;
+                    
+                    if(prev_jacob.rows()==Jacobian_constraints.rows()){
+                        if(prev_jacob.isApprox(Jacobian_constraints)){
+                            std::cout << "--REPEATED LIMITS--" << std::endl;
+                            flag_sjs = false;
+                        }
+                    }
+                }
+
+            }
         
+        }// End SJS cycle
+
         /******************************/
         // Admittance controller
         // send_vel -> q_dot_result

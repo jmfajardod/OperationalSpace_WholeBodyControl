@@ -111,6 +111,9 @@ private:
 	int method_sing_handling;
 	int method_joint_limit_avoidance;
 
+	double time_previous_sjs;
+	double time_actual_sjs;
+
 	std_msgs::Float64 manipulator_cmd;
 
 	geometry_msgs::Twist mobile_pltfrm_cmd;
