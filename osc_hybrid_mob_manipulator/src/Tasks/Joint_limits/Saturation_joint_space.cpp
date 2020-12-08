@@ -13,6 +13,9 @@ void EffortTask::updateSJSConstraints(dart::dynamics::SkeletonPtr mRobot, double
     Eigen::VectorXd current_pos = mRobot->getPositions();
     Eigen::VectorXd current_vel = mRobot->getVelocities();
 
+    //std::cout << "Current joint positions:\n" << current_pos.transpose() << std::endl;
+    //std::cout << "Current joint velocities:\n" << current_vel.transpose() << std::endl; 
+
     for(size_t yy = 0; yy<9 ; yy++){
         if(yy<2){
             Max_joint_accel(yy) =  10.0; // m/s^2
@@ -23,23 +26,23 @@ void EffortTask::updateSJSConstraints(dart::dynamics::SkeletonPtr mRobot, double
             Min_joint_pos(yy)   = -10e10;
         }
         if(yy==2){
-            Max_joint_accel(yy) =  20.0; // rad/s^2
-            Min_joint_accel(yy) = -20.0; // rad/s^2
+            Max_joint_accel(yy) =  M_PI*2; // rad/s^2
+            Min_joint_accel(yy) = -M_PI*2; // rad/s^2
             Max_joint_vel(yy)   =  3.0; // rad/s
             Min_joint_vel(yy)   = -3.0; // rad/s
-            Max_joint_pos(yy)   =  M_PI_2; // rad
-            Min_joint_pos(yy)   = -M_PI_2; // rad
+            Max_joint_pos(yy)   =  M_PI_2-0.1; // rad
+            Min_joint_pos(yy)   = -M_PI_2+0.1; // rad
         }
         if(yy>2){
             Max_joint_accel(yy) =  M_PI*2; // rad/s^2
             Min_joint_accel(yy) = -M_PI*2; // rad/s^2
             Max_joint_vel(yy)   =  3.0; // rad/s
-            Min_joint_vel(yy)   = -3.0; // rad/s
+            Min_joint_vel(yy)   = -1.0; // rad/s
             Max_joint_pos(yy)   =  Upper_limits(yy)-joint_margin_(yy); // rad
             Min_joint_pos(yy)   =  Lower_limits(yy)+joint_margin_(yy); // rad
         }
     }
-    double sampling_T = sampling_time;
+    double sampling_T = 0.1; // Sampling time for velocity predicition
 
     Eigen::VectorXd Joint_accel_max = Eigen::VectorXd::Zero(9);
     Eigen::VectorXd Joint_accel_min = Eigen::VectorXd::Zero(9);
@@ -48,19 +51,23 @@ void EffortTask::updateSJSConstraints(dart::dynamics::SkeletonPtr mRobot, double
     Eigen::VectorXd max_vel = ( 1/sampling_T)*(Max_joint_vel-current_vel);
     Eigen::VectorXd min_vel = ( 1/sampling_T)*(Min_joint_vel-current_vel);
 
+    sampling_T = 0.1; // Sampling time for position predicition
+
     Eigen::VectorXd max_pos_joint = (2/(sampling_T*sampling_T))*(Max_joint_pos-sampling_T*current_vel-current_pos);
     Eigen::VectorXd min_pos_joint = (2/(sampling_T*sampling_T))*(Min_joint_pos-sampling_T*current_vel-current_pos);
 
     for (size_t yy = 0; yy < 9; yy++){
-        Joint_accel_max(yy) = std::min(Max_joint_accel(yy),std::min(max_vel(yy),max_pos_joint(yy)) );
-        Joint_accel_min(yy) = std::max(Min_joint_accel(yy),std::max(min_vel(yy),min_pos_joint(yy)) );
+        Joint_accel_max(yy) = std::min( max_pos_joint(yy) , std::min( max_vel(yy) , Max_joint_accel(yy) ) );
+        Joint_accel_min(yy) = std::max( min_pos_joint(yy) , std::max( min_vel(yy) , Min_joint_accel(yy) ) );
 
+        /*
         if(current_pos(yy)>Max_joint_pos(yy)){
-            Joint_accel_max(yy) = -1.0;
+            Joint_accel_max(yy) = (2/sampling_T)*(-current_vel(yy));
         }
         if(current_pos(yy)<Min_joint_pos(yy)){
-            Joint_accel_min(yy) =  1.0;
+            Joint_accel_min(yy) = (2/sampling_T)*(-current_vel(yy));
         }
+        */
 
         if(Joint_accel_max(yy)<Joint_accel_min(yy)){
             double aux_value = Joint_accel_min(yy);
@@ -71,6 +78,9 @@ void EffortTask::updateSJSConstraints(dart::dynamics::SkeletonPtr mRobot, double
         //if(Joint_accel_max(yy)<-max_joint_accel) Joint_accel_max(yy)=-max_joint_accel;
         //if(Joint_accel_min(yy)> max_joint_accel) Joint_accel_min(yy)= max_joint_accel;
     }        
+
+    //std::cout << "Max limits:\n" << Joint_accel_max.transpose() << std::endl;
+    //std::cout << "Min limits:\n" << Joint_accel_min.transpose() << std::endl;
 
     Max_constraint_accel = Joint_accel_max;
     Min_constraint_accel = Joint_accel_min;
