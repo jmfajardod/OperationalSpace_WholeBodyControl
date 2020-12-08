@@ -37,7 +37,7 @@ void EffortTask::updateSJSConstraints(dart::dynamics::SkeletonPtr mRobot, double
             Max_joint_accel(yy) =  M_PI*2; // rad/s^2
             Min_joint_accel(yy) = -M_PI*2; // rad/s^2
             Max_joint_vel(yy)   =  3.0; // rad/s
-            Min_joint_vel(yy)   = -1.0; // rad/s
+            Min_joint_vel(yy)   = -3.0; // rad/s
             Max_joint_pos(yy)   =  Upper_limits(yy)-joint_margin_(yy); // rad
             Min_joint_pos(yy)   =  Lower_limits(yy)+joint_margin_(yy); // rad
         }
