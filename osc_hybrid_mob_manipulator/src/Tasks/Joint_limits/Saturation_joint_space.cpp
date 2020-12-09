@@ -34,15 +34,15 @@ void EffortTask::updateSJSConstraints(dart::dynamics::SkeletonPtr mRobot, double
             Min_joint_pos(yy)   = -M_PI_2+0.1; // rad
         }
         if(yy>2){
-            Max_joint_accel(yy) =  M_PI*2; // rad/s^2
-            Min_joint_accel(yy) = -M_PI*2; // rad/s^2
-            Max_joint_vel(yy)   =  3.0; // rad/s
-            Min_joint_vel(yy)   = -3.0; // rad/s
+            Max_joint_accel(yy) =  5*M_PI; // rad/s^2 default:  2*M_PI
+            Min_joint_accel(yy) = -5*M_PI; // rad/s^2 default: -2*M_PI
+            Max_joint_vel(yy)   =  2.0; // rad/s      default:  3.0
+            Min_joint_vel(yy)   = -2.0; // rad/s      default: -3.0
             Max_joint_pos(yy)   =  Upper_limits(yy)-joint_margin_(yy); // rad
             Min_joint_pos(yy)   =  Lower_limits(yy)+joint_margin_(yy); // rad
         }
     }
-    double sampling_T = 0.1; // Sampling time for velocity predicition
+    double sampling_T = 0.01; // Sampling time for velocity predicition
 
     Eigen::VectorXd Joint_accel_max = Eigen::VectorXd::Zero(9);
     Eigen::VectorXd Joint_accel_min = Eigen::VectorXd::Zero(9);

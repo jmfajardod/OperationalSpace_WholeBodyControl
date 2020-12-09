@@ -56,8 +56,8 @@ EffortTask::EffortTask(){
 
     //----------------------------------------------------------------------//
     //--- Max vel for straight line tasks
-    max_lineal_vel_  = 0.3;  // 1.0     0.3  // m/s
-    max_angular_vel_ = M_PI; // 5*M_PI  M_PI // rad/s
+    max_lineal_vel_  = 1.0;  // 1.0     0.3  // m/s
+    max_angular_vel_ = 5*M_PI; // 5*M_PI  M_PI // rad/s
 
     //----------------------------------------------------------------------//
     //--- Margins for singular value analysis
@@ -104,7 +104,7 @@ EffortTask::EffortTask(){
     joint_margin_(8) = 0.05*(Upper_limits(8) - Lower_limits(8));
     
     // Parameters for repulsive artificial potentials algorithm
-    eta_firas_  = 1.0; 
+    eta_firas_  = 1.0; // 1.0 0.1 0.01
 
     // Parameters for intermediate value algorithm
     joint_limit_buffer = Eigen::VectorXd::Zero(9); // 0.175->10 deg  0.262->15 deg 0.349->20 deg
@@ -116,7 +116,7 @@ EffortTask::EffortTask(){
     joint_limit_buffer(8) = 0.175;
 
     gain_limit_avoidance = 100.0;
-    scale_null_space = 0.5;
+    scale_null_space = 0.5; // 0.5   0.1   0.0
     interm_alg_update_null = true;
 
     // Variables for SJS
