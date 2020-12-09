@@ -286,6 +286,10 @@ bool OscHybridController::readParameters()
     //--- Method for joint limit avoidance
     switch (method_joint_limit_avoidance)
     {
+    case -1:
+        ROS_INFO("Not handling joint limits");
+        break;
+
     case 0:
         ROS_INFO("Using repulsive potentials for joint limit avoidance");
         break;
@@ -295,7 +299,7 @@ bool OscHybridController::readParameters()
         break;
 
     case 3:
-        ROS_INFO("Using SJS (Saturation in joint space)");
+        ROS_INFO("Using SJS (Saturation in joint space) for joint limit avoidance");
         break;
     
     default:
@@ -561,10 +565,6 @@ void OscHybridController::spin(){
                 // If constraints are exceeded
                 if(flag_sjs){
                     
-                    //std::cout << "Tau Final: \n" << tau_result.transpose() << "\n" << std::endl;
-                    //std::cout << "Current joint accel\n" << current_joint_accel.transpose() << std::endl;
-                    //std::cout << "Limits exceeded" << std::endl;
-                    
                     task_limited = true;
                     Eigen::MatrixXd prev_jacob = Jacobian_constraints;
 
@@ -574,7 +574,7 @@ void OscHybridController::spin(){
                     
                     if(prev_jacob.rows()==Jacobian_constraints.rows()){
                         if(prev_jacob.isApprox(Jacobian_constraints)){
-                            std::cout << "--REPEATED LIMITS--" << std::endl;
+                            ROS_INFO("Repeated saturations in SJS");
                             flag_sjs = false;
                         }
                     }
