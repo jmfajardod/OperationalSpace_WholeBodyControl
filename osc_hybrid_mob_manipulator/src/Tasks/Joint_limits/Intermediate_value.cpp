@@ -165,7 +165,7 @@ void EffortTask::AvoidJointLimitsIntermValue(Eigen::MatrixXd M,
         // ------------------------------------------//
         // Calc null space
 
-        if(interm_alg_update_null){
+        if(interm_alg_update_null==2){
 
             act_param = scale_null_space*act_param;
             act_param_aux = scale_null_space*act_param_aux;
@@ -182,6 +182,10 @@ void EffortTask::AvoidJointLimitsIntermValue(Eigen::MatrixXd M,
             Eigen::MatrixXd Null_space_task =  Eigen::MatrixXd::Identity(dofs, dofs) - occ_dofs; // Null space
             //std::cout << "N_t: \n" << Null_space_task << std::endl;
 
+            *Null_space_iter = *Null_space_iter * Null_space_task.transpose();
+        }
+        else if (interm_alg_update_null==1){
+            Eigen::MatrixXd Null_space_task =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_t * Jacob_t;
             *Null_space_iter = *Null_space_iter * Null_space_task.transpose();
         }
     }

@@ -436,7 +436,7 @@ public:
     double eta_firas_;
 
     // Variables for intermediate value
-    bool   interm_alg_update_null;
+    int   interm_alg_update_null;
     Eigen::VectorXd joint_limit_buffer;
     double gain_limit_avoidance;
     double scale_null_space;

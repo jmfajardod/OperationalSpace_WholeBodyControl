@@ -117,7 +117,7 @@ EffortTask::EffortTask(){
 
     gain_limit_avoidance = 100.0;
     scale_null_space = 0.5; // 0.5   0.1   0.0
-    interm_alg_update_null = true;
+    interm_alg_update_null = 2;
 
     // Variables for SJS
     Max_constraint_accel = Eigen::VectorXd::Zero(9);
