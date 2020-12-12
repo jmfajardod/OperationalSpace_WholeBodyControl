@@ -108,16 +108,16 @@ EffortTask::EffortTask(){
 
     // Parameters for intermediate value algorithm
     joint_limit_buffer = Eigen::VectorXd::Zero(9); // 0.175->10 deg  0.262->15 deg 0.349->20 deg
-    joint_limit_buffer(3) = 0.175;
-    joint_limit_buffer(4) = 0.175;
-    joint_limit_buffer(5) = 0.175;
-    joint_limit_buffer(6) = 0.175;
-    joint_limit_buffer(7) = 0.175;
-    joint_limit_buffer(8) = 0.175;
+    joint_limit_buffer(3) = 0.05*(Upper_limits(3) - Lower_limits(3));
+    joint_limit_buffer(4) = 0.05*(Upper_limits(4) - Lower_limits(4));
+    joint_limit_buffer(5) = 0.05*(Upper_limits(5) - Lower_limits(5));
+    joint_limit_buffer(6) = 0.05*(Upper_limits(6) - Lower_limits(6));
+    joint_limit_buffer(7) = 0.05*(Upper_limits(7) - Lower_limits(7));
+    joint_limit_buffer(8) = 0.05*(Upper_limits(8) - Lower_limits(8));
 
     gain_limit_avoidance = 400.0;
     scale_null_space = 0.5; // 0.5   0.1   0.0
-    interm_alg_update_null = 3;
+    interm_alg_update_null = 2;
 
     // Variables for SJS
     Max_constraint_accel = Eigen::VectorXd::Zero(9);

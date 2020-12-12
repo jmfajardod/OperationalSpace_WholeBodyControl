@@ -31,7 +31,7 @@ use_augmented_projections: True
 # 0 -> Algorithm proposed by Khatib et al.
 # 1 -> Algorithm without torque projection
 # 2 -> Algorithm with non singular torque projection
-singularity_handling: 0
+singularity_handling: 1
 
 # Parameter for joint limit avoidance
 # -1 -> Not handling joint limits
