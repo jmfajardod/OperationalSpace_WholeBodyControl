@@ -56,8 +56,8 @@ EffortTask::EffortTask(){
 
     //----------------------------------------------------------------------//
     //--- Max vel for straight line tasks
-    max_lineal_vel_  = 1.0;  // 1.0     0.3  // m/s
-    max_angular_vel_ = 5*M_PI; // 5*M_PI  M_PI // rad/s
+    max_lineal_vel_  = 0.3;  // 1.0     0.3  // m/s
+    max_angular_vel_ = M_PI; // 5*M_PI  M_PI // rad/s
 
     //----------------------------------------------------------------------//
     //--- Margins for singular value analysis
@@ -115,9 +115,9 @@ EffortTask::EffortTask(){
     joint_limit_buffer(7) = 0.175;
     joint_limit_buffer(8) = 0.175;
 
-    gain_limit_avoidance = 100.0;
+    gain_limit_avoidance = 400.0;
     scale_null_space = 0.5; // 0.5   0.1   0.0
-    interm_alg_update_null = 2;
+    interm_alg_update_null = 3;
 
     // Variables for SJS
     Max_constraint_accel = Eigen::VectorXd::Zero(9);

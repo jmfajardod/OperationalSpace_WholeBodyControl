@@ -165,16 +165,24 @@ void EffortTask::AvoidJointLimitsIntermValue(Eigen::MatrixXd M,
         // ------------------------------------------//
         // Calc null space
 
-        if(interm_alg_update_null==2){
+        if(interm_alg_update_null==3){
 
-            act_param = scale_null_space*act_param;
-            act_param_aux = scale_null_space*act_param_aux;
+            act_param = scale_null_space*act_param; 
 
             //--//
-            // Scale Jacobian to scale Null space 
-            //Jacob_dash_t = Jacob_dash_t.array().rowwise() * act_param.transpose().array(); // Jacob_t = Jacob_t.array().colwise() * act_param.array();
-            //Eigen::MatrixXd Null_space_task =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_t * Jacob_t; // Null space
-            //std::cout << "N_t: \n" << Null_space_task << std::endl; 
+            //Scale Jacobian to scale Null space 
+            Eigen::MatrixXd Jacobian_scaled = Jacob_t.array().colwise() * act_param.array();
+            Eigen::MatrixXd Null_space_task =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_t * Jacobian_scaled; // Null space
+            //Eigen::MatrixXd Null_space_task_st =  Eigen::MatrixXd::Identity(dofs, dofs) - Jacob_dash_t * Jacob_t;
+            //std::cout << "Standard null space: \n" << Null_space_task_st << std::endl;
+            //std::cout << "New null space: \n" << Null_space_task << std::endl; 
+
+            *Null_space_iter = *Null_space_iter * Null_space_task.transpose();
+
+        }
+        else if(interm_alg_update_null==2){
+
+            act_param_aux = scale_null_space*act_param_aux;            
 
             //--//
             // Create diagonal matrix based on activation parameters
