@@ -387,6 +387,9 @@ bool MobManipulatorController::readParameters()
     osc_controller_.changeCartesianPositionGains(   pos_stiff_X, pos_stiff_Y, pos_stiff_Z, pos_damp_X, pos_damp_Y, pos_damp_Z );
     osc_controller_.changeCartesianOrientationGains(ori_stiff_X, ori_stiff_Y, ori_stiff_Z, ori_damp_X, ori_damp_Y, ori_damp_Z );
     
+    // Update joint task gains
+    osc_controller_.changeJointTaskGains(mobile_base_p_gain, mobile_base_d_gain, manipulator_p_gain, manipulator_d_gain);
+
     return true;
 }
 
