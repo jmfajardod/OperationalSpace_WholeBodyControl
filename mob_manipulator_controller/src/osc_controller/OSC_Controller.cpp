@@ -204,8 +204,6 @@ void OSC_Controller::changeJointTaskGains(double Mob_base_P_Gain,
     kd_joints_.topLeftCorner(3, 3)     = Mob_base_D_Gain*Eigen::MatrixXd::Identity(3, 3); // Mobile base damping gains
     kd_joints_.bottomRightCorner(6, 6) = Manipulator_D_Gain*Eigen::MatrixXd::Identity(6, 6); // Manipulator damping gains
 
-    std << "Proportional joint gains \n" << kp_joints_ << std::endl;
-    std << "Derivative joint gains \n"   << kd_joints_ << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

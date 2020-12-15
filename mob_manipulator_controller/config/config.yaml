@@ -62,11 +62,11 @@ Cartesian_orientation_gains:
 
 Joint_tasks_gains:
   Proportional: 
-    Mobile_base: 50.0
-    Manipulator: 200.0
+    Mobile_base: 0.0
+    Manipulator: 0.0
   Derivative:
     Mobile_base: 10.0
-    Manipulator: 57.0
+    Manipulator: 60.0
 
 # Parameter for singularity handling
 # 0 -> Algorithm proposed by Khatib et al.
