@@ -32,14 +32,14 @@ if __name__ == '__main__':
     pubTrajectory = rospy.Publisher('/mobile_manipulator/desired_traj', Trajectory, queue_size=1)
 
     init_pos = np.array([0.53649, 0, 0.74675])
-    init_pos[0] = 0.35
-    init_pos[2] = 0.55
+    init_pos[0] = 0.25
+    init_pos[2] = 0.4
 
-    Quat0 =  np.array([0,0,0,1]) #np.array([-0.412, -0.192, -0.412, 0.790]) 
-    Quat0 = (1.0/np.linalg.norm(Quat0))*Quat0
+    #Quat0 =  np.array([0,0,0,1]) #np.array([-0.412, -0.192, -0.412, 0.790]) 
+    #Quat0 = (1.0/np.linalg.norm(Quat0))*Quat0
 
-    #angle = np.deg2rad( 90.0 )
-    #Quat0 = tf_conversions.transformations.quaternion_about_axis(angle, (0, 1, 0))
+    angle = np.deg2rad( 90.0 )
+    Quat0 = tf_conversions.transformations.quaternion_about_axis(angle, (0, 1, 0))
 
     period = 1.0
     frecuency = 2*np.math.pi / period
@@ -109,8 +109,8 @@ if __name__ == '__main__':
             break
 
         Msg.pose.translation.x = init_pos[0] + 0.15 - 0.15*np.math.cos(frecuency*current_time + offset_time)
-        Msg.pose.translation.y = init_pos[1] #+ 0.1 - 0.1*np.math.cos(frecuency*current_time + offset_time)
-        Msg.pose.translation.z = init_pos[2] + 0.2*np.math.sin(frecuency*current_time + offset_time)
+        Msg.pose.translation.y = init_pos[1] + 0.15*np.math.sin(frecuency*current_time + offset_time)
+        Msg.pose.translation.z = init_pos[2] #- np.abs( 0.5*np.math.sin(frecuency*current_time + offset_time) )
 
         scale = np.abs(np.math.sin(frecuency*current_time))
         #print(scale)
