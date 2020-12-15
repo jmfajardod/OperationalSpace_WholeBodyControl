@@ -40,7 +40,6 @@ point_const_vel_max_lineal:  0.3
 point_const_vel_max_angular: 3.14
 
 # Controller gains
-
 Cartesian_position_gains:
   stiffness:
     X: 400.0
@@ -60,6 +59,14 @@ Cartesian_orientation_gains:
     X: 0.9
     Y: 0.9
     Z: 0.9
+
+Joint_tasks_gains:
+  Proportional: 
+    Mobile_base: 50.0
+    Manipulator: 200.0
+  Derivative:
+    Mobile_base: 10.0
+    Manipulator: 57.0
 
 # Parameter for singularity handling
 # 0 -> Algorithm proposed by Khatib et al.
