@@ -1,6 +1,6 @@
-#include <mob_manipulator_controller/OSC_Controller.hpp>
+#include <osc_controller/OSC_Controller.hpp>
 
-namespace effort_tasks {
+namespace osc_controller {
 
 using namespace dart::common;
 using namespace dart::dynamics;
@@ -9,7 +9,7 @@ using namespace dart::math;
 ////////////////////////////////////////////////////////////////////////////////
 // Function to calculate the efforts required to Hold/Achieve a cartesian orientation 
 
-void EffortTask::AchieveOriManipulator( Eigen::Matrix3d rot_mat_desired, 
+void OSC_Controller::AchieveOriManipulator( Eigen::Matrix3d rot_mat_desired, 
                                         Eigen::Vector3d mTargetVel,
                                         Eigen::Vector3d mTargetAccel,
                                         double *svd_orientation,
@@ -196,7 +196,7 @@ void EffortTask::AchieveOriManipulator( Eigen::Matrix3d rot_mat_desired,
 ////////////////////////////////////////////////////////////////////////////////
 // Function to calculate the efforts required to go to a orientation with a contant velocity
 
-void EffortTask::AchieveOriManipulatorConstVel( Eigen::Matrix3d rot_mat_desired, 
+void OSC_Controller::AchieveOriManipulatorConstVel( Eigen::Matrix3d rot_mat_desired, 
                                                 double *svd_orientation,
                                                 int cycle,
                                                 Eigen::MatrixXd M,

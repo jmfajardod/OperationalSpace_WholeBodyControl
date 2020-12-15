@@ -1,6 +1,6 @@
-#include <mob_manipulator_controller/OSC_Controller.hpp>
+#include <osc_controller/OSC_Controller.hpp>
 
-namespace effort_tasks {
+namespace osc_controller {
 
 using namespace dart::common;
 using namespace dart::dynamics;
@@ -11,7 +11,7 @@ using namespace dart::math;
 // Error functions
 
 // Orientation error Osorio
-Eigen::Vector3d EffortTask::ErrorAngleAxis1(Eigen::Matrix3d rot_mat_desired, 
+Eigen::Vector3d OSC_Controller::ErrorAngleAxis1(Eigen::Matrix3d rot_mat_desired, 
                                             dart::dynamics::SkeletonPtr mRobot,
                                             dart::dynamics::BodyNode* mEndEffector){
 
@@ -39,7 +39,7 @@ Eigen::Vector3d EffortTask::ErrorAngleAxis1(Eigen::Matrix3d rot_mat_desired,
 }
 
 // Orientation error Caccavale
-Eigen::Vector3d EffortTask::ErrorAngleAxis2(Eigen::Matrix3d rot_mat_desired, 
+Eigen::Vector3d OSC_Controller::ErrorAngleAxis2(Eigen::Matrix3d rot_mat_desired, 
                                             dart::dynamics::SkeletonPtr mRobot,
                                             dart::dynamics::BodyNode* mEndEffector){
 
@@ -58,7 +58,7 @@ Eigen::Vector3d EffortTask::ErrorAngleAxis2(Eigen::Matrix3d rot_mat_desired,
 }
 
 // Orientation error Yuan
-Eigen::Vector3d EffortTask::ErrorQuaternion1(Eigen::Matrix3d rot_mat_desired, 
+Eigen::Vector3d OSC_Controller::ErrorQuaternion1(Eigen::Matrix3d rot_mat_desired, 
                                             dart::dynamics::SkeletonPtr mRobot,
                                             dart::dynamics::BodyNode* mEndEffector){
 
@@ -76,7 +76,7 @@ Eigen::Vector3d EffortTask::ErrorQuaternion1(Eigen::Matrix3d rot_mat_desired,
 }
 
 // Orientation error Caccavale
-Eigen::Vector3d EffortTask::ErrorQuaternion2(Eigen::Matrix3d rot_mat_desired, 
+Eigen::Vector3d OSC_Controller::ErrorQuaternion2(Eigen::Matrix3d rot_mat_desired, 
                                             dart::dynamics::SkeletonPtr mRobot,
                                             dart::dynamics::BodyNode* mEndEffector){
     
@@ -96,7 +96,7 @@ Eigen::Vector3d EffortTask::ErrorQuaternion2(Eigen::Matrix3d rot_mat_desired,
 }
 
 // Orientation error Caccavale
-Eigen::Vector3d EffortTask::ErrorQuaternion3(Eigen::Matrix3d rot_mat_desired, 
+Eigen::Vector3d OSC_Controller::ErrorQuaternion3(Eigen::Matrix3d rot_mat_desired, 
                                             dart::dynamics::SkeletonPtr mRobot,
                                             dart::dynamics::BodyNode* mEndEffector){
 

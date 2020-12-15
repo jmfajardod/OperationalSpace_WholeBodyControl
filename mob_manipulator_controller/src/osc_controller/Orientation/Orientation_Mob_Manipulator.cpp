@@ -1,22 +1,21 @@
-#include <mob_manipulator_controller/OSC_Controller.hpp>
+#include <osc_controller/OSC_Controller.hpp>
 
-namespace effort_tasks {
+namespace osc_controller {
 
 using namespace dart::common;
 using namespace dart::dynamics;
 using namespace dart::math;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Function to calculate the efforts required to Hold/Achieve a cartesian position
-// without the trajectory
+// Function to calculate the efforts required to implement a Orientation Impedance 
 
-void EffortTask::CartesianImpedance(  Eigen::Vector3d mTargetPos, 
+void OSC_Controller::OrientationImpedance(Eigen::Matrix3d rot_mat_desired, 
                                     Eigen::Vector3d mTargetVel,
-                                    Eigen::Vector3d mTargetAccel, 
-                                    double *svd_position,
+                                    Eigen::Vector3d mTargetAccel,
+                                    double *svd_orientation,
                                     int cycle,
                                     Eigen::VectorXd tau_ext,
-                                    Eigen::MatrixXd M, 
+                                    Eigen::MatrixXd M,
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
                                     dart::dynamics::SkeletonPtr mRobot,
@@ -27,30 +26,30 @@ void EffortTask::CartesianImpedance(  Eigen::Vector3d mTargetPos,
 
     // ------------------------------------------//
     // ------------------------------------------//
-    // Calculate operational space matrices 
+    // Calculate operational space matrices
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    Eigen::MatrixXd Jacob_t = mEndEffector->getLinearJacobian(); // Jacobian
+    Eigen::MatrixXd Jacob_t = mEndEffector->getAngularJacobian(); // Angular Jacobian
     if(augmented_projections){
         Jacob_t = Jacob_t * (*Null_space_iter).transpose();
     }
-    //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
+    //std::cout << "Angular Jacob: \n" << Jacob_t << std::endl;
 
-    Eigen::MatrixXd Jacob_dot = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
+    Eigen::MatrixXd Jacob_dot = mEndEffector->getAngularJacobianDeriv(); // Derivative of jacobian
     if(augmented_projections){
         Jacob_dot = Jacob_dot * (*Null_space_iter).transpose();
     }
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
-    //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
+    //std::cout << "Angular Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
 
     // ------------------------------------------//
     // ------------------------------------------//
     // Calculate SVD for alpha
 
-    singularity_thres_high_ = singularity_thres_high_pos_;
-    singularity_thres_low_  = singularity_thres_low_pos_;
+    singularity_thres_high_ = singularity_thres_high_ori_;
+    singularity_thres_low_  = singularity_thres_low_ori_;
 
     Eigen::MatrixXd Alpha_t_inv = Jacob_t * M.inverse() * Jacob_t.transpose(); // Symmetric Inertia Matrix
 
@@ -59,7 +58,7 @@ void EffortTask::CartesianImpedance(  Eigen::Vector3d mTargetPos,
     Eigen::MatrixXd Alpha_s_dummy;
     double act_param = 0;
 
-    calcInertiaMatrixHandling( Alpha_t_inv, svd_position, &act_param, &Alpha_ns, &Alpha_s, &Alpha_s_dummy);
+    calcInertiaMatrixHandling( Alpha_t_inv, svd_orientation, &act_param, &Alpha_ns, &Alpha_s, &Alpha_s_dummy);
     //std::cout << "Inertia Matrix: " << Alpha_t << std::endl;
 
     Eigen::MatrixXd Alpha_task = Alpha_ns;
@@ -86,19 +85,40 @@ void EffortTask::CartesianImpedance(  Eigen::Vector3d mTargetPos,
     // ------------------------------------------//
     // Calc Operational acceleration due to task
 
-    Eigen::Vector3d e =  mTargetPos - mEndEffector->getWorldTransform().translation() ; // Position error
-    //std::cout<< "Error : \n" << e << std::endl;
+    Eigen::Vector3d error_ori = Eigen::Vector3d::Zero(3);
 
-    Eigen::Vector3d de = mTargetVel - mEndEffector->getLinearVelocity();  // Velocity error (Target velocity is zero)
+    switch(ori_error_mode){
+        case 1:
+            error_ori = ErrorAngleAxis1(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        case 2:
+            error_ori = ErrorAngleAxis2(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        case 3:
+            error_ori = ErrorQuaternion1(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        case 4:
+            error_ori = ErrorQuaternion2(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        case 5:
+            error_ori = ErrorQuaternion3(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        default:
+            error_ori = ErrorQuaternion3(rot_mat_desired, mRobot, mEndEffector);
+    }
+
+    Eigen::Vector3d angular_vel =  mEndEffector->getAngularJacobian() * mRobot->getVelocities();
+    //std::cout << "Angular velocity vector: \n"  << angular_vel << std::endl;
 
     // Obtain Desired dynamics matrices
     Eigen::MatrixXd Inertia_Matrix_d = 1.0*Eigen::MatrixXd::Identity(3,3);//Alpha_t;
-    Eigen::MatrixXd Stiff_Matrix_d = kp_cartesian_.topLeftCorner(3, 3);
+    Eigen::MatrixXd Stiff_Matrix_d = kp_cartesian_.bottomRightCorner(3, 3);
 
-    Eigen::MatrixXd damp_coeff = kd_cartesian_.topLeftCorner(3, 3);
+    Eigen::MatrixXd damp_coeff = kd_cartesian_.bottomRightCorner(3, 3);
     Eigen::MatrixXd Damping_Matrix_d = calcDampingMatrix(Inertia_Matrix_d, Stiff_Matrix_d, damp_coeff); 
+    //std::cout << "Damping Ori: \n" << kd << std::endl;
 
-    Eigen::Vector3d x_star = mTargetAccel + Inertia_Matrix_d.inverse() * (Damping_Matrix_d*de + Stiff_Matrix_d*e); // - (Jacob_dash_ns.transpose() * tau_ext)); // Command force vector
+    Eigen::Vector3d x_star = mTargetAccel + Inertia_Matrix_d.inverse() * (Damping_Matrix_d*(mTargetVel-angular_vel) + Stiff_Matrix_d*error_ori); // - (Jacob_dash_ns.transpose() * tau_ext)); // Command force vector
     
     if(compensate_topdown){
         x_star = x_star - Jacob_dash_ns.transpose() * *tau_total;
@@ -173,15 +193,16 @@ void EffortTask::CartesianImpedance(  Eigen::Vector3d mTargetPos,
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Function to calculate the efforts required to Hold/Achieve a cartesian position
 
-void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos, 
+////////////////////////////////////////////////////////////////////////////////
+// Function to calculate the efforts required to Hold/Achieve a cartesian orientation 
+
+void OSC_Controller::AchieveOrientation(Eigen::Matrix3d rot_mat_desired, 
                                     Eigen::Vector3d mTargetVel,
-                                    Eigen::Vector3d mTargetAccel, 
-                                    double *svd_position,
+                                    Eigen::Vector3d mTargetAccel,
+                                    double *svd_orientation,
                                     int cycle,
-                                    Eigen::MatrixXd M, 
+                                    Eigen::MatrixXd M,
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
                                     dart::dynamics::SkeletonPtr mRobot,
@@ -192,30 +213,30 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
 
     // ------------------------------------------//
     // ------------------------------------------//
-    // Calculate operational space matrices 
+    // Calculate operational space matrices
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    Eigen::MatrixXd Jacob_t = mEndEffector->getLinearJacobian(); // Jacobian
+    Eigen::MatrixXd Jacob_t = mEndEffector->getAngularJacobian(); // Angular Jacobian
     if(augmented_projections){
         Jacob_t = Jacob_t * (*Null_space_iter).transpose();
     }
-    //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
+    //std::cout << "Angular Jacob: \n" << Jacob_t << std::endl;
 
-    Eigen::MatrixXd Jacob_dot = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
+    Eigen::MatrixXd Jacob_dot = mEndEffector->getAngularJacobianDeriv(); // Derivative of jacobian
     if(augmented_projections){
         Jacob_dot = Jacob_dot * (*Null_space_iter).transpose();
     }
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
-    //std::cout << "Jacobian dot: \n" << Jacob_dot << std::endl;
+    //std::cout << "Angular Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
 
     // ------------------------------------------//
     // ------------------------------------------//
     // Calculate SVD for alpha
 
-    singularity_thres_high_ = singularity_thres_high_pos_;
-    singularity_thres_low_  = singularity_thres_low_pos_;
+    singularity_thres_high_ = singularity_thres_high_ori_;
+    singularity_thres_low_  = singularity_thres_low_ori_;
 
     Eigen::MatrixXd Alpha_t_inv = Jacob_t * M.inverse() * Jacob_t.transpose(); // Symmetric Inertia Matrix
 
@@ -224,7 +245,7 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
     Eigen::MatrixXd Alpha_s_dummy;
     double act_param = 0;
 
-    calcInertiaMatrixHandling( Alpha_t_inv, svd_position, &act_param, &Alpha_ns, &Alpha_s, &Alpha_s_dummy);
+    calcInertiaMatrixHandling( Alpha_t_inv, svd_orientation, &act_param, &Alpha_ns, &Alpha_s, &Alpha_s_dummy);
     //std::cout << "Inertia Matrix: " << Alpha_t << std::endl;
 
     Eigen::MatrixXd Alpha_task = Alpha_ns;
@@ -251,18 +272,40 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
     // ------------------------------------------//
     // Calc Operational acceleration due to task
 
-    Eigen::Vector3d e =  mTargetPos - mEndEffector->getWorldTransform().translation() ; // Position error
-    //std::cout<< "Error : \n" << e << std::endl;
+    Eigen::Vector3d error_ori = Eigen::Vector3d::Zero(3);
 
-    Eigen::Vector3d de = mTargetVel - mEndEffector->getLinearVelocity();  // Velocity error (Target velocity is zero)
+    switch(ori_error_mode){
+        case 1:
+            error_ori = ErrorAngleAxis1(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        case 2:
+            error_ori = ErrorAngleAxis2(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        case 3:
+            error_ori = ErrorQuaternion1(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        case 4:
+            error_ori = ErrorQuaternion2(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        case 5:
+            error_ori = ErrorQuaternion3(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        default:
+            error_ori = ErrorQuaternion3(rot_mat_desired, mRobot, mEndEffector);
+    }
 
-    // Obtain Position Gain matrices
-    Eigen::MatrixXd kp = kp_cartesian_.topLeftCorner(3, 3);
+    Eigen::Vector3d angular_vel =  mEndEffector->getAngularJacobian() * mRobot->getVelocities();
+    //std::cout << "Angular velocity vector: \n"  << angular_vel << std::endl;
 
-    Eigen::MatrixXd damp_coeff = kd_cartesian_.topLeftCorner(3, 3);
+    // Obtain Orientation Gain matrices
+    Eigen::MatrixXd kp = kp_cartesian_.bottomRightCorner(3, 3);
+
+    Eigen::MatrixXd damp_coeff = kd_cartesian_.bottomRightCorner(3, 3);
     Eigen::MatrixXd kd = calcDampingMatrix(Eigen::MatrixXd::Identity(3,3), kp, damp_coeff); 
+    //std::cout << "Damping Ori: \n" << kd << std::endl;
 
-    Eigen::Vector3d x_star = mTargetAccel + kd*de + kp*e ; // Command force vector
+    Eigen::Vector3d x_star = mTargetAccel + kd *(mTargetVel-angular_vel) + kp * error_ori ; 
+    
     if(compensate_topdown){
         x_star = x_star - Jacob_dash_ns.transpose() * *tau_total;
     }
@@ -336,14 +379,13 @@ void EffortTask::AchieveCartesian(  Eigen::Vector3d mTargetPos,
     }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-// Function to calculate the efforts required to Hold/Achieve a cartesian position
+// Function to calculate the efforts required to go to a orientation with a contant velocity
 
-void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget, 
-                                            double *svd_position,
+void OSC_Controller::AchieveOrientationConstVel(Eigen::Matrix3d rot_mat_desired, 
+                                            double *svd_orientation,
                                             int cycle,
-                                            Eigen::MatrixXd M, 
+                                            Eigen::MatrixXd M,
                                             Eigen::VectorXd C_t,
                                             Eigen::VectorXd g_t,
                                             dart::dynamics::SkeletonPtr mRobot,
@@ -354,31 +396,30 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
 
     // ------------------------------------------//
     // ------------------------------------------//
-    // Calculate operational space matrices 
+    // Calculate operational space matrices
 
     std::size_t dofs = mEndEffector->getNumDependentGenCoords();
 
-    Eigen::MatrixXd Jacob_t = mEndEffector->getLinearJacobian(); // Jacobian
-    //std::cout << "Linear Jacob: \n" << Jacob_t << std::endl;
+    Eigen::MatrixXd Jacob_t = mEndEffector->getAngularJacobian(); // Angular Jacobian
     if(augmented_projections){
         Jacob_t = Jacob_t * (*Null_space_iter).transpose();
     }
-    //std::cout << "Projected Linear Jacob: \n" << Jacob_t << std::endl;
+    //std::cout << "Angular Jacob: \n" << Jacob_t << std::endl;
 
-    Eigen::MatrixXd Jacob_dot = mEndEffector->getLinearJacobianDeriv(); // Derivative of jacobian
+    Eigen::MatrixXd Jacob_dot = mEndEffector->getAngularJacobianDeriv(); // Derivative of jacobian
     if(augmented_projections){
         Jacob_dot = Jacob_dot * (*Null_space_iter).transpose();
     }
     Eigen::VectorXd q_dot = mRobot->getVelocities();            // Derivative of the joints
-    //std::cout << "Projected Jacobian dot: \n" << Jacob_dot << std::endl;
+    //std::cout << "Angular Jacobian dot: \n" << Jacob_dot << std::endl;
     //std::cout << "Q dot: \n" << q_dot << std::endl;
 
     // ------------------------------------------//
     // ------------------------------------------//
     // Calculate SVD for alpha
 
-    singularity_thres_high_ = singularity_thres_high_pos_;
-    singularity_thres_low_  = singularity_thres_low_pos_;
+    singularity_thres_high_ = singularity_thres_high_ori_;
+    singularity_thres_low_  = singularity_thres_low_ori_;
 
     Eigen::MatrixXd Alpha_t_inv = Jacob_t * M.inverse() * Jacob_t.transpose(); // Symmetric Inertia Matrix
 
@@ -387,7 +428,7 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
     Eigen::MatrixXd Alpha_s_dummy;
     double act_param = 0;
 
-    calcInertiaMatrixHandling( Alpha_t_inv, svd_position, &act_param, &Alpha_ns, &Alpha_s, &Alpha_s_dummy);
+    calcInertiaMatrixHandling( Alpha_t_inv, svd_orientation, &act_param, &Alpha_ns, &Alpha_s, &Alpha_s_dummy);
     //std::cout << "Inertia Matrix: " << Alpha_t << std::endl;
 
     Eigen::MatrixXd Alpha_task = Alpha_ns;
@@ -414,21 +455,45 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
     // ------------------------------------------//
     // Calc Operational acceleration due to task
 
-    Eigen::Vector3d x_error =  mTarget - mEndEffector->getWorldTransform().translation(); // Position error
-    //std::cout<< "Cartesian error: \n" << x_error << std::endl;
+    Eigen::Vector3d error_ori = Eigen::Vector3d::Zero(3);
 
-    // Obtain Position Gain matrices
-    Eigen::MatrixXd kp = kp_cartesian_.topLeftCorner(3, 3);
+    switch(ori_error_mode){
+        case 1:
+            error_ori = ErrorAngleAxis1(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        case 2:
+            error_ori = ErrorAngleAxis2(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        case 3:
+            error_ori = ErrorQuaternion1(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        case 4:
+            error_ori = ErrorQuaternion2(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        case 5:
+            error_ori = ErrorQuaternion3(rot_mat_desired, mRobot, mEndEffector);
+            break;
+        default:
+            error_ori = ErrorQuaternion3(rot_mat_desired, mRobot, mEndEffector);
+    }
 
-    Eigen::MatrixXd damp_coeff = kd_cartesian_.topLeftCorner(3, 3);
+    Eigen::Vector3d angular_vel =  mEndEffector->getAngularJacobian() * mRobot->getVelocities();
+    //std::cout << "Angular velocity vector: \n"  << angular_vel << std::endl;
+
+    // Obtain Orientation Gain matrices
+    Eigen::MatrixXd kp = kp_cartesian_.bottomRightCorner(3, 3);
+
+    Eigen::MatrixXd damp_coeff = kd_cartesian_.bottomRightCorner(3, 3);
     Eigen::MatrixXd kd = calcDampingMatrix(Eigen::MatrixXd::Identity(3,3), kp, damp_coeff); 
+    //std::cout << "Damping Ori: \n" << kd << std::endl;
+    
+    Eigen::Vector3d x_dot_desired = kp*kd.inverse()*error_ori;
 
-    Eigen::Vector3d x_dot_desired = kp*kd.inverse()*x_error;
-
-    double scale = std::min(1.0, (max_lineal_vel_ / x_dot_desired.norm()));
+    double scale = std::min(1.0, (max_angular_vel_ / x_dot_desired.norm()));
     //std::cout << "Scale V: \n" << scale << std::endl;
 
-    Eigen::Vector3d x_star =  (-1.0*kd) * (mEndEffector->getLinearVelocity() - scale*x_dot_desired); // Command force vector
+    Eigen::Vector3d x_star =  (-1.0*kd) * (angular_vel - scale*x_dot_desired);
+
     if(compensate_topdown){
         x_star = x_star - Jacob_dash_ns.transpose() * *tau_total;
     }
@@ -501,6 +566,5 @@ void EffortTask::AchieveCartesianConstVel(  Eigen::Vector3d mTarget,
         *Null_space_iter = *Null_space_iter * Null_space_s.transpose();
     }
 }
-
 
 } // end namespace

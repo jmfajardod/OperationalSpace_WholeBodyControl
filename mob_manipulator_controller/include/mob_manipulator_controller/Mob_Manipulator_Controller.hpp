@@ -37,7 +37,7 @@
 #include <dart/utils/urdf/urdf.hpp>
 #include <dart/utils/utils.hpp>
 
-#include <mob_manipulator_controller/OSC_Controller.hpp>
+#include <osc_controller/OSC_Controller.hpp>
 
 
 namespace mob_manipulator_controller {
@@ -130,6 +130,9 @@ private:
 	double time_previous_sjs;
 	double time_actual_sjs;
 
+	// Variable to define if only using manipulator (For testing purposes)
+	bool using_only_manipulator;
+
 	// Variable for minimum singular values
 	double min_sv_pos;
 	double min_sv_ori;
@@ -188,7 +191,7 @@ private:
 	 * 
 	*/
 
-	effort_tasks::EffortTask osc_controller_;
+	osc_controller::OSC_Controller osc_controller_;
 
 	/******************************************************************/
 	/******************************************************************/

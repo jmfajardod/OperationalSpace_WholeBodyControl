@@ -11,22 +11,22 @@
 #include <dart/utils/urdf/urdf.hpp>
 #include <dart/utils/utils.hpp>
 
-namespace effort_tasks {
+namespace osc_controller {
 
 /*!
  * Class containing the Effort Task Algorithms
  */
-class EffortTask {
+class OSC_Controller {
 public:
 	/*!
 	 * Constructor.
 	 */
-	EffortTask();
+	OSC_Controller();
 
 	/*!
 	 * Destructor.
 	 */
-	virtual ~EffortTask();
+	virtual ~OSC_Controller();
 
     /*!
 	 * Function to change the gains of the controller
@@ -388,6 +388,12 @@ public:
 
     /***********************************************************************************/
     /***********************************************************************************/
+    // Whole body controller functions
+
+    Eigen::VectorXd admittance_controller(Eigen::VectorXd torque_out);
+
+    /***********************************************************************************/
+    /***********************************************************************************/
     // Miscellaneous functions
 
     Eigen::MatrixXd calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double* min_svd);
@@ -416,6 +422,7 @@ public:
     double max_lineal_vel_;
     double max_angular_vel_;
     
+    // Variable to select the method for orientacion error calculation
     int ori_error_mode;
 
     // Variables for singularity handling method
@@ -466,6 +473,11 @@ private:
     // Variables for singularity handling method
     double singularity_thres_high_;
     double singularity_thres_low_;
+
+    // Gains for WBC
+    double admittance_linear_damping;
+    double admittance_angular_damping;
+    Eigen::MatrixXd admittance_desired_inertia;
 
 };
 

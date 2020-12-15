@@ -1,6 +1,6 @@
-#include <mob_manipulator_controller/OSC_Controller.hpp>
+#include <osc_controller/OSC_Controller.hpp>
 
-namespace effort_tasks {
+namespace osc_controller {
 
 using namespace dart::common;
 using namespace dart::dynamics;
@@ -8,7 +8,7 @@ using namespace dart::math;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor
-EffortTask::EffortTask(){
+OSC_Controller::OSC_Controller(){
 
     //----------------------------------------------------------------------//
     /* Variables for task hierarchy */
@@ -58,6 +58,12 @@ EffortTask::EffortTask(){
     //--- Max vel for straight line tasks
     max_lineal_vel_  = 0.3;  // 1.0     0.3  // m/s
     max_angular_vel_ = M_PI; // 5*M_PI  M_PI // rad/s
+
+    //----------------------------------------------------------------------//
+    //--- Gains for admittance controller
+    admittance_linear_damping = 800.0;
+    admittance_angular_damping = 800.0;
+    admittance_desired_inertia = Eigen::MatrixXd::Identity(3,3);
 
     //----------------------------------------------------------------------//
     //--- Margins for singular value analysis
@@ -135,14 +141,14 @@ EffortTask::EffortTask(){
 
 ////////////////////////////////////////////////////////////////////////////////
 // Destructor
-EffortTask::~EffortTask()
+OSC_Controller::~OSC_Controller()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function to change the Gains
 /*
-void EffortTask::changeGains(double kp_c, double kd_c, double kp_j, double kd_j){
+void OSC_Controller::changeGains(double kp_c, double kd_c, double kp_j, double kd_j){
     kp_cartesian_ = kp_c;
     kd_cartesian_ = kd_c;
     kp_joints_    = kp_j;
@@ -152,31 +158,31 @@ void EffortTask::changeGains(double kp_c, double kd_c, double kp_j, double kd_j)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function to change the maximum velocity of the end effector
-void EffortTask::changeMaxVel(double new_max_vel){
+void OSC_Controller::changeMaxVel(double new_max_vel){
     max_lineal_vel_ = new_max_vel;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function to change the joint margin for avoding joint limits
-//void EffortTask::changeJointMargin(double new_margin){
+//void OSC_Controller::changeJointMargin(double new_margin){
 //    joint_margin_ = new_margin;
 //}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function to change the eta in FIRAS function for avoding joint limits
-void EffortTask::change_etaFIRAS(double new_eta){
+void OSC_Controller::change_etaFIRAS(double new_eta){
     eta_firas_ = new_eta;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function to change the higher threshold for singularities
-void EffortTask::changeHighThSing(double new_high_thr){
+void OSC_Controller::changeHighThSing(double new_high_thr){
     singularity_thres_high_ = new_high_thr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function to change the lower threshold for singularities
-void EffortTask::changeLowThSing(double new_low_thr){
+void OSC_Controller::changeLowThSing(double new_low_thr){
     singularity_thres_low_ = new_low_thr;
 }
 
@@ -184,7 +190,7 @@ void EffortTask::changeLowThSing(double new_low_thr){
 ////////////////////////////////////////////////////////////////////////////////
 // Function to calculate the efforts required to Hold/Achieve a joint configuration
 
-void EffortTask::AchieveJointConf(  Eigen::VectorXd q_desired, 
+void OSC_Controller::AchieveJointConf(  Eigen::VectorXd q_desired, 
                                     Eigen::MatrixXd M, 
                                     Eigen::VectorXd C_t,
                                     Eigen::VectorXd g_t,
@@ -253,7 +259,7 @@ void EffortTask::AchieveJointConf(  Eigen::VectorXd q_desired,
 ////////////////////////////////////////////////////////////////////////////////
 // Function to calculate non-singular operational kinetic energy matrix
 
-Eigen::MatrixXd EffortTask::calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double* min_svd){
+Eigen::MatrixXd OSC_Controller::calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double* min_svd){
 
     //Eigen::JacobiSVD<Eigen::MatrixXd> svd(Alpha_inv, Eigen::ComputeThinU | Eigen::ComputeThinV); // Thin computation
     //Eigen::JacobiSVD<Eigen::MatrixXd> svd(Alpha_inv, Eigen::ComputeFullU | Eigen::ComputeFullV); // Full computation
@@ -333,7 +339,7 @@ Eigen::MatrixXd EffortTask::calcInertiaMatrix(Eigen::MatrixXd Alpha_inv, double*
 ////////////////////////////////////////////////////////////////////////////////
 // Function to calculate non-singular operational kinetic energy matrix
 
-void EffortTask::calcInertiaMatrixHandling( Eigen::MatrixXd Alpha_inv,
+void OSC_Controller::calcInertiaMatrixHandling( Eigen::MatrixXd Alpha_inv,
                                             double* min_svd,
                                             double* act_param,
                                             Eigen::MatrixXd *Alpha_ns,
@@ -466,7 +472,7 @@ void EffortTask::calcInertiaMatrixHandling( Eigen::MatrixXd Alpha_inv,
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // Function to calculate non-singular operational kinetic energy matrix
-Eigen::MatrixXd EffortTask::calcDampingMatrix(Eigen::MatrixXd Alpha, 
+Eigen::MatrixXd OSC_Controller::calcDampingMatrix(Eigen::MatrixXd Alpha, 
                                             Eigen::MatrixXd Stiffness, 
                                             Eigen::MatrixXd DampingCoeff){
 

@@ -1,6 +1,6 @@
-#include <mob_manipulator_controller/OSC_Controller.hpp>
+#include <osc_controller/OSC_Controller.hpp>
 
-namespace effort_tasks {
+namespace osc_controller {
 
 using namespace dart::common;
 using namespace dart::dynamics;
@@ -9,7 +9,7 @@ using namespace dart::math;
 ////////////////////////////////////////////////////////////////////////////////
 // Function to calculate the efforts required to Hold/Achieve a cartesian position
 
-void EffortTask::AchieveCartesianMobilRob( Eigen::Vector3d mTargetPos, 
+void OSC_Controller::AchieveCartesianMobilRob( Eigen::Vector3d mTargetPos, 
                                             Eigen::Vector3d mTargetVel,
                                             Eigen::Vector3d mTargetAccel, 
                                             double *svd_position,
@@ -138,7 +138,7 @@ void EffortTask::AchieveCartesianMobilRob( Eigen::Vector3d mTargetPos,
 ////////////////////////////////////////////////////////////////////////////////
 // Function to calculate the efforts required to Hold/Achieve a cartesian position
 
-void EffortTask::AchieveCartesianMobilRobConstVel(  Eigen::Vector3d mTargetPos,
+void OSC_Controller::AchieveCartesianMobilRobConstVel(  Eigen::Vector3d mTargetPos,
                                                     double *svd_position,
                                                     Eigen::MatrixXd M, 
                                                     Eigen::VectorXd C_t,

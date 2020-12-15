@@ -6,7 +6,7 @@ using namespace dart::common;
 using namespace dart::dynamics;
 using namespace dart::math;
 
-using namespace effort_tasks;
+using namespace osc_controller;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Callback function of the joint states
@@ -223,11 +223,19 @@ bool MobManipulatorController::readParameters()
     if (!nodeHandle_.getParam("models_packages", model_packages_paths ))        return false;
     if (!nodeHandle_.getParam("packages_names", model_packages_names ))        return false;
     if (!nodeHandle_.getParam("urdf_model_path", urdf_model_path ))        return false;
+    if (!nodeHandle_.getParam("only_manipulator", using_only_manipulator ))        return false;
 
     robot_frame = robot_name + "/mobile_base_link";
 
     //ROS_INFO("Robot Frame: %s", robot_frame.c_str());
     //ROS_INFO("Robot dof1: %s", manipulator_dofs.at(0).c_str());
+
+    if(using_only_manipulator){
+        ROS_INFO("Using only manipulator for tasks");
+    }
+    else{
+        ROS_INFO("Using mobile manipulator for tasks");
+    }
 
     //--- Top-down effects parameter
     if(topdown_){
@@ -427,36 +435,11 @@ void MobManipulatorController::spin(){
 
         /******************************/
         //--- Admittance controller
-        // send_vel -> q_dot_result
-        
-        Eigen::MatrixXd damp_des_     = Eigen::MatrixXd::Identity(3, 3) ;
-        damp_des_.topLeftCorner(2, 2) = 800.0*Eigen::MatrixXd::Identity(2, 2); // Liner vel damping (60)
-        damp_des_(2,2) = 800.0 ; // Angular vel damping (20.0)
-
-        Eigen::MatrixXd inertia_des = 1.0*Eigen::MatrixXd::Identity(3, 3);
-
-        damp_des_ = damp_des_.inverse();
-
-        Eigen::VectorXd mob_base_tor = Eigen::VectorXd::Zero(3);
-        Eigen::VectorXd mob_base_vel = Eigen::VectorXd::Zero(3);
-
-        mob_base_tor << tau_result(0), tau_result(1), tau_result(2);
-        //std::cout << "Tau mobile base : \n" << mob_base_tor << std::endl;
-
-        mob_base_vel = damp_des_*mob_base_tor - damp_des_*inertia_des*Eigen::VectorXd::Zero(3);
+        Eigen::VectorXd mob_base_vel = osc_controller_.admittance_controller(tau_result);
         
         q_dot_result(0) = mob_base_vel(0);
         q_dot_result(1) = mob_base_vel(1);
         q_dot_result(2) = mob_base_vel(2);
-
-        
-        /*for (size_t jj = 0; jj < 3; jj++){
-            if(abs(q_dot_result(jj))<0.1){
-                q_dot_result(jj) = 0.0;
-            }
-        }*/
-
-        //std::cout << "Vel Command: \n" << q_dot_result << std::endl;
 
         /******************************/
         // Limit efforts
@@ -591,9 +574,16 @@ void MobManipulatorController::spin(){
         /******************************/
         // Publish commands to mobile platform
 
-        mobile_pltfrm_cmd.linear.x  = 0.0; //q_dot_result(0); // 0.0
-        mobile_pltfrm_cmd.linear.y  = 0.0; //q_dot_result(1); // 0.0
-        mobile_pltfrm_cmd.angular.z = 0.0; //q_dot_result(2); // 0.0
+        if(using_only_manipulator){
+            mobile_pltfrm_cmd.linear.x  = 0.0; 
+            mobile_pltfrm_cmd.linear.y  = 0.0; 
+            mobile_pltfrm_cmd.angular.z = 0.0;
+        }
+        else{
+            mobile_pltfrm_cmd.linear.x  = q_dot_result(0); 
+            mobile_pltfrm_cmd.linear.y  = q_dot_result(1); 
+            mobile_pltfrm_cmd.angular.z = q_dot_result(2); 
+        }
 
         pub_mobile_platfrm.publish(mobile_pltfrm_cmd);
 

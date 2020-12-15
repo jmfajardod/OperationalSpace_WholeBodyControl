@@ -19,6 +19,9 @@ manipulator_controllers:
   - lower_forearm_controller
   - wrist_controller
 
+# Parameter to define if only using manipulator (For testing purposes)
+only_manipulator: True
+
 # Parameters of controller
 compensate_topdownEffects: False # True False
 compensate_nonlinearInJointSpace: True

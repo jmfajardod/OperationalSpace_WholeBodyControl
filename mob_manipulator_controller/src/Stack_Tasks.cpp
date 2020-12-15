@@ -6,7 +6,7 @@ using namespace dart::common;
 using namespace dart::dynamics;
 using namespace dart::math;
 
-using namespace effort_tasks;
+using namespace osc_controller;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function where the stack of tasks is defined

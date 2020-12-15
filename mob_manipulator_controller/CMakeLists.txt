@@ -84,16 +84,17 @@ add_executable(mob_manipulator_controller
   src/Mob_Manipulator_Controller.cpp
   src/Load_model.cpp
   src/Stack_Tasks.cpp
-  src/Controller/OSC_Controller.cpp
-  src/Controller/Position/Position_Manipulator.cpp
-  src/Controller/Position/Position_Mobile_Robot.cpp
-  src/Controller/Position/Position_Mob_Manipulator.cpp
-  src/Controller/Orientation/Orientation_Manipulator.cpp
-  src/Controller/Orientation/Orientation_Mob_Manipulator.cpp
-  src/Controller/Orientation/Error_functions.cpp
-  src/Controller/Joint_limits/Repulsive_potencials.cpp
-  src/Controller/Joint_limits/Intermediate_value.cpp
-  src/Controller/Joint_limits/Saturation_joint_space.cpp
+  src/osc_controller/OSC_Controller.cpp
+  src/osc_controller/Position/Position_Manipulator.cpp
+  src/osc_controller/Position/Position_Mobile_Robot.cpp
+  src/osc_controller/Position/Position_Mob_Manipulator.cpp
+  src/osc_controller/Orientation/Orientation_Manipulator.cpp
+  src/osc_controller/Orientation/Orientation_Mob_Manipulator.cpp
+  src/osc_controller/Orientation/Error_functions.cpp
+  src/osc_controller/Joint_limits/Repulsive_potencials.cpp
+  src/osc_controller/Joint_limits/Intermediate_value.cpp
+  src/osc_controller/Joint_limits/Saturation_joint_space.cpp
+  src/osc_controller/Whole_Body_Control/Admittance_controller.cpp
 )
 
 add_dependencies(mob_manipulator_controller

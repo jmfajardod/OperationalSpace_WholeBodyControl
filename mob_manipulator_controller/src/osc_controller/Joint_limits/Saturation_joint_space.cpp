@@ -1,6 +1,6 @@
-#include <mob_manipulator_controller/OSC_Controller.hpp>
+#include <osc_controller/OSC_Controller.hpp>
 
-namespace effort_tasks {
+namespace osc_controller {
 
 using namespace dart::common;
 using namespace dart::dynamics;
@@ -8,7 +8,7 @@ using namespace dart::math;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function to update SJS constraints
-void EffortTask::updateSJSConstraints(dart::dynamics::SkeletonPtr mRobot, double sampling_time){
+void OSC_Controller::updateSJSConstraints(dart::dynamics::SkeletonPtr mRobot, double sampling_time){
 
     Eigen::VectorXd current_pos = mRobot->getPositions();
     Eigen::VectorXd current_vel = mRobot->getVelocities();
@@ -90,7 +90,7 @@ void EffortTask::updateSJSConstraints(dart::dynamics::SkeletonPtr mRobot, double
 ////////////////////////////////////////////////////////////////////////////////
 // Function to check SJS constraints
 
-void EffortTask::checkSJSConstraints(Eigen::VectorXd Joint_Acceleration,
+void OSC_Controller::checkSJSConstraints(Eigen::VectorXd Joint_Acceleration,
                                     dart::dynamics::BodyNode* mEndEffector,
                                     bool* flag_sjs){
 
@@ -128,7 +128,7 @@ void EffortTask::checkSJSConstraints(Eigen::VectorXd Joint_Acceleration,
 ////////////////////////////////////////////////////////////////////////////////
 // Function to update SJS Jacobian and task vector
 
-void EffortTask::updateSJSConstraintTask(Eigen::VectorXd Current_joint_accel,
+void OSC_Controller::updateSJSConstraintTask(Eigen::VectorXd Current_joint_accel,
                                         bool* flag_sjs,
                                         Eigen::MatrixXd *Jacobian_constr,
                                         Eigen::VectorXd *Constr_Task_Acceleration){
@@ -195,7 +195,7 @@ void EffortTask::updateSJSConstraintTask(Eigen::VectorXd Current_joint_accel,
 ////////////////////////////////////////////////////////////////////////////////
 // Function to compute SJS joint task and update Null space
 
-void EffortTask::SaturationJointSpace(Eigen::MatrixXd Jacobian,
+void OSC_Controller::SaturationJointSpace(Eigen::MatrixXd Jacobian,
                                     Eigen::VectorXd desired_accel,
                                     Eigen::MatrixXd M, 
                                     Eigen::VectorXd C_t,
