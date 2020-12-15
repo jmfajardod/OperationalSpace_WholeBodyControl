@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- ******************************************************************* -->
+    <!-- ******************************************************************* -->
+    <!-- Global arguments -->
+    <arg name="robot_name" default="mobile_manipulator"/>
+    <arg name="use_EKF" value="false"/>
+
+    <!-- ******************************************************************* -->
+    <!-- ******************************************************************* -->
+    <!-- Arguments to load the model in DART -->
+
+    <!-- Path to all packages where the required models are located -->
+    <arg 
+        name="models_packages_arg" 
+        default="[  $(find mobile_robot_unal_description), 
+                    $(find manipulator_unal_description), 
+                    $(find mobile_manipulator_unal_description) ]"
+    />
+
+    <!-- Name of all packages where the required models are located -->
+    <arg
+        name="packages_names_arg" 
+        default="[  mobile_robot_unal_description, 
+                    manipulator_unal_description, 
+                    mobile_manipulator_unal_description ]"
+    />
+
+    <!-- Path to where the main URDF model is localed -->
+    <arg
+        name="urdf_model_path" 
+        default="$(find mobile_manipulator_unal_description)/urdf/mobile_manipulator.urdf"
+    />
+    
+    <!-- ******************************************************************* -->
+    <!-- ******************************************************************* -->
+    <!-- Mobile Platform vel publisher -->
+    <include file="$(find robotino_vel_publisher)/launch/global_vel_publisher.launch">
+        <arg name="robot_name" value="$(arg robot_name)"/>
+        <arg name="use_EKF"    value="$(arg use_EKF)"/>
+    </include> 
+    
+    <!-- ******************************************************************* -->
+    <!-- ******************************************************************* -->
+    <!-- OSC Controller-->
+    <node   pkg="mob_manipulator_controller" type="mob_manipulator_controller" name="osc_controller" 
+            ns="$(arg robot_name)" output="screen">
+        
+        <!-- Load parameters from YAML file -->
+        <rosparam file="$(find mob_manipulator_controller)/config/config.yaml" command="load"/>
+
+        <!-- Load different parameter if using EKF or not -->
+        <param unless="$(arg use_EKF)" name="odom_topic" value="odom"/>
+        <param if="$(arg use_EKF)"     name="odom_topic" value="odometry/filtered"/>
+        
+        <!-- Load folders of models packages into parameter server -->
+        <rosparam param="models_packages" subst_value="True">$(arg models_packages_arg)</rosparam>
+        <rosparam param="packages_names" subst_value="True"> $(arg packages_names_arg)</rosparam>
+        <param name="urdf_model_path" value="$(arg urdf_model_path)"/>
+
+    </node>
+
+</launch>

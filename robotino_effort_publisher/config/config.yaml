@@ -1,8 +1,0 @@
-robot_name: Robotino
-odometry_frame: odom_combined
-wheel_0_topic: wheel0_controller
-wheel_1_topic: wheel1_controller
-wheel_2_topic: wheel2_controller
-wheel_radius: 0.060
-wheel_sep: 0.1817
-loop_rate: 500

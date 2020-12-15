@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-    <node pkg="robotino_effort_publisher" type="global_effort_pub_node" name="global_effort_pub" output="screen">
-        <rosparam file="$(find robotino_effort_publisher)/config/config.yaml" command="load" />
-    </node>
-</launch>
