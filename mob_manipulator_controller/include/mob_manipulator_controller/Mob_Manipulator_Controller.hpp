@@ -111,6 +111,9 @@ private:
 	double ori_stiff_X, ori_stiff_Y, ori_stiff_Z;
 	double ori_damp_X, ori_damp_Y, ori_damp_Z;
 
+	double mobile_base_p_gain, mobile_base_d_gain;
+	double manipulator_p_gain, manipulator_d_gain;
+
 	// Variable to define if only using manipulator (For testing purposes)
 	bool using_only_manipulator;
 

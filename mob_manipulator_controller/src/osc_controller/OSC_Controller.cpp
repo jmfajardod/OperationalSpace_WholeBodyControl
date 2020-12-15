@@ -41,7 +41,7 @@ OSC_Controller::OSC_Controller(){
     kp_joints_.bottomRightCorner(6, 6) = 0.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator stiffness gains
 
     kd_joints_ = Eigen::MatrixXd::Identity(9, 9);
-    kd_joints_.topLeftCorner(2, 2)     = 5.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base damping gains
+    kd_joints_.topLeftCorner(2, 2)     = 10.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base damping gains
     kd_joints_(2,2)                    = 10.0; // Mobile base damping gains
     kd_joints_.bottomRightCorner(6, 6) = 57.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator damping gains
 
@@ -189,6 +189,22 @@ void OSC_Controller::changeCartesianOrientationGains(double Ori_X_stiffness,
     kd_cartesian_(5,5) = Ori_Z_damping;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Function to change the joint tasks gains
+void OSC_Controller::changeJointTaskGains(double Mob_base_P_Gain, 
+                                        double Mob_base_D_Gain, 
+                                        double Manipulator_P_Gain, 
+                                        double Manipulator_D_Gain){
+    
+    kp_joints_ = Eigen::MatrixXd::Identity(9, 9);
+    kp_joints_.topLeftCorner(3, 3)     = Mob_base_P_Gain*Eigen::MatrixXd::Identity(3, 3); // Mobile base stiffness gains
+    kp_joints_.bottomRightCorner(6, 6) = Manipulator_P_Gain*Eigen::MatrixXd::Identity(6, 6); // Manipulator stiffness gains
+
+    kd_joints_ = Eigen::MatrixXd::Identity(9, 9);
+    kd_joints_.topLeftCorner(3, 3)     = Mob_base_D_Gain*Eigen::MatrixXd::Identity(3, 3); // Mobile base damping gains
+    kd_joints_.bottomRightCorner(6, 6) = Manipulator_D_Gain*Eigen::MatrixXd::Identity(6, 6); // Manipulator damping gains
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function to calculate the efforts required to Achieve a joint configuration

@@ -29,9 +29,7 @@ public:
 	virtual ~OSC_Controller();
 
     /*!
-	 * Function to change the gains of the controller
-     * KP_C and KD_C are the cartesian gains
-     * KP_J and KD_J are the joint gains
+	 * Functions to change the gains of the controller
 	 */
 	void changeCartesianPositionGains(double Pos_X_stiffness, double Pos_Y_stiffness, double Pos_Z_stiffness,
 																		double Pos_X_damping, double Pos_Y_damping, double Pos_Z_damping);
@@ -39,6 +37,8 @@ public:
 	void changeCartesianOrientationGains(double Ori_X_stiffness, double Ori_Y_stiffness, double Ori_Z_stiffness,
 																			double Ori_X_damping, double Ori_Y_damping, double Ori_Z_damping);
 
+    void changeJointTaskGains(double Mob_base_P_Gain, double Mob_base_D_Gain, double Manipulator_P_Gain, double Manipulator_D_Gain);
+    
     /*!
 	 * Function to change the higher threshold for singularities
 	 */

@@ -242,6 +242,11 @@ bool MobManipulatorController::readParameters()
     if (!nodeHandle_.getParam("Cartesian_orientation_gains/damping_ratios/Y", ori_damp_Y ))        return false;
     if (!nodeHandle_.getParam("Cartesian_orientation_gains/damping_ratios/Z", ori_damp_Z ))        return false;
 
+    if (!nodeHandle_.getParam("Joint_tasks_gains/Proportional/Mobile_base", mobile_base_p_gain ))   return false;
+    if (!nodeHandle_.getParam("Joint_tasks_gains/Proportional/Manipulator", manipulator_p_gain ))   return false;
+    if (!nodeHandle_.getParam("Joint_tasks_gains/Derivative/Mobile_base", mobile_base_d_gain ))   return false;
+    if (!nodeHandle_.getParam("Joint_tasks_gains/Derivative/Manipulator", manipulator_d_gain ))   return false;
+
     robot_frame = robot_name + "/mobile_base_link";
 
     //ROS_INFO("Robot Frame: %s", robot_frame.c_str());
