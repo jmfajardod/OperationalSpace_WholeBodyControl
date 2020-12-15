@@ -53,6 +53,7 @@ void MobManipulatorController::jointState_CB(const sensor_msgs::JointState msg){
 
     return;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 // Callback function of the odometry
 void MobManipulatorController::odometry_CB(const nav_msgs::Odometry msg){
@@ -156,6 +157,19 @@ MobManipulatorController::MobManipulatorController(ros::NodeHandle& nodeHandle) 
     initMsgs();
 
     /******************************/
+    // Init target variables 
+    targetCartPos = Eigen::Vector3d::Zero(); 
+    targetCartVel = Eigen::Vector3d::Zero(); 
+    targetCartAccel = Eigen::Vector3d::Zero(); 
+
+    targetOrientVel = Eigen::Vector3d::Zero(); 
+    targetOrientAccel = Eigen::Vector3d::Zero(); 
+
+    q_desired = Eigen::VectorXd::Zero(robot_dofs);
+
+    tau_ext = Eigen::VectorXd::Zero(robot_dofs);
+
+    /******************************/
     // Create subscribers
     subs_joint_state_= nodeHandle_.subscribe("/"+ robot_name +"/joint_states" , 10, 
                                         &MobManipulatorController::jointState_CB, this);
@@ -212,38 +226,37 @@ bool MobManipulatorController::readParameters()
 
     robot_frame = robot_name + "/mobile_base_link";
 
-    ROS_INFO("Robot Frame: %s", robot_frame.c_str());
-
-    ROS_INFO("Robot dof1: %s", manipulator_dofs.at(0).c_str());
+    //ROS_INFO("Robot Frame: %s", robot_frame.c_str());
+    //ROS_INFO("Robot dof1: %s", manipulator_dofs.at(0).c_str());
 
     //--- Top-down effects parameter
     if(topdown_){
         ROS_INFO("Compensating Top down effects");
-        effortSolver_.compensate_topdown = true;
+        osc_controller_.compensate_topdown = true;
     }
     else{
         ROS_INFO("NOT Compensating Top down effects");
-        effortSolver_.compensate_topdown = false;
+        osc_controller_.compensate_topdown = false;
     }
 
     //--- Compensate non-linear effects in joint space parameter
     if(jtspace_){
         ROS_INFO("Compensating Nonlinear effects in joint space");
-        effortSolver_.compensate_jtspace = true;
+        osc_controller_.compensate_jtspace = true;
     }
     else{
         ROS_INFO("NOT Compensating Nonlinear effects in joint space");
-        effortSolver_.compensate_jtspace = false;
+        osc_controller_.compensate_jtspace = false;
     }
 
     //--- Use succesive or augmented projections
     if(augmented_){
         ROS_INFO("Using augmented projections");
-        effortSolver_.augmented_projections = true;
+        osc_controller_.augmented_projections = true;
     }
     else{
         ROS_INFO("Using succesive projections");
-        effortSolver_.augmented_projections = false;
+        osc_controller_.augmented_projections = false;
     }
 
     //--- Method for singularity handling
@@ -251,23 +264,23 @@ bool MobManipulatorController::readParameters()
     {
         case 0:
             ROS_INFO("Using singularity handling proposed by Khatib");
-            effortSolver_.singularity_handling_method = 0;
+            osc_controller_.singularity_handling_method = 0;
             break;
 
         case 1:
             ROS_INFO("Using singularity handling without torque projections");
-            effortSolver_.singularity_handling_method = 1;
+            osc_controller_.singularity_handling_method = 1;
             break;
 
         case 2:
             ROS_INFO("Using singularity handling with non-singular torque projections");
-            effortSolver_.singularity_handling_method = 2;
+            osc_controller_.singularity_handling_method = 2;
             break;
         
         default:
             ROS_INFO("Using singularity handling without torque projections");
             method_sing_handling = 1;
-            effortSolver_.singularity_handling_method = 1;
+            osc_controller_.singularity_handling_method = 1;
             break;
     }
 
@@ -377,277 +390,43 @@ void MobManipulatorController::initMsgs(){
 // Spin function
 void MobManipulatorController::spin(){
 
-    // Create loop rate object
+    //--- Create loop rate object
     ros::Rate loop_rate(frecuency_rate);
 
     while (ros::ok()){  
 
-        //std::cout << "Joint Pos: \n" << q_k << std::endl;
-        //std::cout << "Joint Vel: \n" << q_dot_k << std::endl;  
-
-        Eigen::VectorXd current_pos =  q_k;
-        Eigen::VectorXd current_vel =  q_dot_k;
+        Eigen::VectorXd current_pos =  q_k;     // Current joint positions
+        Eigen::VectorXd current_vel =  q_dot_k; // Current joint velocities
 
         /******************************/
-        // Update state of the DART Model
+        //--- Update state of the DART Model
 
         dart_robotSkeleton->setPositions(current_pos);
         dart_robotSkeleton->setVelocities(current_vel);
 
         M = dart_robotSkeleton->getMassMatrix();  // Mass Matrix
-        //std::cout << "Mass Matrix: \n" << M << std::endl;
 
         C_k = dart_robotSkeleton->getCoriolisForces();  // Coriolis vector forces
         g_k = dart_robotSkeleton->getGravityForces();   // Gravity vector forces
-        //std::cout << "Coriolis vector forces: \n" << C_k << std::endl;
-        //std::cout << "Gravity vector forces: \n" << g_k << std::endl;
-
         
         /******************************/
-        // Target definition
-
-        //--- Publish tranform to desired pose frame
-        transformDesiredPos.header.stamp = ros::Time::now();
-        broadcaster_.sendTransform(transformDesiredPos);
-
-        //--- Cartesian Target
-        Eigen::Vector3d targetCartPos = Eigen::Vector3d::Zero(); 
-        Eigen::Vector3d targetCartVel = Eigen::Vector3d::Zero(); 
-        Eigen::Vector3d targetCartAccel = Eigen::Vector3d::Zero(); 
-
-        targetCartPos(0)   = mob_man_traj.pose.translation.x;
-        targetCartPos(1)   = mob_man_traj.pose.translation.y;
-        targetCartPos(2)   = mob_man_traj.pose.translation.z;
-        targetCartVel(0)   = mob_man_traj.vel.linear.x;
-        targetCartVel(1)   = mob_man_traj.vel.linear.y;
-        targetCartVel(2)   = mob_man_traj.vel.linear.z;
-        targetCartAccel(0) = mob_man_traj.accel.linear.x;
-        targetCartAccel(1) = mob_man_traj.accel.linear.y;
-        targetCartAccel(2) = mob_man_traj.accel.linear.z;
-
-        //std::cout << "Cart Desired: \n" << targetCartPos << std::endl;
-
-        //--- Orientation target
-        Eigen::Quaterniond quat_des(mob_man_traj.pose.rotation.w, mob_man_traj.pose.rotation.x, mob_man_traj.pose.rotation.y, mob_man_traj.pose.rotation.z);
-        Eigen::Matrix3d targetOrientPos = quat_des.normalized().toRotationMatrix();
-        //std::cout << "Rotation matrix: \n" << targetOrientPos << std::endl; // Print rot matrix
-
-        Eigen::Vector3d targetOrientVel = Eigen::Vector3d::Zero(); 
-        Eigen::Vector3d targetOrientAccel = Eigen::Vector3d::Zero(); 
-
-        targetOrientVel(0)   = mob_man_traj.vel.angular.x;
-        targetOrientVel(1)   = mob_man_traj.vel.angular.y;
-        targetOrientVel(2)   = mob_man_traj.vel.angular.z;
-        targetOrientAccel(0) = mob_man_traj.accel.angular.x;
-        targetOrientAccel(1) = mob_man_traj.accel.angular.y;
-        targetOrientAccel(2) = mob_man_traj.accel.angular.z;
-
-        //--- Joint Conf Desired
-        Eigen::VectorXd q_desired = Eigen::VectorXd::Zero(9);
-        q_desired(0) = current_pos(0);
-        q_desired(1) = current_pos(1);
-        q_desired(2) = mob_man_traj.joints.mobjoint3;
-        q_desired(3) = mob_man_traj.joints.joint1;
-        q_desired(4) = mob_man_traj.joints.joint2;
-        q_desired(5) = mob_man_traj.joints.joint3;
-        q_desired(6) = mob_man_traj.joints.joint4;
-        q_desired(7) = mob_man_traj.joints.joint5;
-        q_desired(8) = mob_man_traj.joints.joint6;
-        
-        for(size_t jj = 2; jj< 9; jj++){
-            if( q_desired(jj) == -10.0 ){
-                q_desired(jj) = current_pos(jj);
-            }
-        }
-
-        //--- External torques
-        Eigen::VectorXd tau_ext = tau_result - tau_joints;
-        tau_ext(0) = 0.0;
-        tau_ext(1) = 0.0;
-        tau_ext(2) = 0.0;
-        tau_ext = Eigen::VectorXd::Zero(q_desired.size());
-        //std::cout << "Ext Torques: \n" << tau_ext << std::endl;
-
-        //--- Variables to save minimum singular value
-        double min_sv_pos = 10.0e3, min_sv_ori = 10.0e3;
-
-        /*********************************************************************************/
-        // Task Definition for effort
-
-        Eigen::MatrixXd Null_space;
-
-        /*****************************************************/
-        /*****************************************************/
-        Eigen::VectorXd tau_ns;
-        
-        int cycles_algorithm = 1;
-        if(effortSolver_.singularity_handling_method == 2){
-            cycles_algorithm = 2;
-        }
-        
-        // Compute the constraints of the saturation
-        if(method_joint_limit_avoidance==3){
-            time_actual_sjs = ros::Time::now().toSec();
-            double current_sampling_time = time_actual_sjs-time_previous_sjs;
-            if(current_sampling_time<=10e-6){
-                current_sampling_time = 1.0/500.0;
-            }
-
-            effortSolver_.updateSJSConstraints(dart_robotSkeleton, current_sampling_time);
-
-            time_previous_sjs = ros::Time::now().toSec();
-            //std::cout << "Sampling time: " << current_sampling_time << std::endl;
-            //std::cout << "Max accel limits\n" << effortSolver_.Max_constraint_accel.transpose() << std::endl;
-        }
-
-        // SJS variables
-        bool flag_sjs = true;
-        Eigen::MatrixXd Jacobian_constraints = Eigen::MatrixXd::Zero(1,9);
-        Eigen::VectorXd Desired_accel_constraints = Eigen::VectorXd::Zero(1);
-        bool task_limited = false;
-
-        //--- SJS main cycle
-        while(flag_sjs){
-            
-            tau_ns = Eigen::VectorXd::Zero(9);
-
-            //-- Loop for third singularity handling method
-            for (size_t cycle = 1; cycle <= cycles_algorithm; cycle++){
-
-                Null_space = Eigen::MatrixXd::Identity(9,9);
-                tau_result = Eigen::VectorXd::Zero(9);
-            
-                /*****************************************************/
-                // Avoid Joint Limits task
-
-                if(cycle==1){
-                    if(method_joint_limit_avoidance==0){
-                        effortSolver_.AvoidJointLimitsPotentials(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-                        //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
-                        //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
-                    }
-                    if(method_joint_limit_avoidance==1){
-                        effortSolver_.AvoidJointLimitsIntermValue(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-                        //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
-                        //std::cout << "Null space after avoid joint limits: \n" << Null_space << std::endl;
-                    }
-                    if(method_joint_limit_avoidance==3 && task_limited){
-                        effortSolver_.SaturationJointSpace( Jacobian_constraints, Desired_accel_constraints, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-                        //std::cout << "Tau result after avoid joint limits: \n" << tau_result << std::endl;
-                        //std::cout << "Null space after avoid joint limits: \n" << Null_space.transpose() << std::endl;
-                    }
-                }
-
-                /*****************************************************/
-                // Controller using pos XY with mobile robot and Z with mobile manipulator
-
-                //---effortSolver_.AchieveCartesianMobilRob(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-                //effortSolver_.AchieveCartesianMobilRobConstVel(targetCartPos, &min_sv_pos, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-                //std::cout << "Tau result after XY Cart: \n" << tau_result << std::endl;
-                //std::cout << "Null space after straight line: \n" << Null_space << std::endl;
-
-                //---effortSolver_.AchievePosZ(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-                //effortSolver_.AchievePosZConstVel(targetCartPos, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-                //std::cout << "Tau result after Z Cart: \n" << tau_result << std::endl;
-                //std::cout << "Null space after Z Cart: \n" << Null_space << std::endl;
-
-                /*****************************************************/
-                // Controller using pos XYZ with manipulator - To test singularities
-
-                //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-                //effortSolver_.AchieveCartManipulatorConstVel(targetCartPos, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-                //std::cout << "Tau result after Manipulator Cart: \n" << tau_result << std::endl;
-                //std::cout << "Null space after Manipulator Cart: \n" << Null_space << std::endl;
-
-                /*****************************************************/
-                // Controller using pos XYZ with mobile manipulator
-                
-                //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-                //effortSolver_.AchieveCartesianConstVel(targetCartPos, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-                //std::cout << "Tau result after Mob_mani Cart: \n" << tau_result << std::endl;
-                //std::cout << "Null space after Mob_mani Cart: \n" << Null_space << std::endl;
-
-                /*****************************************************/
-                // Orientation tasks with mobile manipulator
-
-                //---effortSolver_.AchieveOrientation(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-                //effortSolver_.AchieveOrientationConstVel(targetOrientPos, &min_sv_ori, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space); 
-                //---effortSolver_.OrientationImpedance(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, cycle, tau_ext, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space); 
-                //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
-                //std::cout << "Null space after achieve orient: \n" << Null_space << std::endl;
-
-                /*****************************************************/
-                // Orientation tasks with manipulator
-
-                //---effortSolver_.AchieveOriManipulator(targetOrientPos, targetOrientVel, targetOrientAccel, &min_sv_ori, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-                effortSolver_.AchieveOriManipulatorConstVel(targetOrientPos, &min_sv_ori, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space); 
-                //std::cout << "Tau result after achieve orient: \n" << tau_result << std::endl;
-                //std::cout << "Null space after achieve orient: \n" << Null_space.transpose() << std::endl;
-
-                /*****************************************************/
-                // Controller using pos XYZ with manipulator - To test singularities
-
-                //---effortSolver_.AchieveCartesianManipulator(targetCartPos, targetCartVel, targetCartAccel, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-                effortSolver_.AchieveCartManipulatorConstVel(targetCartPos, &min_sv_pos, cycle, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &tau_ns, &Null_space);
-                //std::cout << "Tau result after Manipulator Cart: \n" << tau_result << std::endl;
-                //std::cout << "Null space after Manipulator Cart: \n" << Null_space << std::endl;
-            
-                /*****************************************************/
-                // Joint tasks
-                if(cycle==1){
-                    effortSolver_.AchieveJointConf(q_desired, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
-                    //std::cout << "Tau result after achieve joint: \n" << tau_result.transpose() << "\n" << std::endl;
-                }
-
-                tau_ns = tau_result;
-            }
-
-            /*****************************************************/
-            // Compensation of non-linear effects in joint space
-
-            if(effortSolver_.compensate_jtspace){
-                tau_result =  tau_result + C_k + g_k;
-            }
-
-            //std::cout << "Tau Final: \n" << tau_result << "\n" << std::endl;
-
-            flag_sjs = false; // Clean SJS flag
-
-            /*****************************************************/
-            // IF SJS is selected check the constraints
-            if(method_joint_limit_avoidance==3){
-
-                Eigen::VectorXd current_joint_accel = M.inverse() * (tau_result - C_k - g_k);
-                //std::cout << "Current joint accel\n" << current_joint_accel.transpose() << std::endl;
-
-                // Check constraints
-                int critical_joint = -1;
-                effortSolver_.checkSJSConstraints(current_joint_accel, mEndEffector_, &flag_sjs);
-
-                // If constraints are exceeded
-                if(flag_sjs){
-                    
-                    task_limited = true;
-                    Eigen::MatrixXd prev_jacob = Jacobian_constraints;
-
-                    // Update Jacobian and task vector
-                    effortSolver_.updateSJSConstraintTask(current_joint_accel, &flag_sjs, &Jacobian_constraints, &Desired_accel_constraints);
-                    //std::cout << "Jacobian_constraints in main\n" << Jacobian_constraints <<std::endl;
-                    
-                    if(prev_jacob.rows()==Jacobian_constraints.rows()){
-                        if(prev_jacob.isApprox(Jacobian_constraints)){
-                            ROS_INFO("Repeated saturations in SJS");
-                            flag_sjs = false;
-                        }
-                    }
-                }
-
-            }
-        
-        }// End SJS cycle
+        //--- Update target from received data
+        updateTarget(current_pos);
 
         /******************************/
-        // Admittance controller
+        //--- Update external torque variable
+        //tau_ext = tau_joints;
+
+        /******************************/
+        //--- Init minimum singular values variable to large values
+        min_sv_pos = 10.0e3; min_sv_ori = 10.0e3;
+
+        /******************************/
+        //--- Calc torque due to tasks in stack of tasks
+        calcTorqueDueTasks();
+
+        /******************************/
+        //--- Admittance controller
         // send_vel -> q_dot_result
         
         Eigen::MatrixXd damp_des_     = Eigen::MatrixXd::Identity(3, 3) ;
@@ -682,7 +461,7 @@ void MobManipulatorController::spin(){
         /******************************/
         // Limit efforts
 
-        for (size_t ii = 0; ii < 9; ii++){
+        for (size_t ii = 0; ii < robot_dofs; ii++){
             
             if(isnan(tau_result(ii))) {
                 tau_result(ii) = 0.0;
@@ -714,7 +493,7 @@ void MobManipulatorController::spin(){
         /******************************/
         // Limit Velocities
 
-        for (size_t ii = 0; ii < 9; ii++){
+        for (size_t ii = 0; ii < robot_dofs; ii++){
 
             if(isnan(q_dot_result(ii))) {
                 q_dot_result(ii) = 0.0;
@@ -838,8 +617,6 @@ void MobManipulatorController::spin(){
 
         manipulator_cmd.data = tau_result(8);
         pub_manipulator_dof_6.publish(manipulator_cmd);
-            
-        //}
 
         /******************************/
         // Set time and sleep
@@ -850,5 +627,55 @@ void MobManipulatorController::spin(){
     ros::requestShutdown();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Function to update target based on data received from desired_traj topic
+void MobManipulatorController::updateTarget(Eigen::VectorXd current_joint_pos){
+
+    /******************************/
+    // Target update
+
+    //--- Publish tranform to desired pose frame
+    transformDesiredPos.header.stamp = ros::Time::now();
+    broadcaster_.sendTransform(transformDesiredPos);
+
+    //--- Cartesian Target
+    targetCartPos(0)   = mob_man_traj.pose.translation.x;
+    targetCartPos(1)   = mob_man_traj.pose.translation.y;
+    targetCartPos(2)   = mob_man_traj.pose.translation.z;
+    targetCartVel(0)   = mob_man_traj.vel.linear.x;
+    targetCartVel(1)   = mob_man_traj.vel.linear.y;
+    targetCartVel(2)   = mob_man_traj.vel.linear.z;
+    targetCartAccel(0) = mob_man_traj.accel.linear.x;
+    targetCartAccel(1) = mob_man_traj.accel.linear.y;
+    targetCartAccel(2) = mob_man_traj.accel.linear.z;
+
+    //--- Orientation target
+    Eigen::Quaterniond quat_des(mob_man_traj.pose.rotation.w, mob_man_traj.pose.rotation.x, mob_man_traj.pose.rotation.y, mob_man_traj.pose.rotation.z);
+    targetOrientPos = quat_des.normalized().toRotationMatrix();
+    targetOrientVel(0)   = mob_man_traj.vel.angular.x;
+    targetOrientVel(1)   = mob_man_traj.vel.angular.y;
+    targetOrientVel(2)   = mob_man_traj.vel.angular.z;
+    targetOrientAccel(0) = mob_man_traj.accel.angular.x;
+    targetOrientAccel(1) = mob_man_traj.accel.angular.y;
+    targetOrientAccel(2) = mob_man_traj.accel.angular.z;
+
+    //--- Joint Conf Desired
+    q_desired(0) = current_joint_pos(0);
+    q_desired(1) = current_joint_pos(1);
+    q_desired(2) = mob_man_traj.joints.mobjoint3;
+    q_desired(3) = mob_man_traj.joints.joint1;
+    q_desired(4) = mob_man_traj.joints.joint2;
+    q_desired(5) = mob_man_traj.joints.joint3;
+    q_desired(6) = mob_man_traj.joints.joint4;
+    q_desired(7) = mob_man_traj.joints.joint5;
+    q_desired(8) = mob_man_traj.joints.joint6;
+    
+    for(size_t jj = 2; jj< robot_dofs; jj++){
+        if( q_desired(jj) == -10.0 ){
+            q_desired(jj) = current_joint_pos(jj);
+        }
+    }
+
+}
 
 } /* namespace */

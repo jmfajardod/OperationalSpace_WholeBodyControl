@@ -83,16 +83,17 @@ add_executable(mob_manipulator_controller
   src/mob_manipulator_controller_node.cpp
   src/Mob_Manipulator_Controller.cpp
   src/Load_model.cpp
-  src/Tasks/Effort_Tasks.cpp
-  src/Tasks/Position/Position_Manipulator.cpp
-  src/Tasks/Position/Position_Mobile_Robot.cpp
-  src/Tasks/Position/Position_Mob_Manipulator.cpp
-  src/Tasks/Orientation/Orientation_Manipulator.cpp
-  src/Tasks/Orientation/Orientation_Mob_Manipulator.cpp
-  src/Tasks/Orientation/Error_functions.cpp
-  src/Tasks/Joint_limits/Repulsive_potencials.cpp
-  src/Tasks/Joint_limits/Intermediate_value.cpp
-  src/Tasks/Joint_limits/Saturation_joint_space.cpp
+  src/Stack_Tasks.cpp
+  src/Controller/OSC_Controller.cpp
+  src/Controller/Position/Position_Manipulator.cpp
+  src/Controller/Position/Position_Mobile_Robot.cpp
+  src/Controller/Position/Position_Mob_Manipulator.cpp
+  src/Controller/Orientation/Orientation_Manipulator.cpp
+  src/Controller/Orientation/Orientation_Mob_Manipulator.cpp
+  src/Controller/Orientation/Error_functions.cpp
+  src/Controller/Joint_limits/Repulsive_potencials.cpp
+  src/Controller/Joint_limits/Intermediate_value.cpp
+  src/Controller/Joint_limits/Saturation_joint_space.cpp
 )
 
 add_dependencies(mob_manipulator_controller

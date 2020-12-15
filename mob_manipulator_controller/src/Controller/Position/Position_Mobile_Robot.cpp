@@ -1,4 +1,4 @@
-#include <mob_manipulator_controller/Effort_Tasks.hpp>
+#include <mob_manipulator_controller/OSC_Controller.hpp>
 
 namespace effort_tasks {
 

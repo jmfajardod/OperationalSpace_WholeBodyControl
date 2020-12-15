@@ -4,10 +4,15 @@
     <arg name="robot_name" default=""/>
     <arg name="use_EKF" default="false"/>
 
-    <node pkg="robotino_vel_publisher" type="global_vel_pub_node" name="global_vel_pub" ns="$(arg robot_name)" output="screen">
+    <node   pkg="robotino_vel_publisher" type="global_vel_pub_node" name="global_vel_pub" 
+            ns="$(arg robot_name)" output="log">
+
         <rosparam file="$(find robotino_vel_publisher)/config/config.yaml" command="load" />
+        
+        <!-- Load differents parameters if using EKF or not -->
         <param unless="$(arg use_EKF)" name="odometry_topic" value="odom"/>
         <param if="$(arg use_EKF)"     name="odometry_topic" value="odometry/filtered"/>
+
     </node>
 
 </launch>

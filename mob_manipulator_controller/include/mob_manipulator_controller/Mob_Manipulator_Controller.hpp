@@ -37,7 +37,8 @@
 #include <dart/utils/urdf/urdf.hpp>
 #include <dart/utils/utils.hpp>
 
-#include <mob_manipulator_controller/Effort_Tasks.hpp>
+#include <mob_manipulator_controller/OSC_Controller.hpp>
+
 
 namespace mob_manipulator_controller {
 
@@ -129,6 +130,10 @@ private:
 	double time_previous_sjs;
 	double time_actual_sjs;
 
+	// Variable for minimum singular values
+	double min_sv_pos;
+	double min_sv_ori;
+
 	// Variable to publish commands of manipulator in topic
 	std_msgs::Float64 manipulator_cmd;
 
@@ -155,9 +160,21 @@ private:
 	Eigen::VectorXd tau_zero;
 	Eigen::VectorXd tau_result;
 	Eigen::VectorXd tau_joints;
+	Eigen::VectorXd tau_ext;
 
 	Eigen::VectorXd q_dot_zero;
 	Eigen::VectorXd q_dot_result;
+
+	// Variables for trajectory targets
+	Eigen::Vector3d targetCartPos;
+	Eigen::Vector3d targetCartVel; 
+	Eigen::Vector3d targetCartAccel;
+
+	Eigen::Matrix3d targetOrientPos;
+	Eigen::Vector3d targetOrientVel; 
+	Eigen::Vector3d targetOrientAccel;
+
+	Eigen::VectorXd q_desired;
 
 	/*!
 	* DART Objects
@@ -171,7 +188,7 @@ private:
 	 * 
 	*/
 
-	effort_tasks::EffortTask effortSolver_;
+	effort_tasks::EffortTask osc_controller_;
 
 	/******************************************************************/
 	/******************************************************************/
@@ -214,6 +231,21 @@ private:
 	* Function to initialize the msgs
 	*/
     void initMsgs();
+
+	/*!
+	* Function to calculate torque due to tasks
+	*/
+    void calcTorqueDueTasks();
+
+	/*!
+	* Function to define the stack of tasks
+	*/
+	void StackTasks(Eigen::MatrixXd *Null_space, Eigen::VectorXd *torque_ns, int cycle);
+
+	/*!
+	* Function to update target variables based on data received from topic
+	*/
+	void updateTarget(Eigen::VectorXd current_joint_pos);
 
 };
 
