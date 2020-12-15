@@ -100,6 +100,20 @@ private:
 	std::string robot_frame;
 	int robot_dofs;
 
+	// Maximum velocities when using the controllers: Go to point with constant vel
+	double point_const_vel_max_lineal;
+	double point_const_vel_max_angular;
+
+	// Cartesian gains
+	double pos_stiff_X, pos_stiff_Y, pos_stiff_Z;
+	double pos_damp_X, pos_damp_Y, pos_damp_Z;
+
+	double ori_stiff_X, ori_stiff_Y, ori_stiff_Z;
+	double ori_damp_X, ori_damp_Y, ori_damp_Z;
+
+	// Variable to define if only using manipulator (For testing purposes)
+	bool using_only_manipulator;
+
 	// Odometry topic
 	std::string odometry_topic;
 
@@ -118,6 +132,8 @@ private:
 	int method_sing_handling;
 	int method_joint_limit_avoidance;
 
+	int orient_error_calc;
+
 	// Parameters required to load model in DART
 	std::vector<std::string> model_packages_paths;
 	std::vector<std::string> model_packages_names;
@@ -129,9 +145,6 @@ private:
 
 	double time_previous_sjs;
 	double time_actual_sjs;
-
-	// Variable to define if only using manipulator (For testing purposes)
-	bool using_only_manipulator;
 
 	// Variable for minimum singular values
 	double min_sv_pos;

@@ -83,7 +83,7 @@ void MobManipulatorController::calcTorqueDueTasks(){
     }
     
     //--- Compute the constraints of the saturation
-    if(method_joint_limit_avoidance==3){
+    if(osc_controller_.joint_limit_handling_method==3){
         time_actual_sjs = ros::Time::now().toSec();
         double current_sampling_time = time_actual_sjs-time_previous_sjs;
         if(current_sampling_time<=10e-6){
@@ -117,13 +117,13 @@ void MobManipulatorController::calcTorqueDueTasks(){
             // Avoid Joint Limits task
 
             if(cycle==1){
-                if(method_joint_limit_avoidance==0){
+                if(osc_controller_.joint_limit_handling_method==0){
                     osc_controller_.AvoidJointLimitsPotentials(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
                 }
-                if(method_joint_limit_avoidance==1){
+                if(osc_controller_.joint_limit_handling_method==1){
                     osc_controller_.AvoidJointLimitsIntermValue(M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
                 }
-                if(method_joint_limit_avoidance==3 && task_limited){
+                if(osc_controller_.joint_limit_handling_method==3 && task_limited){
                     osc_controller_.SaturationJointSpace( Jacobian_constraints, Desired_accel_constraints, M, C_k, g_k, dart_robotSkeleton, mEndEffector_, &tau_result, &Null_space);
                 }
             }
@@ -148,7 +148,7 @@ void MobManipulatorController::calcTorqueDueTasks(){
 
         /*****************************************************/
         // IF SJS is selected check the constraints
-        if(method_joint_limit_avoidance==3){
+        if(osc_controller_.joint_limit_handling_method==3){
 
             Eigen::VectorXd current_joint_accel = M.inverse() * (tau_result - C_k - g_k);
 

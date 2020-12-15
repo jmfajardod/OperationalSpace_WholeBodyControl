@@ -19,6 +19,14 @@ manipulator_controllers:
   - lower_forearm_controller
   - wrist_controller
 
+# Parameter to select the way to calculate the orientation error
+# 1 -> Angle-axis Munoz-Osorio
+# 2 -> Angle-axis Caccavale
+# 3 -> Quaternion Yuan
+# 4 -> Quaternion Caccavale 1
+# 5 -> Quaternion Caccavale 2
+orientation_error_calc: 5
+
 # Parameter to define if only using manipulator (For testing purposes)
 only_manipulator: True
 
@@ -26,6 +34,32 @@ only_manipulator: True
 compensate_topdownEffects: False # True False
 compensate_nonlinearInJointSpace: True
 use_augmented_projections: True
+
+# Maximum velocities when using the controllers: Go to point with constant vel
+point_const_vel_max_lineal:  0.3
+point_const_vel_max_angular: 3.14
+
+# Controller gains
+
+Cartesian_position_gains:
+  stiffness:
+    X: 400.0
+    Y: 400.0
+    Z: 400.0
+  damping_ratios:
+    X: 0.9
+    Y: 0.9
+    Z: 0.9
+
+Cartesian_orientation_gains:
+  stiffness:
+    X: 400.0
+    Y: 400.0
+    Z: 400.0
+  damping_ratios:
+    X: 0.9
+    Y: 0.9
+    Z: 0.9
 
 # Parameter for singularity handling
 # 0 -> Algorithm proposed by Khatib et al.
@@ -38,4 +72,4 @@ singularity_handling: 1
 #  0 -> Repulsive artificial potentials
 #  1 -> Intermediate value
 #  3 -> SJS
-joint_limit_avoidance: 1
+joint_limit_avoidance: 0

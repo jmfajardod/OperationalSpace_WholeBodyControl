@@ -224,17 +224,69 @@ bool MobManipulatorController::readParameters()
     if (!nodeHandle_.getParam("packages_names", model_packages_names ))        return false;
     if (!nodeHandle_.getParam("urdf_model_path", urdf_model_path ))        return false;
     if (!nodeHandle_.getParam("only_manipulator", using_only_manipulator ))        return false;
+    if (!nodeHandle_.getParam("orientation_error_calc", orient_error_calc ))        return false;
+    if (!nodeHandle_.getParam("point_const_vel_max_lineal", point_const_vel_max_lineal ))        return false;
+    if (!nodeHandle_.getParam("point_const_vel_max_angular", point_const_vel_max_angular ))        return false;
+
+    if (!nodeHandle_.getParam("Cartesian_position_gains/stiffness/X", pos_stiff_X ))        return false;
+    if (!nodeHandle_.getParam("Cartesian_position_gains/stiffness/Y", pos_stiff_Y ))        return false;
+    if (!nodeHandle_.getParam("Cartesian_position_gains/stiffness/Z", pos_stiff_Z ))        return false;
+    if (!nodeHandle_.getParam("Cartesian_position_gains/damping_ratios/X", pos_damp_X ))        return false;
+    if (!nodeHandle_.getParam("Cartesian_position_gains/damping_ratios/Y", pos_damp_Y ))        return false;
+    if (!nodeHandle_.getParam("Cartesian_position_gains/damping_ratios/Z", pos_damp_Z ))        return false;
+
+    if (!nodeHandle_.getParam("Cartesian_orientation_gains/stiffness/X", ori_stiff_X ))        return false;
+    if (!nodeHandle_.getParam("Cartesian_orientation_gains/stiffness/Y", ori_stiff_Y ))        return false;
+    if (!nodeHandle_.getParam("Cartesian_orientation_gains/stiffness/Z", ori_stiff_Z ))        return false;
+    if (!nodeHandle_.getParam("Cartesian_orientation_gains/damping_ratios/X", ori_damp_X ))        return false;
+    if (!nodeHandle_.getParam("Cartesian_orientation_gains/damping_ratios/Y", ori_damp_Y ))        return false;
+    if (!nodeHandle_.getParam("Cartesian_orientation_gains/damping_ratios/Z", ori_damp_Z ))        return false;
 
     robot_frame = robot_name + "/mobile_base_link";
 
     //ROS_INFO("Robot Frame: %s", robot_frame.c_str());
     //ROS_INFO("Robot dof1: %s", manipulator_dofs.at(0).c_str());
 
+    //--- Using only manipulator parameter
     if(using_only_manipulator){
         ROS_INFO("Using only manipulator for tasks");
     }
     else{
         ROS_INFO("Using mobile manipulator for tasks");
+    }
+
+    //--- Selection of the orientation error calculation
+    switch (orient_error_calc)
+    {
+        case 1:
+            ROS_INFO("Using orient error calculation proposed by Munoz-Osorio");
+            osc_controller_.ori_error_mode = 1;
+            break;
+
+        case 2:
+            ROS_INFO("Using orient error calculation proposed by Caccavale (Angle-Axis)");
+            osc_controller_.ori_error_mode = 2;
+            break;
+
+        case 3:
+            ROS_INFO("Using orient error calculation proposed by Yuan");
+            osc_controller_.ori_error_mode = 3;
+            break;
+
+        case 4:
+            ROS_INFO("Using orient error calculation proposed by Caccavale (Quaternion-1 form)");
+            osc_controller_.ori_error_mode = 4;
+            break;
+
+        case 5:
+            ROS_INFO("Using orient error calculation proposed by Caccavale (Quaternion-2 form)");
+            osc_controller_.ori_error_mode = 5;
+            break;
+
+        default:
+            ROS_INFO("Using orient error calculation proposed by Caccavale (Quaternion-2 form)");
+            osc_controller_.ori_error_mode = 5;
+            break;
     }
 
     //--- Top-down effects parameter
@@ -297,25 +349,38 @@ bool MobManipulatorController::readParameters()
     {
     case -1:
         ROS_INFO("Not handling joint limits");
+        osc_controller_.joint_limit_handling_method = -1;
         break;
 
     case 0:
         ROS_INFO("Using repulsive potentials for joint limit avoidance");
+        osc_controller_.joint_limit_handling_method = 0;
         break;
 
     case 1:
         ROS_INFO("Using intermediate value for joint limit avoidance");
+        osc_controller_.joint_limit_handling_method = 1;
         break;
 
     case 3:
         ROS_INFO("Using SJS (Saturation in joint space) for joint limit avoidance");
+        osc_controller_.joint_limit_handling_method = 3;
         break;
     
     default:
         method_joint_limit_avoidance = 0;
         ROS_INFO("Using repulsive potentials for joint limit avoidance");
+        osc_controller_.joint_limit_handling_method = 0;
         break;
     }
+
+    // Update the maximum velocities when using the controller go to point with constant vel
+    osc_controller_.max_lineal_vel_  = point_const_vel_max_lineal;
+    osc_controller_.max_angular_vel_ = point_const_vel_max_angular;
+
+    // Update cartesian gains
+    osc_controller_.changeCartesianPositionGains(   pos_stiff_X, pos_stiff_Y, pos_stiff_Z, pos_damp_X, pos_damp_Y, pos_damp_Z );
+    osc_controller_.changeCartesianOrientationGains(ori_stiff_X, ori_stiff_Y, ori_stiff_Z, ori_damp_X, ori_damp_Y, ori_damp_Z );
     
     return true;
 }

@@ -26,24 +26,24 @@ OSC_Controller::OSC_Controller(){
     //----------------------------------------------------------------------//
     // Gain Matrices definition
     kp_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
-    kp_cartesian_.topLeftCorner(2, 2)     = 400.0*Eigen::MatrixXd::Identity(2, 2); // Position gains (100)  // (400)
-    kp_cartesian_(2,2)                    = 400.0; //(1500) // (400)
-    kp_cartesian_.bottomRightCorner(3, 3) = 400.0*Eigen::MatrixXd::Identity(3, 3); // Orientation gains (1200) // (400)
+    kp_cartesian_.topLeftCorner(2, 2)     = 400.0*Eigen::MatrixXd::Identity(2, 2); // Position XY stiffness gains
+    kp_cartesian_(2,2)                    = 400.0; //Position Z stiffness gain
+    kp_cartesian_.bottomRightCorner(3, 3) = 400.0*Eigen::MatrixXd::Identity(3, 3); // Orientation stiffness gains 
 
     kd_cartesian_ = Eigen::MatrixXd::Identity(6, 6);
-    kd_cartesian_.topLeftCorner(2, 2)     = 0.9*Eigen::MatrixXd::Identity(2, 2); // Position gains 
-    kd_cartesian_(2,2)                    = 0.9;
-    kd_cartesian_.bottomRightCorner(3, 3) = 0.9*Eigen::MatrixXd::Identity(3, 3); // Orientation gains 
+    kd_cartesian_.topLeftCorner(2, 2)     = 0.9*Eigen::MatrixXd::Identity(2, 2); // Position XY damping ratios
+    kd_cartesian_(2,2)                    = 0.9; // Position Z damping ratio
+    kd_cartesian_.bottomRightCorner(3, 3) = 0.9*Eigen::MatrixXd::Identity(3, 3); // Orientation damping ratios 
 
     kp_joints_ = Eigen::MatrixXd::Identity(9, 9);
-    kp_joints_.topLeftCorner(2, 2)     = 0.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains (50)
-    kp_joints_(2,2)                    = 0.0; // Mobile base gains (100)
-    kp_joints_.bottomRightCorner(6, 6) = 0.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (1000.0) (100.0)// (200.0)
+    kp_joints_.topLeftCorner(2, 2)     = 0.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base stiffness gains
+    kp_joints_(2,2)                    = 0.0; // Mobile base stiffness gains
+    kp_joints_.bottomRightCorner(6, 6) = 0.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator stiffness gains
 
     kd_joints_ = Eigen::MatrixXd::Identity(9, 9);
-    kd_joints_.topLeftCorner(2, 2)     = 5.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base gains (5.0)
-    kd_joints_(2,2)                    = 10.0; // Mobile base gains (10.0)
-    kd_joints_.bottomRightCorner(6, 6) = 57.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator gains (57.0) (200.0) // (57.0)
+    kd_joints_.topLeftCorner(2, 2)     = 5.0*Eigen::MatrixXd::Identity(2, 2); // Mobile base damping gains
+    kd_joints_(2,2)                    = 10.0; // Mobile base damping gains
+    kd_joints_.bottomRightCorner(6, 6) = 57.0*Eigen::MatrixXd::Identity(6, 6); // Manipulator damping gains
 
     //----------------------------------------------------------------------//
     //--- Select orientation error function
@@ -78,6 +78,13 @@ OSC_Controller::OSC_Controller(){
 
     //----------------------------------------------------------------------//
     //--- Parameters for avoid joint limits task
+
+    // -1 -> No joint limit handling
+    //  0 -> Artificial potential field
+    //  1 -> Intermediate value
+    //  3 -> Saturation in joint space
+    joint_limit_handling_method = 0;
+
     Lower_limits = Eigen::VectorXd::Zero(9);
     Upper_limits = Eigen::VectorXd::Zero(9);
 
@@ -146,50 +153,45 @@ OSC_Controller::~OSC_Controller()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Function to change the Gains
-/*
-void OSC_Controller::changeGains(double kp_c, double kd_c, double kp_j, double kd_j){
-    kp_cartesian_ = kp_c;
-    kd_cartesian_ = kd_c;
-    kp_joints_    = kp_j;
-    kd_joints_    = kd_j;
+// Function to change the cartesian position gains
+void OSC_Controller::changeCartesianPositionGains(double Pos_X_stiffness, 
+                                                double Pos_Y_stiffness, 
+                                                double Pos_Z_stiffness,
+                                                double Pos_X_damping, 
+                                                double Pos_Y_damping, 
+                                                double Pos_Z_damping){
+    // Stiffness gains
+    kp_cartesian_(0,0) = Pos_X_stiffness;
+    kp_cartesian_(1,1) = Pos_Y_stiffness;
+    kp_cartesian_(2,2) = Pos_Z_stiffness;
+
+    // Damping ratios 
+    kd_cartesian_(0,0) = Pos_X_damping;
+    kd_cartesian_(1,1) = Pos_Y_damping;
+    kd_cartesian_(2,2) = Pos_Z_damping;
 }
-*/
-
 ////////////////////////////////////////////////////////////////////////////////
-// Function to change the maximum velocity of the end effector
-void OSC_Controller::changeMaxVel(double new_max_vel){
-    max_lineal_vel_ = new_max_vel;
-}
+// Function to change the cartesian orientation gains
+void OSC_Controller::changeCartesianOrientationGains(double Ori_X_stiffness, 
+                                                    double Ori_Y_stiffness, 
+                                                    double Ori_Z_stiffness,
+													double Ori_X_damping, 
+                                                    double Ori_Y_damping, 
+                                                    double Ori_Z_damping){
+    // Stiffness gains
+    kp_cartesian_(3,3) = Ori_X_stiffness;
+    kp_cartesian_(4,4) = Ori_Y_stiffness;
+    kp_cartesian_(5,5) = Ori_Z_stiffness;
 
-////////////////////////////////////////////////////////////////////////////////
-// Function to change the joint margin for avoding joint limits
-//void OSC_Controller::changeJointMargin(double new_margin){
-//    joint_margin_ = new_margin;
-//}
-
-////////////////////////////////////////////////////////////////////////////////
-// Function to change the eta in FIRAS function for avoding joint limits
-void OSC_Controller::change_etaFIRAS(double new_eta){
-    eta_firas_ = new_eta;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Function to change the higher threshold for singularities
-void OSC_Controller::changeHighThSing(double new_high_thr){
-    singularity_thres_high_ = new_high_thr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Function to change the lower threshold for singularities
-void OSC_Controller::changeLowThSing(double new_low_thr){
-    singularity_thres_low_ = new_low_thr;
+    // Damping ratios 
+    kd_cartesian_(3,3) = Ori_X_damping;
+    kd_cartesian_(4,4) = Ori_Y_damping;
+    kd_cartesian_(5,5) = Ori_Z_damping;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Function to calculate the efforts required to Hold/Achieve a joint configuration
-
+// Function to calculate the efforts required to Achieve a joint configuration
 void OSC_Controller::AchieveJointConf(  Eigen::VectorXd q_desired, 
                                     Eigen::MatrixXd M, 
                                     Eigen::VectorXd C_t,

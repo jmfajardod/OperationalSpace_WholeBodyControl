@@ -33,22 +33,11 @@ public:
      * KP_C and KD_C are the cartesian gains
      * KP_J and KD_J are the joint gains
 	 */
-	//void changeGains(double kp_c, double kd_c, double kp_j, double kd_j);
+	void changeCartesianPositionGains(double Pos_X_stiffness, double Pos_Y_stiffness, double Pos_Z_stiffness,
+																		double Pos_X_damping, double Pos_Y_damping, double Pos_Z_damping);
 
-    /*!
-	 * Function to change the maximum linear velocity of the end effector
-	 */
-    void changeMaxVel(double new_max_vel);
-
-    /*!
-	 * Function to change the joint margin for avoding joint limits
-	 */
-    void changeJointMargin(double new_margin);
-
-    /*!
-	 * Function to change the eta in FIRAS function for avoding joint limits
-	 */
-    void change_etaFIRAS(double new_eta);
+	void changeCartesianOrientationGains(double Ori_X_stiffness, double Ori_Y_stiffness, double Ori_Z_stiffness,
+																			double Ori_X_damping, double Ori_Y_damping, double Ori_Z_damping);
 
     /*!
 	 * Function to change the higher threshold for singularities
@@ -435,6 +424,8 @@ public:
     double singularity_thres_low_ori_;
 
     // Variables for joint limit avoidance methods
+    int joint_limit_handling_method;
+
     Eigen::VectorXd Lower_limits;
     Eigen::VectorXd Upper_limits;
 
