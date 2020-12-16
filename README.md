@@ -10,14 +10,14 @@ Los paquetes desarrollados necesitan tener instaladas las librerías Eigen y DAR
  
 <code> sudo apt-get install libeigen3-dev</code>
  
-<code> sudo apt-add-repository ppa:dartsim/ppa  
-sudo apt-get update 
-sudo apt-get install libdart6-dev
+<code> sudo apt-add-repository ppa:dartsim/ppa \
+sudo apt-get update  \
+sudo apt-get install libdart6-dev 
 </code>
  
 Además de las anteriores librerías, se utilizaron los paquetes de ROS-Control y robot_localization. Para instalarlos se puede utilizar los siguientes comandos:
  
-<code>sudo apt-get install ros-melodic-ros-control  
+<code>sudo apt-get install ros-melodic-ros-control  \
 sudo apt-get install ros-melodic-ros-controllers</code>
  
 <code>sudo apt-get install ros-melodic-robot-localization</code>
@@ -26,9 +26,9 @@ sudo apt-get install ros-melodic-ros-controllers</code>
  
 Para compilar el código se recomienda utilizar la herramienta catkin_tools, la cual puede ser instalada utilizando los comandos:
  
-<code>sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list' 
-wget http://packages.ros.org/ros.key -O - | sudo apt-key add - 
-sudo apt-get update 
+<code>sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list'  \
+wget http://packages.ros.org/ros.key -O - | sudo apt-key add -  \
+sudo apt-get update  \
 sudo apt-get install python-catkin-tools</code>
  
 Con esta herramienta se recomienda compilar los paquetes utilizando máximo la mitad de los hilos disponibles de CPU, utilizando el modificador -j. Como ejemplo, en caso de que se tengan ocho hilos disponibles se debe utilizar el siguiente comando estando dentro del workspace.
