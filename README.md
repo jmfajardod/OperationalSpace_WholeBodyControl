@@ -1,24 +1,52 @@
-# Thesis for a WBC with Operational Space control for a mobile manipulator
+# Control de cuerpo completo en espacio operacional de robots tipo manipulador móvil
+ 
+<img src="./docs/img/mobile_manipulator_demo.gif"/>
 
-OSF implementation based on the work of Khatib.
+Paquetes desarrollados como parte de la tesis de pregrado de Jose Manuel Fajardo denominada control de cuerpo completo en espacio operacional de robots tipo manipulador móvil.
+ 
+## Dependencias
+ 
+Los paquetes desarrollados necesitan tener instaladas las librerías Eigen y DART de C++. Para instalarlas se pueden utilizar los comandos:
+ 
+<code> sudo apt-get install libeigen3-dev</code>
+ 
+<code> sudo apt-add-repository ppa:dartsim/ppa  
+sudo apt-get update 
+sudo apt-get install libdart6-dev
+</code>
+ 
+Además de las anteriores librerías, se utilizaron los paquetes de ROS-Control y robot_localization. Para instalarlos se puede utilizar los siguientes comandos:
+ 
+<code>sudo apt-get install ros-melodic-ros-control  sudo apt-get install ros-melodic-ros-controllers</code>
+ 
+<code>sudo apt-get install ros-melodic-robot-localization</code>
+ 
+## Compilación
+ 
+Para compilar el código se recomienda utilizar la herramienta catkin_tools, la cual puede ser instalada utilizando los comandos:
+ 
+<code>sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list' 
+wget http://packages.ros.org/ros.key -O - | sudo apt-key add - 
+sudo apt-get update 
+sudo apt-get install python-catkin-tools</code>
+ 
+Con esta herramienta se recomienda compilar los paquetes utilizando máximo la mitad de los hilos disponibles de CPU, utilizando el modificador -j. Como ejemplo, en caso de que se tengan ocho hilos disponibles se debe utilizar el siguiente comando estando dentro del workspace.
+ 
+<code>catkin build -j 4</code>
+ 
+## Uso
+ 
+Para el uso se debe iniciar el simulador y cargar el modelo a través del comando:
+ 
+<code>roslaunch mobile_manipulator_unal_description gazebo_view.launch </code>
+ 
+Después se debe iniciar el controlador utilizando el comando:
+ 
+<code>roslaunch mob_manipulator_controller osc_controller.launch</code>
+ 
+Teniendo el controlador se puede pasar a publicar la trayectoria deseada en el tópico */mobile_manipulator/desired_traj* y suscribirse al tópico de información del robot */mobile_manipulator/data*.
+ 
+## Parámetros
+ 
+TODO
 
-As of now the stack of tasks is implemented as recursive projections.
-
-As of now the implementation uses a hybrid control, with the stack of tasks for both force and velocity tasks.
-
-
-## To create a csv from a rosbag
-
-Run the command:
-
->
-> <code> rostopic echo -b Odometry.bag -p /gazebo/model_states > gazebo.csv </code>
->
-
-## To save selected topics for EKF test
-
-Run the command:
-
->
-> <code> rosbag record /Robotino/commands/velocity /Robotino/odom /clock /gazebo/model_states </code>
->
