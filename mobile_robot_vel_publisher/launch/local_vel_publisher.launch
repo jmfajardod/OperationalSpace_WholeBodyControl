@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="mobile_robot_vel_publisher" type="local_vel_pub_node" name="local_vel_pub" output="screen">
+        <rosparam file="$(find mobile_robot_vel_publisher)/config/config.yaml" command="load" />
+    </node>
+</launch>

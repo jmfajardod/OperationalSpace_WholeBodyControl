@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(robotino_vel_publisher)
+project(mobile_robot_vel_publisher)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -29,7 +29,7 @@ catkin_package(
   INCLUDE_DIRS 
     include
   LIBRARIES 
-    robotino_vel_publisher
+    mobile_robot_vel_publisher
   CATKIN_DEPENDS 
     geometry_msgs 
     roscpp 

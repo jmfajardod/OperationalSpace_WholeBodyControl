@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>robotino_vel_publisher</name>
+  <name>mobile_robot_vel_publisher</name>
   <version>0.0.1</version>
-  <description>The robotino_vel_publisher package</description>
+  <description>The mobile_robot_vel_publisher package</description>
 
   <maintainer email="jmfajardod@gmail.com">josefajardo</maintainer>
 

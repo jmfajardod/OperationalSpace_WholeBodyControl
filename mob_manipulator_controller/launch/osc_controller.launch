@@ -36,7 +36,7 @@
     <!-- ******************************************************************* -->
     <!-- ******************************************************************* -->
     <!-- Mobile Platform vel publisher -->
-    <include file="$(find robotino_vel_publisher)/launch/global_vel_publisher.launch">
+    <include file="$(find mobile_robot_vel_publisher)/launch/global_vel_publisher.launch">
         <arg name="robot_name" value="$(arg robot_name)"/>
         <arg name="use_EKF"    value="$(arg use_EKF)"/>
     </include> 

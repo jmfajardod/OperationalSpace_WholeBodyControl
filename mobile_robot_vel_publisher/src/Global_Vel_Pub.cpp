@@ -1,4 +1,4 @@
-#include <robotino_vel_publisher/Global_Vel_Pub.hpp>
+#include <mobile_robot_vel_publisher/Global_Vel_Pub.hpp>
 
 namespace global_vel_publisher {
 
@@ -115,15 +115,15 @@ GlobalVelPub::GlobalVelPub(ros::NodeHandle& nodeHandle) :
     J1(2,1) = -cos(alpha_2+beta_2+gamma_2);
     J1(2,2) = -wheel_sep*cos(beta_2+gamma_2);
 
-    std::cout << "Matrix J1: \n" << J1 << std::endl;
+    //std::cout << "Matrix J1: \n" << J1 << std::endl;
 
     // Matrix J2
     J2 = wheel_radius*J2;
-    std::cout << "Matrix J2: \n" << J2 << std::endl;
+    //std::cout << "Matrix J2: \n" << J2 << std::endl;
 
     // Inverse Jacobian
     Jacob_inv = J2.inverse() * J1 ;
-    std::cout << "Inverse Jacobian: \n" << Jacob_inv << std::endl;
+    //std::cout << "Inverse Jacobian: \n" << Jacob_inv << std::endl;
 
     // Create subscribers
     subs_cmd_vel_= nodeHandle_.subscribe("/"+ robot_name +"/commands/velocity" , 10, 

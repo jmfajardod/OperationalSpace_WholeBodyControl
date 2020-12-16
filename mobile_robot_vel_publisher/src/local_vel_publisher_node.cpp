@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include <robotino_vel_publisher/Local_Vel_Pub.hpp>
+#include <mobile_robot_vel_publisher/Local_Vel_Pub.hpp>
 
 int main(int argc,char** argv)
 {
