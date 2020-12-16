@@ -82,8 +82,7 @@ GlobalVelPub::GlobalVelPub(ros::NodeHandle& nodeHandle) :
     Jacob_inv(Eigen::MatrixXd::Zero(3,3)),
     q_dot(Eigen::VectorXd::Zero(3)),
     x_dot(Eigen::VectorXd::Zero(3)),
-    Rot_mat(Eigen::MatrixXd::Zero(3,3)),
-    odom_rate(1000)
+    Rot_mat(Eigen::MatrixXd::Zero(3,3))
 {
     if (!readParameters()) {
         ROS_ERROR("Could not read parameters.");
@@ -159,7 +158,6 @@ bool GlobalVelPub::readParameters()
     if (!nodeHandle_.getParam("wheel_2_topic", wheel_2_name))   return false;
     if (!nodeHandle_.getParam("wheel_radius", wheel_radius))   return false;
     if (!nodeHandle_.getParam("wheel_sep", wheel_sep))   return false;
-    if (!nodeHandle_.getParam("loop_rate", odom_rate))   return false;
 
     wheel_0_command_topic = "/" + robot_name + "/" + wheel_0_name + "/command";
     wheel_1_command_topic = "/" + robot_name + "/" + wheel_1_name + "/command";
