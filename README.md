@@ -17,7 +17,8 @@ sudo apt-get install libdart6-dev
  
 Además de las anteriores librerías, se utilizaron los paquetes de ROS-Control y robot_localization. Para instalarlos se puede utilizar los siguientes comandos:
  
-<code>sudo apt-get install ros-melodic-ros-control  sudo apt-get install ros-melodic-ros-controllers</code>
+<code>sudo apt-get install ros-melodic-ros-control  
+sudo apt-get install ros-melodic-ros-controllers</code>
  
 <code>sudo apt-get install ros-melodic-robot-localization</code>
  
