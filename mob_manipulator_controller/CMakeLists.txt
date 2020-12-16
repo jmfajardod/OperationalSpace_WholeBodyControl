@@ -91,7 +91,7 @@ add_executable(mob_manipulator_controller
   src/osc_controller/Orientation/Orientation_Manipulator.cpp
   src/osc_controller/Orientation/Orientation_Mob_Manipulator.cpp
   src/osc_controller/Orientation/Error_functions.cpp
-  src/osc_controller/Joint_limits/Repulsive_potencials.cpp
+  src/osc_controller/Joint_limits/Repulsive_potentials.cpp
   src/osc_controller/Joint_limits/Intermediate_value.cpp
   src/osc_controller/Joint_limits/Saturation_joint_space.cpp
   src/osc_controller/Whole_Body_Control/Admittance_controller.cpp
