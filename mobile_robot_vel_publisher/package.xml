@@ -4,9 +4,10 @@
   <version>0.0.1</version>
   <description>The mobile_robot_vel_publisher package</description>
 
+  <author email="jmfajardod@gmail.com">josefajardo</author>
   <maintainer email="jmfajardod@gmail.com">josefajardo</maintainer>
 
-  <license>BSD</license>
+  <license>Apache 2.0</license>
 
   <buildtool_depend>catkin</buildtool_depend>
 
